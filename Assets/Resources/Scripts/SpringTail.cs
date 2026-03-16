@@ -1,0 +1,97 @@
+using UnityEngine;
+
+public class SpringTail : MonoBehaviour
+{
+    public Transform[] bones; //‚µ‚Á‚Û‚Ìbone”z—ñ(ªŒ³‚©‚ç‡‚É“ü‚ê‚é)
+    public Transform root; //‚µ‚Á‚Û‚ÌŠî€‚É‚È‚éTransform
+
+    public float followSpeed = 5.0f; //K”ö‚ªƒvƒŒƒCƒ„[‚Ì‰ñ“]‚É‚Â‚¢‚Ä‚¢‚­‘¬‚³(‘å‚«‚¢‚Ù‚Çƒsƒ^ƒb‚Æ’Ç]‚·‚é)
+    public float returnSpeed = 30.0f; //K”ö‚ªŒ³‚ÌŒ`‚É–ß‚ë‚¤‚Æ‚·‚é‘¬‚³(‘å‚«‚¢‚Ù‚Ç‘f‘‚­Œ³‚Ìp¨‚É–ß‚é)
+    public float delay = 0.2f; //ƒ{[ƒ“‚²‚Æ‚Ì’x‚ê—Ê(‘å‚«‚¢‚Ù‚ÇŒã‚ë‚Ìƒ{[ƒ“‚ª’x‚ê‚Ä“®‚­)
+
+    public float inertia = 8.0f; //Šµ«‚Ì‹­‚³(‘å‚«‚¢‚Ù‚ÇU‚èq‚Ì‚æ‚¤‚É‘å‚«‚­—h‚ê‚é)
+    public float damping = 1.0f; //Šµ«‚ÌŒ¸Š(‘å‚«‚¢‚Ù‚Ç—h‚ê‚ª‘‚­~‚Ü‚é)
+    public float rootAmplify = 5.0f; //‰ñ“]‘•(ƒvƒŒƒCƒ„[‚Ì‰ñ“]‚ğ‰½”{‚É‚µ‚ÄK”ö‚É“`‚¦‚é‚©)
+
+    public float maxAngle = 15.0f;      //ƒ{[ƒ“‚ª‹È‚ª‚ê‚éÅ‘åŠp“x(Šª‚«‚·‚¬‚ÄK”ö‚ª‚®‚é‚®‚é‚É‚È‚é‚Ì‚ğ–h‚®)
+    public float maxVelocity = 4.0f;    //Šµ«ãŒÀ(‰ñ“]‚µ‘±‚¯‚½‚Æ‚«‚É—h‚ê‚ª–\‘–‚·‚é‚Ì‚ğ–h‚®)
+
+    Quaternion[] baseRotations;
+    Quaternion lastRootRotation;
+    Vector3[] angularVelocity;
+
+    void Start()
+    {
+        baseRotations = new Quaternion[bones.Length];
+        angularVelocity = new Vector3[bones.Length];
+
+        for (int i = 0; i < bones.Length; i++)
+        {
+            baseRotations[i] = bones[i].localRotation;
+        }
+
+        lastRootRotation = root.rotation;
+    }
+
+    void LateUpdate()
+    {
+        Quaternion delta = root.rotation * Quaternion.Inverse(lastRootRotation);
+
+        delta.ToAngleAxis(out float rootAngle, out Vector3 rootAxis);
+
+        if (rootAngle > 180.0f) rootAngle -= 360.0f;
+
+        rootAngle *= rootAmplify;
+
+        delta = Quaternion.AngleAxis(rootAngle, rootAxis);
+
+        for (int i = 0; i < bones.Length; i++)
+        {
+            float weight = 1.0f + i * delay; //æ’[‚Ù‚Ç—h‚ê‚é
+
+            Quaternion follow = delta * bones[i].rotation;
+            Quaternion baseRot = bones[i].parent.rotation * baseRotations[i];
+
+            Quaternion target = Quaternion.Slerp(
+                follow,
+                baseRot,
+                returnSpeed * Time.deltaTime
+            );
+
+            Quaternion current = bones[i].rotation;
+            Quaternion diff = target * Quaternion.Inverse(current);
+
+            diff.ToAngleAxis(out float angle, out Vector3 axis);
+
+            if (angle > 180.0f) angle -= 360.0f;
+
+            //Šª‚«‚·‚¬–h~
+            angle = Mathf.Clamp(angle, -maxAngle, maxAngle);
+
+            if (axis == Vector3.zero)
+                axis = Vector3.up;
+
+            Vector3 accel = axis * angle * Mathf.Deg2Rad * inertia;
+
+            angularVelocity[i] += accel * Time.deltaTime;
+
+            //Šµ«‚ÌÅ‘å‘¬“x§ŒÀ
+            angularVelocity[i] = Vector3.ClampMagnitude(
+                angularVelocity[i],
+                maxVelocity
+            );
+
+            angularVelocity[i] *= Mathf.Exp(-damping * Time.deltaTime);
+
+            Quaternion inertiaRot =
+                Quaternion.AngleAxis(
+                    angularVelocity[i].magnitude * Mathf.Rad2Deg * Time.deltaTime,
+                    angularVelocity[i].normalized
+                );
+
+            bones[i].rotation = inertiaRot * current;
+        }
+
+        lastRootRotation = root.rotation;
+    }
+}
