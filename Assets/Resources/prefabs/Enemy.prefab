@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7580618016455426607}
   - component: {fileID: 1738197082226529537}
   - component: {fileID: 2730568993129447868}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -137,6 +137,7 @@ MonoBehaviour:
   wanderChangeTime: 2
   drawVision: 1
   visionSegments: 40
+  Catch: 0
 --- !u!135 &2730568993129447868
 SphereCollider:
   m_ObjectHideFlags: 0

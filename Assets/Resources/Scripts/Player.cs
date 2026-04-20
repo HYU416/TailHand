@@ -3,43 +3,76 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
-    public float moveSpeed = 5.0f; //Player‚Ì‘¬‚³
-    public float rotateSpeed = 10.0f; //Player‚Ì‰ñ“]‚Ì‘¬‚³
+    public float moveSpeed = 5.0f; //Playerã®é€Ÿã•
+    public float rotateSpeed = 10.0f; //Playerã®å›è»¢ã®é€Ÿã•
 
     Rigidbody rb;
     Vector2 moveInput;
+    bool movebutton;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
     }
 
-    // Input System ‚Ì Move ƒCƒxƒ“ƒg
+    // Input System ã® Move ã‚¤ãƒ™ãƒ³ãƒˆ
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
     }
 
+    public void OnMove2(InputValue value)
+    {
+        float input = value.Get<float>();
+        movebutton = input > 0.5f;
+    }
+
     void FixedUpdate()
     {
-        // “ü—Í‚ğ3DƒxƒNƒgƒ‹‚É•ÏŠ·
+        //rb.linearVelocity = Vector3.zero;
+        //rb.angularVelocity = Vector3.zero;
+        //// å…¥åŠ›ã‚’3Dãƒ™ã‚¯ãƒˆãƒ«ã«å¤‰æ›
+        //Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
+
+        //if (direction.sqrMagnitude > 0.01f)
+        //{
+        //    // å‘ãã®å›è»¢
+        //    Quaternion targetRotation = Quaternion.LookRotation(direction);
+        //    transform.rotation = Quaternion.Slerp(
+        //        transform.rotation,
+        //        targetRotation,
+        //        rotateSpeed * Time.fixedDeltaTime
+        //    );
+        //    Debug.Log(movebutton);
+
+        //    // å‰æ–¹å‘ã«ç§»å‹•
+        //    Vector3 move = transform.forward * moveSpeed * Time.fixedDeltaTime;
+        //    if (!movebutton) move = Vector3.zero;
+        //    rb.MovePosition(rb.position + move);
+        //}
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
         Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
 
+        // å›è»¢
         if (direction.sqrMagnitude > 0.01f)
         {
-            // Œü‚«‚Ì‰ñ“]
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
                 rotateSpeed * Time.fixedDeltaTime
             );
+        }
 
-            // ‘O•ûŒü‚ÉˆÚ“®
+        // ç§»å‹•
+        if (movebutton)
+        {
             Vector3 move = transform.forward * moveSpeed * Time.fixedDeltaTime;
             rb.MovePosition(rb.position + move);
         }
     }
 }
-
 
