@@ -123,4 +123,5 @@ public class Enemy : MonoBehaviour
             Destroy(visionLine);
         }
     }
+
 }
