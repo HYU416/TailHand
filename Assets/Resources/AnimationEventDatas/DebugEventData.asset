@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0531105dfa65e43bfc88ceca1ac016, type: 3}
+  m_Name: DebugEventData
+  m_EditorClassIdentifier: Assembly-CSharp::AnimEventDataAsset
+  clip: {fileID: 1827226128182048838, guid: 9f2a64896b174774b8d51bb1d00eee08, type: 3}
+  frameRate: 60
+  events:
+  - frame: 240
+    Type: 0
+    list: 1
