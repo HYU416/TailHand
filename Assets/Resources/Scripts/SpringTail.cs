@@ -22,15 +22,16 @@ public class SpringTail : MonoBehaviour
 
     void Start()
     {
+        // ボーンの数分Quaternionの要素を作成
         baseRotations = new Quaternion[bones.Length];
         angularVelocity = new Vector3[bones.Length];
 
         for (int i = 0; i < bones.Length; i++)
         {
-            baseRotations[i] = bones[i].localRotation;
+            baseRotations[i] = bones[i].localRotation;  // ボーンごとのローカルローテーションを格納
         }
 
-        lastRootRotation = root.rotation;
+        lastRootRotation = root.rotation;   // 付け根部分のローテーション
     }
 
     void LateUpdate()
@@ -52,16 +53,17 @@ public class SpringTail : MonoBehaviour
             Quaternion follow = delta * bones[i].rotation;
             Quaternion baseRot = bones[i].parent.rotation * baseRotations[i];
 
+            // ラープ処理で回転をなめらかに
             Quaternion target = Quaternion.Slerp(
                 follow,
                 baseRot,
                 returnSpeed * Time.deltaTime
             );
 
-            Quaternion current = bones[i].rotation;
-            Quaternion diff = target * Quaternion.Inverse(current);
+            Quaternion current = bones[i].rotation;                     // 現在のクオータニオン
+            Quaternion diff = target * Quaternion.Inverse(current);     // ターゲットと現在の回転の差異
 
-            diff.ToAngleAxis(out float angle, out Vector3 axis);
+            diff.ToAngleAxis(out float angle, out Vector3 axis);        // 回転量と回転軸に分解
 
             if (angle > 180.0f) angle -= 360.0f;
 
