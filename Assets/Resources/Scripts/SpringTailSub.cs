@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class ChainSim : MonoBehaviour
+public class SpringTailSub : MonoBehaviour
 {
     // 鎖の前後のつながりを自前で作成
     [System.Serializable]
