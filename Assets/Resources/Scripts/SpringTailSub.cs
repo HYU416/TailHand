@@ -20,12 +20,18 @@ public class SpringTailSub : MonoBehaviour
     [SerializeField] private FChainData[] chainsData;
 
     private int chainCount;
+    [Header("前の鎖との伸びの最大値")]
     [SerializeField] private float restLength = 0.4f;  // 前の鎖との伸びの最大値
+    [Header("引っ張られた鎖にかかる力の倍率")]
     [SerializeField, Range(1.0f, 100.0f)] private float velocityMagnification = 4.0f;             // 引っ張られた鎖にかかる速度倍率
+    [Header("浮力倍率")]
     [SerializeField, Range(0.0f, 5.0f)] private float bouncyForce = 0.65f;                         // 浮力倍率
+    [Header("先頭チェーンの浮力倍率")]
     [SerializeField, Range(0.0f, 1.0f)] private float firstBouncyForceMag = 0.7f;                 // 先頭チェーンの浮力倍率(Lerp処理で倍率付け)
+    [Header("浮力を強くしすぎてしっぽがプルプルする場合はここの数値を下げる")]
     [SerializeField, Range(0.0f, 1.0f)] private float decreaseRateXZ = 0.95f;                     // 浮力を強くしすぎてしっぽがプルプルする場合はここの数値を下げる
 
+    [Header("XZ方向の加速の最大値")]
     [SerializeField] private float maxForceXZ = 120.0f;
     private const int loopCount = 5;
 
