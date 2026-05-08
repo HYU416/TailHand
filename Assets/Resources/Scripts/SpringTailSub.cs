@@ -34,6 +34,8 @@ public class SpringTailSub : MonoBehaviour
     [Header("XZ方向の加速の最大値")]
     [SerializeField] private float maxForceXZ = 120.0f;
     private const int loopCount = 5;
+    public Vector3 tipPos;
+    public Vector3 rearEndPos;
 
     void Start()
     {
@@ -164,7 +166,7 @@ public class SpringTailSub : MonoBehaviour
     {
         // 親への方向へ向くように補正
         var parentData = chainsData[data.prevChainIndex];
-        Vector3 dir = parentData.currentPos - data.currentPos;
+        Vector3 dir = (parentData.currentPos - rearEndPos) - (data.currentPos - tipPos);
 
         if (dir.sqrMagnitude > 0.0001f)
         {
