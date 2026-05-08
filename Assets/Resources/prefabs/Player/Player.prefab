@@ -222,7 +222,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d9d7ecfe2a317194d9bfa6ef72cd05c2, type: 3}
       propertyPath: m_Name
-      value: Player_test
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d9d7ecfe2a317194d9bfa6ef72cd05c2, type: 3}
       propertyPath: m_Layer
@@ -347,7 +347,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed4ab77e954c08b4196852b0ea277f09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  moveSpeed: 5
+  moveSpeed: 10
   rotateSpeed: 10
 --- !u!114 &8518947225360136565
 MonoBehaviour:
