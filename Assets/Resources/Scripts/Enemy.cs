@@ -26,7 +26,13 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject PlayerObject = GameObject.FindGameObjectWithTag("Player");
+        if (PlayerObject == null)
+        {
+            Debug.LogError("PlayerÉ^ÉOÇ™å©Ç¬Ç©ÇËÇ‹ÇπÇÒÅB");
+        }
+        player = PlayerObject.transform;
+        
         Catch = false;
         PickRandomDirection();
 
