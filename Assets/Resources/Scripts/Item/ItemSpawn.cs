@@ -67,8 +67,15 @@ public class ItemSpawn : MonoBehaviour
 
     private void OnDestroy()
     {
-        // オブジェクトが破壊されるときにアイテムをスポーン
-        SpawnItem();
+        //シーン終了時にアイテムをスポーンさせないため、シーン終了時はこのメソッドを呼び出さないようにする
+        if (gameObject != null) {
+            // シーン終了時はアイテムをスポーンさせない
+            if (gameObject.scene.isLoaded)
+            {
+                // オブジェクトが破壊されるときにアイテムをスポーン
+                SpawnItem();
+            }
+        }
     }
 
     private void SpawnItem()
