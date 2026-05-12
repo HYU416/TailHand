@@ -7,6 +7,11 @@ using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class EffectEditorWindow : EditorWindow
 {
+    private const float EVENT_HEIGHT = 20f;
+    private const float EVENT_SPACING = 28f;
+    private const float EVENT_Y_OFFSET = 35f;
+    private const float EVENT_MIN_WIDTH = 12f;
+
     private EffectDatabase database;
     private Vector2 rightScroll;
     private Vector2 timelineScroll;
@@ -859,85 +864,10 @@ public class EffectEditorWindow : EditorWindow
                     ).intValue;
             }
 
-            Color[] idColors =
-            {
-            new Color(0.32f,0.18f,0.18f),
-            new Color(0.18f,0.18f,0.32f),
-            new Color(0.18f,0.32f,0.18f),
-            new Color(0.32f,0.32f,0.18f),
-            new Color(0.32f,0.18f,0.32f),
-            new Color(0.18f,0.32f,0.32f),
+            //イベントタイプとヒットIDに基づいてカードの色を決定
+            Color cardColor =GetEventColor(eventType, hitId);
 
-            new Color(0.35f,0.25f,0.18f),
-            new Color(0.25f,0.35f,0.18f),
-            new Color(0.18f,0.25f,0.35f),
-            new Color(0.35f,0.18f,0.25f),
-
-            new Color(0.25f,0.18f,0.35f),
-            new Color(0.18f,0.35f,0.25f),
-        };
-
-            Color cardColor;
-
-            if (
-                eventType ==
-                EffectEventType.Hit
-            )
-            {
-                cardColor =
-                    idColors[
-                        Mathf.Abs(hitId) %
-                        idColors.Length
-                    ];
-            }
-            else
-            {
-                switch (eventType)
-                {
-                    case EffectEventType.Sound:
-
-                        cardColor =
-                            new Color(
-                                0.8f,
-                                0.8f,
-                                0.2f
-                            );
-
-                        break;
-
-                    case EffectEventType.CameraShake:
-
-                        cardColor =
-                            new Color(
-                                0.2f,
-                                0.8f,
-                                0.8f
-                            );
-
-                        break;
-
-                    case EffectEventType.Function:
-                        cardColor =
-                            new Color(
-                                0.8f,
-                                0.2f,
-                                0.8f
-                            );
-                        break;
-
-                    default:
-
-                        cardColor =
-                            Color.gray;
-
-                        break;
-                }
-            }
-
-            if (
-    eventType ==
-    EffectEventType.Hit
-)
+            if (eventType == EffectEventType.Hit)
             {
                 e.FindPropertyRelative(
                     "previewColor"
@@ -1022,7 +952,7 @@ public class EffectEditorWindow : EditorWindow
                 continue;
             }
 
-            GUILayout.Space(4);
+            EditorGUILayout.Space(4);
 
             if (
                 eventType ==
@@ -1065,184 +995,7 @@ public class EffectEditorWindow : EditorWindow
                 typeProp
             );
 
-            if (
-                eventType ==
-                EffectEventType.Hit
-            )
-            {
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "hitId"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "colliderType"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "hitOffset"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "previewColor"
-                    )
-                );
-
-                HitColliderType type =
-                    (HitColliderType)
-                    e.FindPropertyRelative(
-                        "colliderType"
-                    ).enumValueIndex;
-
-                switch (type)
-                {
-                    case HitColliderType.Sphere:
-
-                        EditorGUILayout.PropertyField(
-                            e.FindPropertyRelative(
-                                "hitRadius"
-                            )
-                        );
-
-                        break;
-
-                    case HitColliderType.Box:
-
-                        EditorGUILayout.PropertyField(
-                            e.FindPropertyRelative(
-                                "hitBoxSize"
-                            )
-                        );
-
-                        break;
-
-                    case HitColliderType.Capsule:
-
-                        EditorGUILayout.PropertyField(
-                            e.FindPropertyRelative(
-                                "capsuleRadius"
-                            )
-                        );
-
-                        EditorGUILayout.PropertyField(
-                            e.FindPropertyRelative(
-                                "capsuleHeight"
-                            )
-                        );
-
-                        EditorGUILayout.PropertyField(
-                            e.FindPropertyRelative(
-                                "capsuleDirection"
-                            )
-                        );
-
-                        break;
-                }
-
-                if (
-                    GUILayout.Button(
-                        "Edit"
-                    )
-                )
-                {
-                    selectedEventIndex =
-                        i;
-
-                    editingEventIndex =
-                        i;
-
-                    editHitEvent =
-                        (EffectEvent)
-                        e.boxedValue;
-
-                    PreviewFrame(
-                        frameProp.intValue
-                    );
-                }
-            }
-
-            if (
-    eventType ==
-    EffectEventType.Sound
-)
-            {
-                SerializedProperty useBGM =
-                    e.FindPropertyRelative(
-                        "useBGM"
-                    );
-
-                EditorGUILayout.PropertyField(
-                    useBGM,
-                    new GUIContent(
-                        "Use BGM"
-                    )
-                );
-
-                if (useBGM.boolValue)
-                {
-                    EditorGUILayout.PropertyField(
-                        e.FindPropertyRelative(
-                            "bgm"
-                        )
-                    );
-                }
-                else
-                {
-                    EditorGUILayout.PropertyField(
-                        e.FindPropertyRelative(
-                            "se"
-                        )
-                    );
-                }
-            }
-
-            if (
-    eventType ==
-    EffectEventType.CameraShake
-)
-            {
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "shakePower"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "shakeTime"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "shakeAxis"
-                    )
-                );
-
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "shakeCurve"
-                    )
-                );
-            }
-
-            if (
-    eventType ==
-    EffectEventType.Function
-)
-            {
-                EditorGUILayout.PropertyField(
-                    e.FindPropertyRelative(
-                        "onEvent"
-                    )
-                );
-            }
+            DrawEventFields(e,eventType, i);
 
             if (
                 GUILayout.Button("Delete")
@@ -1448,7 +1201,57 @@ public class EffectEditorWindow : EditorWindow
         EditorGUILayout.EndVertical();
     }
 
+    private readonly Color[] hitColors =
+{
+    new Color(0.32f,0.18f,0.18f),
+    new Color(0.18f,0.18f,0.32f),
+    new Color(0.18f,0.32f,0.18f),
+    new Color(0.32f,0.32f,0.18f),
+    new Color(0.32f,0.18f,0.32f),
+    new Color(0.18f,0.32f,0.32f),
+    new Color(0.35f,0.25f,0.18f),
+    new Color(0.25f,0.35f,0.18f),
+    new Color(0.18f,0.25f,0.35f),
+    new Color(0.35f,0.18f,0.25f),
+    new Color(0.25f,0.18f,0.35f),
+    new Color(0.18f,0.35f,0.25f),
+};
 
+    private Color GetEventColor( EffectEventType type,int hitId)
+    {
+        switch (type)
+        {
+            case EffectEventType.Hit:
+                return hitColors[
+                    Mathf.Abs(hitId) %
+                    hitColors.Length
+                ];
+
+            case EffectEventType.Sound:
+                return new Color(
+                    0.8f,
+                    0.8f,
+                    0.2f
+                );
+
+            case EffectEventType.CameraShake:
+                return new Color(
+                    0.2f,
+                    0.8f,
+                    0.8f
+                );
+
+            case EffectEventType.Function:
+                return new Color(
+                    0.8f,
+                    0.2f,
+                    0.8f
+                );
+
+            default:
+                return Color.gray;
+        }
+    }
 
     private void DrawTimeline()
     {
@@ -1589,44 +1392,7 @@ public class EffectEditorWindow : EditorWindow
                 rect.y + 35 +
                 stack * 28;
 
-            Rect eventRect;
-
-            if (
-                eventType ==
-                EffectEventType.Hit
-            )
-            {
-                int endFrame =
-                    e.FindPropertyRelative(
-                        "endFrame"
-                    ).intValue;
-
-                float endX =
-                    rect.x +
-                    endFrame *
-                    frameWidth;
-
-                eventRect =
-                    new Rect(
-                        x,
-                        y,
-                        Mathf.Max(
-                            12,
-                            endX - x
-                        ),
-                        20
-                    );
-            }
-            else
-            {
-                eventRect =
-                    new Rect(
-                        x,
-                        y,
-                        12,
-                        20
-                    );
-            }
+            Rect eventRect =GetEventRect(e, rect,frameWidth,stack);
 
             Event current =
                 Event.current;
@@ -1850,124 +1616,15 @@ public class EffectEditorWindow : EditorWindow
                 rect.x +
                 frame * frameWidth;
 
-            float y =
-                rect.y + 35 +
-                stack * 28;
+            float y = rect.y + EVENT_Y_OFFSET + stack * EVENT_SPACING;
 
-            Color[] idColors =
-            {
-            new Color(0.32f,0.18f,0.18f),
-            new Color(0.18f,0.18f,0.32f),
-            new Color(0.18f,0.32f,0.18f),
-            new Color(0.32f,0.32f,0.18f),
-            new Color(0.32f,0.18f,0.32f),
-            new Color(0.18f,0.32f,0.32f),
 
-            new Color(0.35f,0.25f,0.18f),
-            new Color(0.25f,0.35f,0.18f),
-            new Color(0.18f,0.25f,0.35f),
-            new Color(0.35f,0.18f,0.25f),
+            //イベントタイプとヒットIDに基づいてカードの色を決定
+            Color color = GetEventColor(eventType,hitId);
 
-            new Color(0.25f,0.18f,0.35f),
-            new Color(0.18f,0.35f,0.25f),
-        };
 
-            Color color;
 
-            if (
-                eventType ==
-                EffectEventType.Hit
-            )
-            {
-                color =
-                    idColors[
-                        Mathf.Abs(hitId) %
-                        idColors.Length
-                    ];
-            }
-            else
-            {
-                switch (eventType)
-                {
-                    case EffectEventType.Sound:
-
-                        color =
-                            new Color(
-                                0.8f,
-                                0.8f,
-                                0.2f
-                            );
-
-                        break;
-
-                    case EffectEventType.CameraShake:
-
-                        color =
-                            new Color(
-                                0.2f,
-                                0.8f,
-                                0.8f
-                            );
-
-                        break;
-
-                    case EffectEventType.Function:
-                        //ピンク
-                        color =
-                            new Color(
-                                0.8f,
-                                0.2f,
-                                0.8f
-                            );
-                        break;
-
-                    default:
-
-                        color =
-                            Color.gray;
-
-                        break;
-                }
-            }
-
-            Rect eventRect;
-
-            if (
-                eventType ==
-                EffectEventType.Hit
-            )
-            {
-                int endFrame =
-                    e.FindPropertyRelative(
-                        "endFrame"
-                    ).intValue;
-
-                float endX =
-                    rect.x +
-                    endFrame *
-                    frameWidth;
-
-                eventRect =
-                    new Rect(
-                        x,
-                        y,
-                        Mathf.Max(
-                            12,
-                            endX - x
-                        ),
-                        20
-                    );
-            }
-            else
-            {
-                eventRect =
-                    new Rect(
-                        x,
-                        y,
-                        12,
-                        20
-                    );
-            }
+            Rect eventRect = GetEventRect(e,rect,frameWidth,stack);
 
             bool selected =
                 selectedEventIndex == i;
@@ -2049,6 +1706,205 @@ public class EffectEditorWindow : EditorWindow
         }
     }
 
+    private void DrawEventFields( SerializedProperty e, EffectEventType type,int index)
+    {
+        switch (type)
+        {
+            case EffectEventType.Hit:
+                DrawHitEvent(e, index);
+                break;
+
+            case EffectEventType.Sound:
+                DrawSoundEvent(e);
+                break;
+
+            case EffectEventType.CameraShake:
+                DrawCameraShakeEvent(e);
+                break;
+
+            case EffectEventType.Function:
+                DrawFunctionEvent(e);
+                break;
+        }
+    }
+
+    private void DrawHitEvent(
+    SerializedProperty e,
+    int index
+)
+    {
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "hitId"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "colliderType"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "hitOffset"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "previewColor"
+            )
+        );
+
+        HitColliderType type =
+            (HitColliderType)
+            e.FindPropertyRelative(
+                "colliderType"
+            ).enumValueIndex;
+
+        switch (type)
+        {
+            case HitColliderType.Sphere:
+
+                EditorGUILayout.PropertyField(
+                    e.FindPropertyRelative(
+                        "hitRadius"
+                    )
+                );
+
+                break;
+
+            case HitColliderType.Box:
+
+                EditorGUILayout.PropertyField(
+                    e.FindPropertyRelative(
+                        "hitBoxSize"
+                    )
+                );
+
+                break;
+
+            case HitColliderType.Capsule:
+
+                EditorGUILayout.PropertyField(
+                    e.FindPropertyRelative(
+                        "capsuleRadius"
+                    )
+                );
+
+                EditorGUILayout.PropertyField(
+                    e.FindPropertyRelative(
+                        "capsuleHeight"
+                    )
+                );
+
+                EditorGUILayout.PropertyField(
+                    e.FindPropertyRelative(
+                        "capsuleDirection"
+                    )
+                );
+
+                break;
+        }
+
+        if (
+            GUILayout.Button(
+                "Edit"
+            )
+        )
+        {
+            selectedEventIndex =
+                index;
+
+            editingEventIndex =
+                index;
+
+            editHitEvent =
+                (EffectEvent)
+                e.boxedValue;
+
+            PreviewFrame(
+                e.FindPropertyRelative(
+                    "frame"
+                ).intValue
+            );
+        }
+    }
+
+    private void DrawSoundEvent(
+    SerializedProperty e
+)
+    {
+        SerializedProperty useBGM =
+            e.FindPropertyRelative(
+                "useBGM"
+            );
+
+        EditorGUILayout.PropertyField(
+            useBGM,
+            new GUIContent(
+                "Use BGM"
+            )
+        );
+
+        if (useBGM.boolValue)
+        {
+            EditorGUILayout.PropertyField(
+                e.FindPropertyRelative(
+                    "bgm"
+                )
+            );
+        }
+        else
+        {
+            EditorGUILayout.PropertyField(
+                e.FindPropertyRelative(
+                    "se"
+                )
+            );
+        }
+    }
+
+    private void DrawCameraShakeEvent(
+    SerializedProperty e
+)
+    {
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "shakePower"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "shakeTime"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "shakeAxis"
+            )
+        );
+
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "shakeCurve"
+            )
+        );
+    }
+
+    private void DrawFunctionEvent(
+    SerializedProperty e
+)
+    {
+        EditorGUILayout.PropertyField(
+            e.FindPropertyRelative(
+                "onEvent"
+            )
+        );
+    }
 
     private void PreviewFrame(
         int frame
@@ -2207,6 +2063,62 @@ public class EffectEditorWindow : EditorWindow
  );
 
         SceneView.RepaintAll();
+    }
+
+    private Rect GetEventRect(
+    SerializedProperty e,
+    Rect timelineRect,
+    float frameWidth,
+    int stack
+)
+    {
+        int frame =
+            e.FindPropertyRelative(
+                "frame"
+            ).intValue;
+
+        EffectEventType type =
+            (EffectEventType)
+            e.FindPropertyRelative(
+                "type"
+            ).enumValueIndex;
+
+        float x =
+            timelineRect.x +
+            frame * frameWidth;
+
+        float y =
+            timelineRect.y + 35 +
+            stack * 28;
+
+        if (type == EffectEventType.Hit)
+        {
+            int endFrame =
+                e.FindPropertyRelative(
+                    "endFrame"
+                ).intValue;
+
+            float endX =
+                timelineRect.x +
+                endFrame * frameWidth;
+
+            return new Rect(
+                x,
+                y,
+                Mathf.Max(
+                    EVENT_MIN_WIDTH,
+                    endX - x
+                ),
+                EVENT_HEIGHT
+            );
+        }
+
+        return new Rect(
+            x,
+            y,
+            EVENT_MIN_WIDTH,
+            EVENT_HEIGHT
+        );
     }
 
     private int GetMaxFrame()

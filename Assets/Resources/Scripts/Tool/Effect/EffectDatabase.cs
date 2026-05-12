@@ -1,24 +1,25 @@
-// EffectDatabase.cs
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+//エフェクトの種類を定義する列挙型
 public enum EffectType
 {
-    Explosion,
-    Slash,
-    Fire
+    Explosion,          //爆発
+    Slash,              //斬撃
+    Fire                //炎
 }
 
 [Serializable]
 public class EffectData
 {
+    //エフェクトの種類
     public EffectType type;
-
+    //エフェクトのプレハブ
     public GameObject prefab;
 }
 
+//エフェクトデータベースを管理するScriptableObjectクラス
 [CreateAssetMenu(
     fileName = "EffectDatabase",
     menuName = "Game/EffectDatabase"
@@ -26,6 +27,6 @@ public class EffectData
 public class EffectDatabase :
     ScriptableObject
 {
-    public List<EffectData> effects =
-        new();
+    //エフェクトデータのリスト
+    public List<EffectData> effects =new();
 }

@@ -27,8 +27,7 @@ public class ItemSpawn : MonoBehaviour
 
     void Start()
     {
-        //あとで消す
-        EffectManager.Instance.Play(EffectType.Explosion, transform.position);
+     
     }
     // 出現率を100%に補正するメソッド
     public void NormalizeRates()

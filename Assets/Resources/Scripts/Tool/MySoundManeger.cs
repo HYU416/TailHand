@@ -19,32 +19,22 @@ public static class MySoundManeger
 
     private static void Initialize()
     {
+        //既に初期化済みならスキップ
         if (initialized)
             return;
-
-        SM =
-            Resources.Load
-            <
-                SoundManeger
-            >
-            (
-                "Tools/SoundManager"
-            );
-
+        // ResourcesからSoundManagerをロード
+        SM = Resources.Load < SoundManeger > ( "Tools/SoundManager");
+        // ロード失敗のチェック
         if (SM == null)
         {
-            Debug.LogError(
-                "SoundManager not found"
-            );
-
+            Debug.LogError( "SoundManager not found");
             return;
         }
-
-        Mixer =
-            SM.audioMixer;
-
+        // AudioMixerもSoundManagerから取得
+        Mixer = SM.audioMixer;
+        // Mixerの取得失敗のチェック
         initialized = true;
-
+        //volumeの保存値があれば適用
         LoadVolumes();
     }
 

@@ -1,21 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EffectPlayer :
-    MonoBehaviour
+public class EffectPlayer : MonoBehaviour
 {
     [SerializeField]
     private EffectType effectType;
 
     [SerializeField]
     private ParticleSystem mainParticle;
-    public ParticleSystem MainParticle =>
-    mainParticle;
+    public ParticleSystem MainParticle => mainParticle;
 
 
     [SerializeField]
-    private List<EffectEvent> events =
-        new();
+    private List<EffectEvent> events = new();
 
     [SerializeField]
     private int frameRate = 60;
@@ -27,9 +24,7 @@ public class EffectPlayer :
     private int currentFrame;
     private float elapsedTime;
     private int currentEventIndex;
-    private Dictionary<int, Collider>
-    activeColliders =
-        new();
+    private Dictionary<int, Collider> activeColliders =new();
 
     public List<EffectEvent> Events
     {
@@ -61,11 +56,7 @@ public class EffectPlayer :
 
         if (mainParticle != null)
         {
-            mainParticle.Stop(
-                true,
-                ParticleSystemStopBehavior
-                .StopEmittingAndClear
-            );
+            mainParticle.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
 
             mainParticle.Play(true);
         }
@@ -77,53 +68,33 @@ public class EffectPlayer :
 
         if (mainParticle != null)
         {
-            mainParticle.Stop(
-                true,
-                ParticleSystemStopBehavior
-                .StopEmittingAndClear
-            );
+            mainParticle.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         RemoveAllHitColliders(); 
 
-        EffectManager.Instance.Release(
-            effectType,
-            this
-        );
+        EffectManager.Instance.Release( effectType, this);
     }
 
     
 
     private void Update()
     {
-        if (!isPlaying)
-            return;
+        if (!isPlaying)return;
 
-        if (mainParticle == null)
-            return;
+        if (mainParticle == null) return;
 
-        elapsedTime +=
-     Time.deltaTime;
+        elapsedTime +=Time.deltaTime;
 
-        int frame =
-            Mathf.FloorToInt(
-                elapsedTime *
-                frameRate
-            );
-        Debug.Log(
-            $"{effectType} Frame : {frame}"
-        );
+        int frame = Mathf.FloorToInt(elapsedTime *frameRate );
+        Debug.Log( $"{effectType} Frame : {frame}");
         while (currentFrame < frame)
         {
             currentFrame++;
 
-            ExecuteFrame(
-                currentFrame
-            );
+            ExecuteFrame( currentFrame );
 
-            UpdateHitColliders(
-                currentFrame
-            );
+            UpdateHitColliders( currentFrame);
         }
 
         if (!mainParticle.IsAlive(true))
@@ -132,17 +103,11 @@ public class EffectPlayer :
         }
     }
 
-    private void ExecuteFrame(
-        int frame
-    )
+    private void ExecuteFrame(int frame)
     {
-        while (
-            currentEventIndex <
-            events.Count
-        )
+        while ( currentEventIndex < events.Count )
         {
-            EffectEvent e =
-                events[currentEventIndex];
+            EffectEvent e = events[currentEventIndex];
 
             if (e.frame != frame)
                 break;
@@ -153,9 +118,7 @@ public class EffectPlayer :
         }
     }
 
-    private void ExecuteEvent(
-       EffectEvent e
-   )
+    private void ExecuteEvent( EffectEvent e )
     {
         switch (e.type)
         {
@@ -169,28 +132,25 @@ public class EffectPlayer :
                 if (e.useBGM)
                 {
                     MySoundManeger.Play(gameObject, e.bgm);
-                    Debug.Log(
-                        $"{effectType} Play BGM : {e.bgm}"
-                    );
+                    Debug.Log( $"{effectType} Play BGM : {e.bgm}");
                 }
                 else
                 {
                     MySoundManeger.Play(gameObject, e.se);
-                    Debug.Log(
-                        $"{effectType} Play SE : {e.se}"
-                    );
+                    Debug.Log( $"{effectType} Play SE : {e.se}" );
                 }
                
                 break;
 
             case EffectEventType.CameraShake:
 
-                CameraShakeManager.Shake(
-         e.shakePower,
-         e.shakeTime,
-         e.shakeAxis,
-         e.shakeCurve
-     );
+                CameraShakeManager.Shake
+                    (
+                        e.shakePower,
+                        e.shakeTime,
+                        e.shakeAxis,
+                        e.shakeCurve
+                     );
 
                 break;
 
@@ -200,28 +160,17 @@ public class EffectPlayer :
         }
     }
 
-    private void CreateHitCollider(
-    EffectEvent e
-)
+    private void CreateHitCollider( EffectEvent e)
     {
-        RemoveHitCollider(
-            e.hitId
-        );
+        RemoveHitCollider( e.hitId);
 
-        GameObject obj =
-            new GameObject(
-                $"Hit_{e.hitId}"
-            );
+        GameObject obj =new GameObject( $"Hit_{e.hitId}");
 
-        obj.transform.SetParent(
-            transform
-        );
+        obj.transform.SetParent( transform);
 
-        obj.transform.localPosition =
-            Vector3.zero;
+        obj.transform.localPosition = Vector3.zero;
 
-        obj.transform.localRotation =
-            Quaternion.identity;
+        obj.transform.localRotation = Quaternion.identity;
 
         Collider created = null;
 
@@ -229,19 +178,13 @@ public class EffectPlayer :
         {
             case HitColliderType.Sphere:
 
-                SphereCollider sphere =
-                    obj.AddComponent
-                    <
-                        SphereCollider
-                    >();
+                SphereCollider sphere = obj.AddComponent<SphereCollider >();
 
                 sphere.isTrigger = true;
 
-                sphere.center =
-                    e.hitOffset;
+                sphere.center = e.hitOffset;
 
-                sphere.radius =
-                    e.hitRadius;
+                sphere.radius = e.hitRadius;
 
                 created = sphere;
 
@@ -249,19 +192,13 @@ public class EffectPlayer :
 
             case HitColliderType.Box:
 
-                BoxCollider box =
-                    obj.AddComponent
-                    <
-                        BoxCollider
-                    >();
+                BoxCollider box = obj.AddComponent <BoxCollider >();
 
                 box.isTrigger = true;
 
-                box.center =
-                    e.hitOffset;
+                box.center =e.hitOffset;
 
-                box.size =
-                    e.hitBoxSize;
+                box.size = e.hitBoxSize;
 
                 created = box;
 
@@ -269,25 +206,17 @@ public class EffectPlayer :
 
             case HitColliderType.Capsule:
 
-                CapsuleCollider capsule =
-                    obj.AddComponent
-                    <
-                        CapsuleCollider
-                    >();
+                CapsuleCollider capsule = obj.AddComponent <CapsuleCollider >();
 
                 capsule.isTrigger = true;
 
-                capsule.center =
-                    e.hitOffset;
+                capsule.center =e.hitOffset;
 
-                capsule.radius =
-                    e.capsuleRadius;
+                capsule.radius =e.capsuleRadius;
 
-                capsule.height =
-                    e.capsuleHeight;
+                capsule.height = e.capsuleHeight;
 
-                capsule.direction =
-    (int)e.capsuleDirection;
+                capsule.direction =(int)e.capsuleDirection;
 
                 created = capsule;
 
@@ -296,31 +225,19 @@ public class EffectPlayer :
 
         if (created != null)
         {
-            activeColliders.Add(
-                e.hitId,
-                created
-            );
+            activeColliders.Add(e.hitId,created);
         }
     }
 
-    private void RemoveHitCollider(
-    int id
-)
+    private void RemoveHitCollider(int id)
     {
-        if (
-            activeColliders.ContainsKey(
-                id
-            )
-        )
+        if ( activeColliders.ContainsKey( id) )
         {
-            Collider col =
-                activeColliders[id];
+            Collider col = activeColliders[id];
 
             if (col != null)
             {
-                Destroy(
-                    col.gameObject
-                );
+                Destroy(col.gameObject );
             }
 
             activeColliders.Remove(id);
@@ -329,56 +246,32 @@ public class EffectPlayer :
 
     private void RemoveAllHitColliders()
     {
-        foreach (
-            Collider col
-            in activeColliders.Values
-        )
+        foreach (Collider col in activeColliders.Values )
         {
             if (col != null)
             {
-                Destroy(
-                    col.gameObject
-                );
+                Destroy( col.gameObject);
             }
         }
 
         activeColliders.Clear();
     }
 
-    private void UpdateHitColliders(
-    int frame
-)
+    private void UpdateHitColliders(int frame)
     {
-        foreach (
-            EffectEvent e
-            in events
-        )
+        foreach ( EffectEvent e in events )
         {
-            if (
-                e.type !=
-                EffectEventType.Hit
-            )
-            {
-                continue;
-            }
+            if ( e.type != EffectEventType.Hit) continue;
 
-            if (
-                frame > e.endFrame
-            )
+            if (frame > e.endFrame )
             {
-                RemoveHitCollider(
-                    e.hitId
-                );
+                RemoveHitCollider( e.hitId);
             }
         }
     }
 
-    private void OnTriggerEnter(
-        Collider other
-    )
+    private void OnTriggerEnter(Collider other )
     {
-        Debug.Log(
-            $"{effectType} Hit : {other.name}"
-        );
+        Debug.Log( $"{effectType} Hit : {other.name}");
     }
 }
