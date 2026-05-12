@@ -25,6 +25,11 @@ public class ItemSpawn : MonoBehaviour
     [Header("火打石のプレハブ")]
     [SerializeField] private GameObject flintPrefab;
 
+    void Start()
+    {
+        //あとで消す
+        EffectManager.Instance.Play(EffectType.Explosion, transform.position);
+    }
     // 出現率を100%に補正するメソッド
     public void NormalizeRates()
     {
@@ -96,5 +101,7 @@ public class ItemSpawn : MonoBehaviour
             Instantiate(flintPrefab, transform.position, Quaternion.identity);
         }
         // 何も出ない場合は何もしない
+
+       
     }
 }

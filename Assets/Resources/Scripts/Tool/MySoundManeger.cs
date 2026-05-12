@@ -15,6 +15,39 @@ public static class MySoundManeger
     private const float DB_MAX = 0f;
     private const string PREF_PREFIX = "vol_"; // ó·: "vol_Master_Volume"
 
+    private static bool initialized;
+
+    private static void Initialize()
+    {
+        if (initialized)
+            return;
+
+        SM =
+            Resources.Load
+            <
+                SoundManeger
+            >
+            (
+                "Tools/SoundManager"
+            );
+
+        if (SM == null)
+        {
+            Debug.LogError(
+                "SoundManager not found"
+            );
+
+            return;
+        }
+
+        Mixer =
+            SM.audioMixer;
+
+        initialized = true;
+
+        LoadVolumes();
+    }
+
     public static void SetSoundManeger(SoundManeger soundManeger)
     {
         SM = soundManeger;
@@ -34,6 +67,8 @@ public static class MySoundManeger
 
     public static void SetVolume(string name, float volume)
     {
+        Initialize();
+
         // Åö -60?0dB Ç…ÉNÉâÉìÉv
         float db = Mathf.Clamp(volume, DB_MIN, DB_MAX);
         Mixer.SetFloat(name, db);
@@ -46,6 +81,8 @@ public static class MySoundManeger
 
     public static float GetVolume(string name)
     {
+        Initialize();
+
         float volume;
         if (Mixer.GetFloat(name, out volume))
         {
@@ -81,6 +118,7 @@ public static class MySoundManeger
 
     public static void Play(GameObject obj, SEList soundList)
     {
+        Initialize();
         AudioSource source = obj.GetComponent<AudioSource>();
         if (source == null) source = obj.AddComponent<AudioSource>();
         Debug.Log(SM.seListData[(int)soundList].audioClip + " " + SM.seListData[(int)soundList].volume + " " + SM.seListData[(int)soundList].pitch + " " + SM.seListData[(int)soundList].isLoop + " " + SM.seListData[(int)soundList].audioMixerGroup);
@@ -94,8 +132,10 @@ public static class MySoundManeger
     }
     public static void Play(GameObject obj, BGMList soundList)
     {
+        Initialize();
         AudioSource source = obj.GetComponent<AudioSource>();
         if (source == null) source = obj.AddComponent<AudioSource>();
+        Debug.Log(SM.bgmListData[(int)soundList].audioClip + " " + SM.bgmListData[(int)soundList].volume + " " + SM.bgmListData[(int)soundList].pitch + " " + SM.bgmListData[(int)soundList].isLoop + " " + SM.bgmListData[(int)soundList].audioMixerGroup);
         if (source != null)
         {
 
