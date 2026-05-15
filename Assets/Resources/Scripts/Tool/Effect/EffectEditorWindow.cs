@@ -600,7 +600,11 @@ public class EffectEditorWindow : EditorWindow
 
     private void DrawTimelineControls()
     {
-        playbackSpeed = EditorGUILayout.Slider("Speed", playbackSpeed, 0.1f, 3f);
+        playbackSpeed = EditorGUILayout.Slider("Speed", playbackSpeed, 0.1f, 100f);
+
+        currentPlayer.PlaySpeed = playbackSpeed;
+
+        EditorUtility.SetDirty(currentPlayer);
 
         int maxFrame = GetMaxFrame();
         previewFrame = EditorGUILayout.IntSlider("Preview Frame", previewFrame, 0, maxFrame);
