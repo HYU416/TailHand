@@ -17,10 +17,11 @@ public class CameraFollow : MonoBehaviour
     public Transform target;
     public Vector3 offset;
     public Quaternion Quaternion;
+    public Vector3 shakeOffset;
 
     void LateUpdate()
     {
-        transform.position = target.position + offset;
+        transform.position = target.position + offset + shakeOffset;
 
         transform.rotation = Quaternion;
     }

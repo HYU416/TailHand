@@ -25,6 +25,10 @@ public class ItemSpawn : MonoBehaviour
     [Header("火打石のプレハブ")]
     [SerializeField] private GameObject flintPrefab;
 
+    void Start()
+    {
+     
+    }
     // 出現率を100%に補正するメソッド
     public void NormalizeRates()
     {
@@ -67,8 +71,15 @@ public class ItemSpawn : MonoBehaviour
 
     private void OnDestroy()
     {
-        // オブジェクトが破壊されるときにアイテムをスポーン
-        SpawnItem();
+        //シーン終了時にアイテムをスポーンさせないため、シーン終了時はこのメソッドを呼び出さないようにする
+        if (gameObject != null) {
+            // シーン終了時はアイテムをスポーンさせない
+            if (gameObject.scene.isLoaded)
+            {
+                // オブジェクトが破壊されるときにアイテムをスポーン
+                SpawnItem();
+            }
+        }
     }
 
     private void SpawnItem()
@@ -89,5 +100,7 @@ public class ItemSpawn : MonoBehaviour
             Instantiate(flintPrefab, transform.position, Quaternion.identity);
         }
         // 何も出ない場合は何もしない
+
+       
     }
 }
