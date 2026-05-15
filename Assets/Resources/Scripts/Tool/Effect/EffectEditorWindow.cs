@@ -10,24 +10,24 @@ public class EffectEditorWindow : EditorWindow
     private const float EVENT_Y_OFFSET = 35f;
     private const float EVENT_MIN_WIDTH = 12f;
 
-    //エディタ上で使用する変数
+    //====エディタ上で使用する変数======
     private EffectDatabase database;
     private Vector2 rightScroll;      // Effect Info、Player Settings、Events セクション用
     private Vector2 timelineScroll;   // タイムラインビュー用
     private Vector2 eventScroll;      // イベントリスト用
-    private int selectedIndex = -1;
-    private EffectData currentData;
-    private EffectPlayer currentPlayer;
-    private int previewFrame;
-    private GameObject previewInstance;
-    private EffectEvent editHitEvent;
-    private int editingEventIndex = -1;
-    private int selectedEventIndex = -1;
-    private List<bool> eventFoldouts = new();
-    private bool isPlaying;
-    private bool loopPlayback = true;
+    private int selectedIndex = -1; // 現在選択されているエフェクトのインデックス
+    private EffectData currentData; // 現在選択されているエフェクトのデータ
+    private EffectPlayer currentPlayer; // 現在選択されているエフェクトのプレイヤーコンポーネント
+    private int previewFrame;// タイムラインのプレビューで表示しているフレーム
+    private GameObject previewInstance;// タイムラインのプレビューで生成しているエフェクトのインスタンス
+    private EffectEvent editHitEvent;// 現在編集している当たり判定イベントのデータ
+    private int editingEventIndex = -1;// 現在編集しているイベントのインデックス
+    private int selectedEventIndex = -1;// イベントリストで選択されているイベントのインデックス
+    private List<bool> eventFoldouts = new();//イベントリストの各イベントの折りたたみ状態を管理するリスト
+    private bool isPlaying;// タイムラインの再生中かどうか
+    private bool loopPlayback = true;// タイムラインの再生がループするかどうか
 
-    private double lastTime;
+    private double lastTime;// 最後に更新された時間
     private float playbackFrame;
     private float playbackSpeed = 1f;
 
@@ -578,12 +578,23 @@ public class EffectEditorWindow : EditorWindow
         previewInstance = Instantiate(currentData.prefab);
         previewInstance.hideFlags = HideFlags.HideAndDontSave;
 
-        ParticleSystem particle = previewInstance.GetComponentInChildren<ParticleSystem>();
-        if (particle != null)
+        // 子オブジェクトを含むすべてのパーティクルシステムを取得
+        ParticleSystem[] allParticles = previewInstance.GetComponentsInChildren<ParticleSystem>();
+        
+        if (allParticles != null && allParticles.Length > 0)
         {
-            loopPlayback = particle.main.loop;
-            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            particle.Simulate(previewFrame / (float)currentPlayer.FrameRate, true, true, true);
+            // メインパーティクルからループ設定を取得（最初のパーティクル）
+            loopPlayback = allParticles[0].main.loop;
+            
+            // すべてのパーティクルシステムを初期化して再生開始
+            foreach (ParticleSystem particle in allParticles)
+            {
+                if (particle != null)
+                {
+                    particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    particle.Simulate(previewFrame / (float)currentPlayer.FrameRate, true, true, true);
+                }
+            }
         }
     }
 
@@ -892,8 +903,10 @@ public class EffectEditorWindow : EditorWindow
         previewInstance = Instantiate(currentData.prefab);
         previewInstance.hideFlags = HideFlags.HideAndDontSave;
 
-        ParticleSystem particle = previewInstance.GetComponentInChildren<ParticleSystem>();
-        if (particle == null)
+        // 子オブジェクトを含むすべてのパーティクルシステムを取得
+        ParticleSystem[] allParticles = previewInstance.GetComponentsInChildren<ParticleSystem>();
+        
+        if (allParticles == null || allParticles.Length == 0)
             return;
 
         EffectPlayer player = previewInstance.GetComponent<EffectPlayer>();
@@ -901,8 +914,15 @@ public class EffectEditorWindow : EditorWindow
         int frameRate = so.FindProperty("frameRate").intValue;
         float time = frame / (float)Mathf.Max(1, frameRate);
 
-        particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        particle.Simulate(time, true, true, true);
+        // すべてのパーティクルシステムを指定フレームまでシミュレート
+        foreach (ParticleSystem particle in allParticles)
+        {
+            if (particle != null)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                particle.Simulate(time, true, true, true);
+            }
+        }
 
         SceneView.RepaintAll();
     }
@@ -948,11 +968,21 @@ public class EffectEditorWindow : EditorWindow
             previewInstance.hideFlags = HideFlags.HideAndDontSave;
         }
 
-        ParticleSystem particle = previewInstance.GetComponentInChildren<ParticleSystem>();
-        if (particle == null)
+        // 子オブジェクトを含むすべてのパーティクルシステムを取得
+        ParticleSystem[] allParticles = previewInstance.GetComponentsInChildren<ParticleSystem>();
+        
+        if (allParticles == null || allParticles.Length == 0)
             return;
 
-        particle.Simulate(delta * playbackSpeed, true, false, true);
+        // すべてのパーティクルシステムを再生速度に応じてシミュレート
+        foreach (ParticleSystem particle in allParticles)
+        {
+            if (particle != null)
+            {
+                particle.Simulate(delta * playbackSpeed, true, false, true);
+            }
+        }
+
         SceneView.RepaintAll();
     }
 

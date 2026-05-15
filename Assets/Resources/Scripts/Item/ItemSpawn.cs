@@ -103,4 +103,13 @@ public class ItemSpawn : MonoBehaviour
 
        
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("ExplosionEffect"))
+        {
+            // アイテムボックスの破壊
+            Destroy(gameObject);
+        }
+    }
 }

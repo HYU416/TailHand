@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class EffectPlayer : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class EffectPlayer : MonoBehaviour
     private ParticleSystem mainParticle;
     public ParticleSystem MainParticle => mainParticle;
 
+    // 子オブジェクトを含むすべてのパーティクルシステム
+    private ParticleSystem[] allParticleSystems;
 
     [SerializeField]
     private List<EffectEvent> events = new();
@@ -24,7 +27,7 @@ public class EffectPlayer : MonoBehaviour
     private int currentFrame;
     private float elapsedTime;
     private int currentEventIndex;
-    private Dictionary<int, Collider> activeColliders =new();
+    private Dictionary<int, Collider> activeColliders = new();
 
     public List<EffectEvent> Events
     {
@@ -41,7 +44,8 @@ public class EffectPlayer : MonoBehaviour
             return a.frame.CompareTo(b.frame);
         });
 
-        
+        // 子オブジェクトを含むすべてのパーティクルシステムを取得
+        allParticleSystems = GetComponentsInChildren<ParticleSystem>();
     }
 
     public void EffectStart()
@@ -54,10 +58,22 @@ public class EffectPlayer : MonoBehaviour
 
         RemoveAllHitColliders();
 
-        if (mainParticle != null)
+        // すべてのパーティクルシステムを再生
+        if (allParticleSystems != null && allParticleSystems.Length > 0)
         {
-            mainParticle.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
-
+            foreach (ParticleSystem particle in allParticleSystems)
+            {
+                if (particle != null)
+                {
+                    particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    particle.Play(true);
+                }
+            }
+        }
+        else if (mainParticle != null)
+        {
+            // フォールバック: allParticleSystemsが空の場合
+            mainParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             mainParticle.Play(true);
         }
     }
@@ -66,38 +82,65 @@ public class EffectPlayer : MonoBehaviour
     {
         isPlaying = false;
 
-        if (mainParticle != null)
+        // すべてのパーティクルシステムを停止
+        if (allParticleSystems != null && allParticleSystems.Length > 0)
         {
-            mainParticle.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+            foreach (ParticleSystem particle in allParticleSystems)
+            {
+                if (particle != null)
+                {
+                    particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+            }
+        }
+        else if (mainParticle != null)
+        {
+            mainParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
-        RemoveAllHitColliders(); 
+        RemoveAllHitColliders();
 
-        EffectManager.Instance.Release( effectType, this);
+        EffectManager.Instance.Release(effectType, this);
     }
-
-    
 
     private void Update()
     {
-        if (!isPlaying)return;
+        if (!isPlaying) return;
 
         if (mainParticle == null) return;
 
-        elapsedTime +=Time.deltaTime;
+        elapsedTime += Time.deltaTime;
 
-        int frame = Mathf.FloorToInt(elapsedTime *frameRate );
-        Debug.Log( $"{effectType} Frame : {frame}");
+        int frame = Mathf.FloorToInt(elapsedTime * frameRate);
+        Debug.Log($"{effectType} Frame : {frame}");
         while (currentFrame < frame)
         {
             currentFrame++;
 
-            ExecuteFrame( currentFrame );
+            ExecuteFrame(currentFrame);
 
-            UpdateHitColliders( currentFrame);
+            UpdateHitColliders(currentFrame);
         }
 
-        if (!mainParticle.IsAlive(true))
+        // すべてのパーティクルが停止したかチェック
+        bool anyAlive = false;
+        if (allParticleSystems != null && allParticleSystems.Length > 0)
+        {
+            foreach (ParticleSystem particle in allParticleSystems)
+            {
+                if (particle != null && particle.IsAlive(true))
+                {
+                    anyAlive = true;
+                    break;
+                }
+            }
+        }
+        else if (mainParticle != null)
+        {
+            anyAlive = mainParticle.IsAlive(true);
+        }
+
+        if (!anyAlive)
         {
             EffectStop();
         }
@@ -105,7 +148,7 @@ public class EffectPlayer : MonoBehaviour
 
     private void ExecuteFrame(int frame)
     {
-        while ( currentEventIndex < events.Count )
+        while (currentEventIndex < events.Count)
         {
             EffectEvent e = events[currentEventIndex];
 
@@ -118,7 +161,7 @@ public class EffectPlayer : MonoBehaviour
         }
     }
 
-    private void ExecuteEvent( EffectEvent e )
+    private void ExecuteEvent(EffectEvent e)
     {
         switch (e.type)
         {
@@ -127,19 +170,19 @@ public class EffectPlayer : MonoBehaviour
                 CreateHitCollider(e);
 
                 break;
-                
+
             case EffectEventType.Sound:
                 if (e.useBGM)
                 {
                     MySoundManeger.Play(gameObject, e.bgm);
-                    Debug.Log( $"{effectType} Play BGM : {e.bgm}");
+                    Debug.Log($"{effectType} Play BGM : {e.bgm}");
                 }
                 else
                 {
                     MySoundManeger.Play(gameObject, e.se);
-                    Debug.Log( $"{effectType} Play SE : {e.se}" );
+                    Debug.Log($"{effectType} Play SE : {e.se}");
                 }
-               
+
                 break;
 
             case EffectEventType.CameraShake:
@@ -160,13 +203,13 @@ public class EffectPlayer : MonoBehaviour
         }
     }
 
-    private void CreateHitCollider( EffectEvent e)
+    private void CreateHitCollider(EffectEvent e)
     {
-        RemoveHitCollider( e.hitId);
+        RemoveHitCollider(e.hitId);
 
-        GameObject obj =new GameObject( $"Hit_{e.hitId}");
+        GameObject obj = new GameObject($"Hit_{e.hitId}");
 
-        obj.transform.SetParent( transform);
+        obj.transform.SetParent(transform);
 
         obj.transform.localPosition = Vector3.zero;
 
@@ -178,7 +221,7 @@ public class EffectPlayer : MonoBehaviour
         {
             case HitColliderType.Sphere:
 
-                SphereCollider sphere = obj.AddComponent<SphereCollider >();
+                SphereCollider sphere = obj.AddComponent<SphereCollider>();
 
                 sphere.isTrigger = true;
 
@@ -192,11 +235,11 @@ public class EffectPlayer : MonoBehaviour
 
             case HitColliderType.Box:
 
-                BoxCollider box = obj.AddComponent <BoxCollider >();
+                BoxCollider box = obj.AddComponent<BoxCollider>();
 
                 box.isTrigger = true;
 
-                box.center =e.hitOffset;
+                box.center = e.hitOffset;
 
                 box.size = e.hitBoxSize;
 
@@ -206,17 +249,17 @@ public class EffectPlayer : MonoBehaviour
 
             case HitColliderType.Capsule:
 
-                CapsuleCollider capsule = obj.AddComponent <CapsuleCollider >();
+                CapsuleCollider capsule = obj.AddComponent<CapsuleCollider>();
 
                 capsule.isTrigger = true;
 
-                capsule.center =e.hitOffset;
+                capsule.center = e.hitOffset;
 
-                capsule.radius =e.capsuleRadius;
+                capsule.radius = e.capsuleRadius;
 
                 capsule.height = e.capsuleHeight;
 
-                capsule.direction =(int)e.capsuleDirection;
+                capsule.direction = (int)e.capsuleDirection;
 
                 created = capsule;
 
@@ -225,19 +268,19 @@ public class EffectPlayer : MonoBehaviour
 
         if (created != null)
         {
-            activeColliders.Add(e.hitId,created);
+            activeColliders.Add(e.hitId, created);
         }
     }
 
     private void RemoveHitCollider(int id)
     {
-        if ( activeColliders.ContainsKey( id) )
+        if (activeColliders.ContainsKey(id))
         {
             Collider col = activeColliders[id];
 
             if (col != null)
             {
-                Destroy(col.gameObject );
+                Destroy(col.gameObject);
             }
 
             activeColliders.Remove(id);
@@ -246,11 +289,11 @@ public class EffectPlayer : MonoBehaviour
 
     private void RemoveAllHitColliders()
     {
-        foreach (Collider col in activeColliders.Values )
+        foreach (Collider col in activeColliders.Values)
         {
             if (col != null)
             {
-                Destroy( col.gameObject);
+                Destroy(col.gameObject);
             }
         }
 
@@ -259,19 +302,19 @@ public class EffectPlayer : MonoBehaviour
 
     private void UpdateHitColliders(int frame)
     {
-        foreach ( EffectEvent e in events )
+        foreach (EffectEvent e in events)
         {
-            if ( e.type != EffectEventType.Hit) continue;
+            if (e.type != EffectEventType.Hit) continue;
 
-            if (frame > e.endFrame )
+            if (frame > e.endFrame)
             {
-                RemoveHitCollider( e.hitId);
+                RemoveHitCollider(e.hitId);
             }
         }
     }
 
-    private void OnTriggerEnter(Collider other )
+    private void OnTriggerEnter(Collider other)
     {
-        Debug.Log( $"{effectType} Hit : {other.name}");
+        Debug.Log($"{effectType} Hit : {other.name}");
     }
 }
