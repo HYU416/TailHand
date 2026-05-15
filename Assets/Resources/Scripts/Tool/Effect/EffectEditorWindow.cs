@@ -30,6 +30,7 @@ public class EffectEditorWindow : EditorWindow
     private double lastTime;// ç≈å„Ç…çXêVÇ≥ÇÍÇΩéûä‘
     private float playbackFrame;
     private float playbackSpeed = 1f;
+    private Vector3 previewPosition;
 
     private readonly Color[] hitColors =
     {
@@ -547,6 +548,8 @@ public class EffectEditorWindow : EditorWindow
 
         GUILayout.Space(10);
         GUILayout.Label($"Frame : {previewFrame}", GUILayout.Width(100));
+        
+        
         GUILayout.FlexibleSpace();
 
         if (GUILayout.Button("Preview", GUILayout.Width(80)))
@@ -608,6 +611,16 @@ public class EffectEditorWindow : EditorWindow
 
         int maxFrame = GetMaxFrame();
         previewFrame = EditorGUILayout.IntSlider("Preview Frame", previewFrame, 0, maxFrame);
+        previewPosition =
+             EditorGUILayout.Vector3Field(
+             "Preview Position",
+             previewPosition
+            );
+        if (previewInstance != null)
+        {
+            previewInstance.transform.position =
+                previewPosition;
+        }
     }
 
     private void DrawTimelineView()
@@ -1010,7 +1023,7 @@ public class EffectEditorWindow : EditorWindow
 
     private int GetMaxFrame()
     {
-        int maxFrame = 60;
+        int maxFrame = 0;
 
         foreach (EffectEvent e in currentPlayer.Events)
         {
