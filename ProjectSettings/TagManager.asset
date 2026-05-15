@@ -8,6 +8,7 @@ TagManager:
   - Tail
   - ExplosionEffect
   - ItemBox
+  - Boss
   layers:
   - Default
   - TransparentFX

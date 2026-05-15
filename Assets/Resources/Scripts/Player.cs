@@ -9,6 +9,9 @@ public class Player : MonoBehaviour
     public float currentSpeed = 0f;
     public float deceleration = 3.0f;// 1秒あたりの減速量
 
+    [Header("Camera")]
+    public Transform cameraTransform;
+
     [Header("各ギアの最低速度")]
     [SerializeField]
     private List<float> gearSpeeds = new List<float>()
@@ -38,6 +41,9 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         currentSpeed  = gearSpeeds[0];
         StartGearUp();
+        if (cameraTransform == null){
+            cameraTransform = Camera.main.transform;
+        }
     }
 
     // Input System の Move イベント
@@ -79,7 +85,18 @@ public class Player : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
+        Vector3 camForward = cameraTransform.forward;
+        Vector3 camRight = cameraTransform.right;
+
+        camForward.y = 0f;
+        camRight.y = 0f;
+
+        camForward.Normalize();
+        camRight.Normalize();
+
+        Vector3 direction =
+            camForward * moveInput.y +
+            camRight * moveInput.x;
 
         // 回転
         if (direction.sqrMagnitude > 0.01f)
