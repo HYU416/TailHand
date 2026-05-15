@@ -1013,17 +1013,25 @@ public class EffectEditorWindow : EditorWindow
             maxFrame = Mathf.Max(maxFrame, e.frame, e.endFrame);
         }
 
-        if (currentPlayer.MainParticle != null)
+        ParticleSystem[] particles =
+            currentPlayer.GetComponentsInChildren<ParticleSystem>(true);
+
+        foreach (ParticleSystem particle in particles)
         {
-            ParticleSystem.MainModule main = currentPlayer.MainParticle.main;
-            float duration = main.duration;
+            if (particle == null)
+                continue;
+
+            ParticleSystem.MainModule main = particle.main;
 
             if (main.loop)
-            {
-                duration = 0;
-            }
+                continue;
 
-            int particleFrame = Mathf.CeilToInt(duration * currentPlayer.FrameRate);
+            int particleFrame =
+                Mathf.CeilToInt(
+                    main.duration *
+                    currentPlayer.FrameRate
+                );
+
             maxFrame = Mathf.Max(maxFrame, particleFrame);
         }
 
