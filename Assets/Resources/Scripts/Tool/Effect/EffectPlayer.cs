@@ -22,6 +22,15 @@ public class EffectPlayer : MonoBehaviour
 
     public int FrameRate => frameRate;
 
+    [SerializeField]
+    private float playSpeed = 1f;
+
+    public float PlaySpeed
+    {
+        get => playSpeed;
+        set => playSpeed = Mathf.Max(0.01f, value);
+    }
+
     private bool isPlaying;
 
     private int currentFrame;
@@ -65,6 +74,9 @@ public class EffectPlayer : MonoBehaviour
             {
                 if (particle != null)
                 {
+                    var main = particle.main;
+                    main.simulationSpeed = playSpeed;
+
                     particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                     particle.Play(true);
                 }
@@ -109,7 +121,7 @@ public class EffectPlayer : MonoBehaviour
 
         if (mainParticle == null) return;
 
-        elapsedTime += Time.deltaTime;
+        elapsedTime += Time.deltaTime * playSpeed;
 
         int frame = Mathf.FloorToInt(elapsedTime * frameRate);
         Debug.Log($"{effectType} Frame : {frame}");
