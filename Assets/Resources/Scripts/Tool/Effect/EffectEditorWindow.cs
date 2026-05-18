@@ -502,6 +502,9 @@ public class EffectEditorWindow : EditorWindow
         //エフェクトのターゲットタグを設定するためのタグフィールドを表示
         currentData.targetTag = EditorGUILayout.TagField("Target Tag", currentData.targetTag);
 
+        //エフェクトの再生速度を設定するためのフロートフィールドを表示
+        currentData.playSpeed = EditorGUILayout.FloatField( "Play Speed", currentData.playSpeed);
+
         //Setupボタン
         if (GUILayout.Button("Setup Effect", GUILayout.Height(40)))
         {

@@ -29,6 +29,8 @@ public class EffectManager : MonoBehaviour
     /// エフェクトタイプとエフェクトプレイヤーのプール
     private Dictionary<EffectType, Queue<EffectPlayer>> pool = new();
 
+    private Dictionary<EffectType, EffectData> dataTable = new();
+
     /// エフェクトマネージャーの作成
     private static void CreateManager()
     {
@@ -53,32 +55,44 @@ public class EffectManager : MonoBehaviour
         Initialize();
     }
 
-    // 初期化
     private void Initialize()
     {
-        // データベースがアサインされていない場合は、Resourcesからロード
         if (database == null)
         {
-            database = Resources.Load<EffectDatabase> ("Data/EffectData/EffectDatabase");
+            database =
+                Resources.Load<EffectDatabase>(
+                    "Data/EffectData/EffectDatabase"
+                );
         }
-        // データベースのロード失敗のチェック
+
         if (database == null)
         {
-            Debug.LogError( "EffectDatabase Not Found");
+            Debug.LogError(
+                "EffectDatabase Not Found"
+            );
+
             return;
         }
-        //prefabTableの初期化
-        prefabTable.Clear();
 
-        // データベースのエフェクトデータからprefabTableを構築
+        prefabTable.Clear();
+        dataTable.Clear();
+
         foreach (EffectData data in database.effects)
         {
             if (data.prefab == null)
                 continue;
-            // 同じEffectTypeが複数登録されている場合は、最初のものだけを使用
-            if (!prefabTable.ContainsKey( data.type ) )
+
+            if (!prefabTable.ContainsKey(data.type))
             {
-                prefabTable.Add( data.type, data.prefab);
+                prefabTable.Add(
+                    data.type,
+                    data.prefab
+                );
+
+                dataTable.Add(
+                    data.type,
+                    data
+                );
             }
         }
     }
@@ -132,6 +146,11 @@ public class EffectManager : MonoBehaviour
         {
             EffectPlayer poolPlayer = pool[type].Dequeue();
             poolPlayer.SetEffectType(type);
+            if (dataTable.ContainsKey(type))
+            {
+                poolPlayer.SetPlaySpeed(dataTable[type].playSpeed);
+            }
+
             return poolPlayer;
         }
         //プールに指定したタイプのエフェクトプレイヤーが存在しない場合は、新規に作成
@@ -152,7 +171,10 @@ public class EffectManager : MonoBehaviour
         }
 
         player.SetEffectType(type);
-
+        if (dataTable.ContainsKey(type))
+        {
+            player.SetPlaySpeed(dataTable[type].playSpeed);
+        }
         return player;
     }
 

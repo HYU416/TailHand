@@ -343,6 +343,11 @@ public class EffectPlayer : MonoBehaviour
         effectType = type;
     }
 
+    public void SetPlaySpeed( float speed)
+    {
+        playSpeed = Mathf.Max(0.01f, speed);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log($"{effectType} Hit : {other.name}");
