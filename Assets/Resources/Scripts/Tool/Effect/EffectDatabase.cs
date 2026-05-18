@@ -17,6 +17,9 @@ public class EffectData
     public EffectType type;
     //エフェクトのプレハブ
     public GameObject prefab;
+    //エフェクトのタグ
+    [TagSelector]
+    public string targetTag;
 }
 
 //エフェクトデータベースを管理するScriptableObjectクラス

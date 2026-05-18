@@ -28,6 +28,8 @@ public enum CapsuleDirection
 [Serializable]
 public class EffectEvent
 {
+    //当たり判定イベントの場合の対象タグ
+    public string hitTag;
     //エディタ上でのプレビュー用の色
     public Color previewColor =Color.red;
     //イベントが発生するフレーム
