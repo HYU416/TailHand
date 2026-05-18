@@ -496,6 +496,7 @@ public class EffectEditorWindow : EditorWindow
         EditorGUILayout.BeginVertical("box");
         //セクションのタイトルを表示
         GUILayout.Label("Effect Info", EditorStyles.boldLabel);
+        EditorGUI.BeginChangeCheck();
         //Prefabフィールドを表示して、ユーザーがエフェクトのPrefabを割り当てられるようにする
         currentData.prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", currentData.prefab, typeof(GameObject), false);
 
@@ -504,6 +505,14 @@ public class EffectEditorWindow : EditorWindow
 
         //エフェクトの再生速度を設定するためのフロートフィールドを表示
         currentData.playSpeed = EditorGUILayout.FloatField( "Play Speed", currentData.playSpeed);
+
+        //変更があった場合は、データベースを保存してアセットを更新
+        if (EditorGUI.EndChangeCheck())
+        {
+            EditorUtility.SetDirty(database);
+
+            AssetDatabase.SaveAssets();
+        }
 
         //Setupボタン
         if (GUILayout.Button("Setup Effect", GUILayout.Height(40)))

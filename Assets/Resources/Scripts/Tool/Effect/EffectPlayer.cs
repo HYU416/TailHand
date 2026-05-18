@@ -238,7 +238,10 @@ public class EffectPlayer : MonoBehaviour
         rb.isKinematic = true;
         rb.useGravity = false;
 
-        if (e.hitTag != null) obj.tag = e.hitTag;
+        if (!string.IsNullOrEmpty(e.hitTag))
+        {
+            obj.tag = e.hitTag;
+        }
         switch (e.colliderType)
         {
             case HitColliderType.Sphere:

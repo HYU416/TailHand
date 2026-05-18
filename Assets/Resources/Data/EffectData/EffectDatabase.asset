@@ -14,8 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EffectDatabase
   effects:
   - type: 0
-    prefab: {fileID: 4047225120726829713, guid: 70d46e2c4db1aec4b83115b67ec8ad16, type: 3}
+    prefab: {fileID: 8411288342181989615, guid: 261f057c6c3b23e4b8f3d5efa3858284, type: 3}
+    targetTag: ExplosionEffect
+    playSpeed: 6
   - type: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 8411288342181989615, guid: 8af233b2cc1b03f4aacafeca2fc21d1f, type: 3}
+    targetTag: ExplosionEffect
+    playSpeed: 6
   - type: 2
     prefab: {fileID: 0}
+    targetTag: 
+    playSpeed: 1
+  - type: 3
+    prefab: {fileID: 0}
+    targetTag: 
+    playSpeed: 1
