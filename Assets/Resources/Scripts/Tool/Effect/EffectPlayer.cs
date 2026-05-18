@@ -229,6 +229,16 @@ public class EffectPlayer : MonoBehaviour
 
         Collider created = null;
 
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = obj.AddComponent<Rigidbody>();
+        }
+
+        rb.isKinematic = true;
+        rb.useGravity = false;
+
+        obj.tag = e.hitTag;
         switch (e.colliderType)
         {
             case HitColliderType.Sphere:
@@ -278,10 +288,13 @@ public class EffectPlayer : MonoBehaviour
                 break;
         }
 
+        
         if (created != null)
         {
             activeColliders.Add(e.hitId, created);
         }
+
+       
     }
 
     private void RemoveHitCollider(int id)
