@@ -3,133 +3,106 @@ using UnityEngine.InputSystem;
 
 public class PlayerCatchEnemy : MonoBehaviour
 {
-    [Header("Catch")]
-    public float catchRange = 8.0f;
     public Transform tailEnd;
-    public KeyCode catchKey = KeyCode.K;
 
-    [Header("Debug")]
-    public bool drawVision = false;
-    public int visionSegments = 40;
+    [HideInInspector]
+    public Transform touchingTarget;
 
-    LineRenderer visionLine;
+    private Transform caughtTarget;
+
+    private Vector3 prevTailPos;
+    private Vector3 tailVelocity;
 
     void Start()
     {
-        if (drawVision)
-        {
-            visionLine = gameObject.AddComponent<LineRenderer>();
+        prevTailPos = tailEnd.position;
+    }
 
-            visionLine.loop = true;
-            visionLine.widthMultiplier = 0.05f;
-            visionLine.positionCount = visionSegments;
-
-            visionLine.material = new Material(Shader.Find("Sprites/Default"));
-            visionLine.startColor = Color.green;
-            visionLine.endColor = Color.green;
-        }
+    void Update()
+    {
+        tailVelocity = (tailEnd.position - prevTailPos) / Time.deltaTime;
+        prevTailPos = tailEnd.position;
     }
 
     public void OnCatch(InputValue value)
     {
         if (value.isPressed)
         {
-            CatchEnemy();
+            CatchTarget();
         }
-    }
-    void Update()
-    {
-        if (drawVision && visionLine != null)
+        else
         {
-            DrawVisionCircle();
+            ReleaseTarget();
         }
     }
 
-    void CatchEnemy()
+    void CatchTarget()
     {
-        //ä˘Ç…EnemyÇ™Ç¢ÇÈÇ»ÇÁâΩÇ‡ÇµÇ»Ç¢
-        if (tailEnd.childCount > 0)
+        if (caughtTarget != null) return;
+
+        if (touchingTarget == null) return;
+
+        Rigidbody rb = touchingTarget.GetComponent<Rigidbody>();
+
+        if (rb != null)
         {
-            Debug.Log("ÉLÉÉÉbÉ`ÇµÇƒÇ‹Ç∑Å[Å[Å[ÅIÅIÅI");
-            return;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
         }
 
-        //îÕàÕì‡Ç…EnemyÇ™Ç¢Ç»Ç¢Ç»ÇÁåüçıÇ‡ÇµÇ»Ç¢
-        Collider[] hits = Physics.OverlapSphere(transform.position, catchRange);
+        Collider[] cols = touchingTarget.GetComponentsInChildren<Collider>();
 
-        Transform closest = null;
-        Enemy targetEnemy = null;
-        float closestDist = catchRange;
-
-        foreach (Collider hit in hits)
+        foreach (Collider col in cols)
         {
-            if (!hit.CompareTag("Enemy")) continue;
-
-            Enemy e = hit.GetComponent<Enemy>();
-            if (e == null || e.Catch) continue;
-
-            float dist = DistanceXZ(transform.position, hit.transform.position);
-
-            if (dist < closestDist)
-            {
-                closestDist = dist;
-                closest = hit.transform;
-                targetEnemy = e;
-            }
+            col.enabled = false;
         }
 
-        if (closest != null)
-        {
-            targetEnemy.Catch = true;
-            targetEnemy.OnCaught();
+        // ÂÖÉ„ÅÆ„Çπ„Ç±„Éº„É´‰øùÂ≠ò
+        Vector3 originalScale = touchingTarget.localScale;
 
-            Rigidbody rb = closest.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = true;
-            }
+        touchingTarget.SetParent(tailEnd, false);
 
-            Collider[] cols = closest.GetComponentsInChildren<Collider>();
-            foreach (Collider col in cols)
-            {
-                col.enabled = false;
-            }
+        touchingTarget.localPosition = Vector3.zero;
+        touchingTarget.localRotation = Quaternion.identity;
 
-            closest.SetParent(tailEnd, false);
-            closest.localPosition = Vector3.zero;
-            closest.localRotation = Quaternion.identity;
-            Vector3 parentScale = tailEnd.lossyScale;
-            closest.localScale = new Vector3(
-                1f / parentScale.x,
-                1f / parentScale.y,
-                1f / parentScale.z);
-        }
+        // Ë¶™„Çπ„Ç±„Éº„É´Êâì„Å°Ê∂à„Åó
+        Vector3 parentScale = tailEnd.lossyScale;
+
+        touchingTarget.localScale = new Vector3(
+            originalScale.x / parentScale.x,
+            originalScale.y / parentScale.y,
+            originalScale.z / parentScale.z);
+
+        caughtTarget = touchingTarget;
+        touchingTarget = null;
+
+        Debug.Log("„Ç≠„É£„ÉÉ„ÉÅÔºÅ");
     }
 
-    float DistanceXZ(Vector3 a, Vector3 b)
+    void ReleaseTarget()
     {
-        Vector2 a2 = new Vector2(a.x, a.z);
-        Vector2 b2 = new Vector2(b.x, b.z);
+        if (caughtTarget == null) return;
 
-        return Vector2.Distance(a2, b2);
-    }
+        Rigidbody rb = caughtTarget.GetComponent<Rigidbody>();
 
-    void DrawVisionCircle()
-    {
-        float angle = 0f;
+        caughtTarget.SetParent(null);
 
-        for (int i = 0; i < visionSegments; i++)
+        Collider[] cols = caughtTarget.GetComponentsInChildren<Collider>();
+
+        foreach (Collider col in cols)
         {
-            float x = Mathf.Cos(Mathf.Deg2Rad * angle) * catchRange;
-            float z = Mathf.Sin(Mathf.Deg2Rad * angle) * catchRange;
-
-            Vector3 pos = new Vector3(x, 0, z) + transform.position;
-
-            visionLine.SetPosition(i, pos);
-
-            angle += 360f / visionSegments;
+            col.enabled = true;
         }
+
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.linearVelocity = tailVelocity;
+        }
+
+        Debug.Log("Êäï„Åí„ÅüÔºÅ");
+
+        caughtTarget = null;
     }
 }

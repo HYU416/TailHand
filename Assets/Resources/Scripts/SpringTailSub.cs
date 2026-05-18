@@ -198,7 +198,7 @@ public class SpringTailSub : MonoBehaviour
 
         data.rb.linearVelocity = vec;
 
-        Debug.Log("aa");
+        //Debug.Log("aa");
     }
 
     // 指定した許容値よりおおきければTrueを返す
