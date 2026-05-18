@@ -890,96 +890,89 @@ public class EffectEditorWindow : EditorWindow
         };
     }
 
+    // タイムラインと下パネルの境界線を描画し、ドラッグによる高さ変更を行う
     private void DrawResizeBar()
     {
-        Rect resizeRect =
-            GUILayoutUtility.GetRect(
-                position.width,
-                6f
-            );
+        // リサイズバー用のRectを取得
+        Rect resizeRect =GUILayoutUtility.GetRect( position.width,6f );
 
-        EditorGUI.DrawRect(
-            resizeRect,
-            new Color(0.15f, 0.15f, 0.15f)
-        );
-
-        EditorGUIUtility.AddCursorRect(
-            resizeRect,
-            MouseCursor.ResizeVertical
-        );
+        EditorGUI.DrawRect(resizeRect, new Color(0.15f, 0.15f, 0.15f) );
+        // マウスカーソルを上下リサイズ表示に変更
+        EditorGUIUtility.AddCursorRect( resizeRect, MouseCursor.ResizeVertical);
 
         Event e = Event.current;
 
         switch (e.type)
         {
             case EventType.MouseDown:
-
-                if (resizeRect.Contains(e.mousePosition))
-                {
-                    resizingPanels = true;
-                }
-
+                // リサイズバー上ならドラッグ開始
+                if (resizeRect.Contains(e.mousePosition)) resizingPanels = true;
                 break;
 
             case EventType.MouseDrag:
-
+                // リサイズ中なら高さを変更
                 if (resizingPanels)
                 {
                     topPanelHeight += e.delta.y;
-
-                    topPanelHeight =
-                        Mathf.Clamp(
-                            topPanelHeight,
-                            200f,
-                            position.height - 200f
-                        );
-
+                    // 高さ制限
+                    topPanelHeight = Mathf.Clamp( topPanelHeight, 200f,position.height - 200f );
+                    // 再描画
                     Repaint();
                 }
 
                 break;
 
             case EventType.MouseUp:
-
+                // リサイズ終了
                 resizingPanels = false;
 
                 break;
         }
     }
 
+    // タイムライン全体の描画を行う
     private void DrawTimeline()
     {
+        //タイトル表示
         GUILayout.Label("Timeline", EditorStyles.boldLabel);
 
+        //イベント配列を取得
         SerializedObject so = new SerializedObject(currentPlayer);
         SerializedProperty events = so.FindProperty("events");
-
+        // 最大フレーム数を計算しフレーム数に応じて横幅を拡張
         int maxFrame = CalculateMaxFrame(events);
         float extraWidth = Mathf.Max(0, GetMaxFrame() - 60) * 30;
         Rect rect = GUILayoutUtility.GetRect(1200 + extraWidth, 60 + events.arraySize * 28);
 
         EditorGUI.DrawRect(rect, new Color(0.12f, 0.12f, 0.12f));
-
+        // 1フレームあたりの横幅を計算
         float frameWidth = rect.width / Mathf.Max(1, maxFrame);
-
+        // 再生中なら自動スクロール
         if (isPlaying)
         {
             AutoScrollTimeline(rect, frameWidth);
         }
-
+        // イベントクリック処理
         bool clickedEvent = HandleEventClicks(events, rect, frameWidth);
+        // 再生位置描画
         DrawPlayhead(rect, frameWidth);
+        // グリッド描画
         DrawTimelineGrid(rect, frameWidth, maxFrame);
+        // タイムラインクリック処理
         HandleTimelineClick(rect, frameWidth, maxFrame, clickedEvent);
+        // イベント描画
         DrawTimelineEvents(events, rect, frameWidth);
     }
 
+    // events配列から最大フレーム数を取得する
     private int CalculateMaxFrame(SerializedProperty events)
     {
-        int maxFrame = 60;
+        int maxFrame = 0;
         for (int i = 0; i < events.arraySize; i++)
         {
+            // イベント取得
             SerializedProperty e = events.GetArrayElementAtIndex(i);
+            // 開始フレームと終了フレームを取得して、最大値を更新
             int startFrame = e.FindPropertyRelative("frame").intValue;
             int endFrame = e.FindPropertyRelative("endFrame").intValue;
             maxFrame = Mathf.Max(maxFrame, startFrame, endFrame, GetMaxFrame());
@@ -987,19 +980,23 @@ public class EffectEditorWindow : EditorWindow
         return maxFrame;
     }
 
+    // 再生位置に合わせてタイムラインを自動スクロールする
     private void AutoScrollTimeline(Rect rect, float frameWidth)
     {
+        //再生位置に合わせてスクロール位置を調整
         float autoScrollPlayheadX = rect.x + previewFrame * frameWidth;
         float viewWidth = position.width - 40;
         timelineScroll.x = Mathf.Max(0, autoScrollPlayheadX - viewWidth * 0.5f);
     }
 
+    // タイムラインイベントのクリック処理を行う
     private bool HandleEventClicks(SerializedProperty events, Rect rect, float frameWidth)
     {
         bool clickedEvent = false;
 
         for (int i = 0; i < events.arraySize; i++)
         {
+            // イベント取得
             SerializedProperty e = events.GetArrayElementAtIndex(i);
             Rect eventRect = GetEventRect(e, rect, frameWidth, i);
             Event current = Event.current;
@@ -1008,16 +1005,18 @@ public class EffectEditorWindow : EditorWindow
             {
                 clickedEvent = true;
                 selectedEventIndex = i;
-
+                // ダブルクリックで編集開始
                 if (current.clickCount == 2)
                 {
                     editingEventIndex = i;
                     editHitEvent = currentPlayer.Events[i];
+                    // プレビュー位置更新
                     previewFrame = e.FindPropertyRelative("frame").intValue;
                     PreviewFrame(previewFrame);
                 }
-
+                // 再描画
                 Repaint();
+                // イベント消費
                 current.Use();
             }
         }
@@ -1025,15 +1024,17 @@ public class EffectEditorWindow : EditorWindow
         return clickedEvent;
     }
 
+    // タイムライン上の現在再生位置を描画
     private void DrawPlayhead(Rect rect, float frameWidth)
     {
+        // 再生ヘッドのX座標を計算
         float playheadX = rect.x + previewFrame * frameWidth;
-
+        // 縦線描画
         EditorGUI.DrawRect(new Rect(playheadX, rect.y, 2, rect.height), Color.red);
 
         Handles.BeginGUI();
         Handles.color = Color.red;
-
+        // 再生ヘッド上部の三角形頂点
         Vector3[] triangle =
         {
             new Vector3(playheadX - 6, rect.y),
@@ -1043,66 +1044,84 @@ public class EffectEditorWindow : EditorWindow
 
         Handles.DrawAAConvexPolygon(triangle);
         Handles.EndGUI();
-
+        // 現在フレーム数表示
         GUI.Label(new Rect(playheadX + 4, rect.y + 10, 40, 20), previewFrame.ToString());
     }
 
+    // タイムラインのグリッド線とフレーム番号を描画する
     private void DrawTimelineGrid(Rect rect, float frameWidth, int maxFrame)
     {
         for (int i = 0; i <= maxFrame; i++)
         {
+            // グリッド線のX座標を計算
             float x = rect.x + frameWidth * i;
+            // 縦グリッド線描画
             EditorGUI.DrawRect(new Rect(x, rect.y, 1, rect.height), new Color(0.25f, 0.25f, 0.25f));
+            // フレーム番号描画
             GUI.Label(new Rect(x + 2, rect.y + 2, 30, 20), i.ToString());
         }
     }
 
+    // タイムラインクリック時に再生フレームを変更する
     private void HandleTimelineClick(Rect rect, float frameWidth, int maxFrame, bool clickedEvent)
     {
+        // イベント上をクリックしていない場合のみ処理
         if (!clickedEvent && Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
         {
             float localX = Event.current.mousePosition.x - rect.x;
+            // クリック位置からフレーム番号計算
             previewFrame = Mathf.Clamp(Mathf.RoundToInt(localX / frameWidth), 0, maxFrame);
+            // フレームプレビュー更新
             PreviewFrame(previewFrame);
+            // 再描画
             Repaint();
+            // イベント消費
             Event.current.Use();
         }
     }
 
+    // タイムラインイベントを描画する
     private void DrawTimelineEvents(SerializedProperty events, Rect rect, float frameWidth)
     {
         for (int i = 0; i < events.arraySize; i++)
         {
+            // イベント取得
             SerializedProperty e = events.GetArrayElementAtIndex(i);
+            // イベントの種類とhitIdを取得して色を決定
             EffectEventType eventType = (EffectEventType)e.FindPropertyRelative("type").enumValueIndex;
             int hitId = eventType == EffectEventType.Hit ? e.FindPropertyRelative("hitId").intValue : 0;
+            // イベントの開始フレームを取得
             int frame = e.FindPropertyRelative("frame").intValue;
 
             Color color = GetEventColor(eventType, hitId);
             Rect eventRect = GetEventRect(e, rect, frameWidth, i);
-
+            // 選択状態
             bool selected = selectedEventIndex == i;
+            // 編集状態
             bool editing = editingEventIndex == i;
-
+            // イベント本体描画
             EditorGUI.DrawRect(eventRect, color);
-
+            // 選択中または編集中なら枠描画
             if (selected || editing)
             {
                 DrawEventOutline(eventRect, editing);
             }
 
             float y = rect.y + EVENT_Y_OFFSET + i * EVENT_SPACING;
+            // イベント名表示
             GUI.Label(new Rect(5, y - 2, 80, 20), eventType == EffectEventType.Hit ? $"Hit{hitId}" : eventType.ToString());
         }
     }
 
+    // 選択中イベントの枠線を描画する
     private void DrawEventOutline(Rect eventRect, bool editing)
     {
         Handles.BeginGUI();
-
+        // 元の色保存
         Color old = Handles.color;
+        // 編集中なら緑、それ以外は黄色
         Handles.color = editing ? Color.green : Color.yellow;
-
+        // 枠線頂点
         Vector3[] lines =
         {
             new Vector3(eventRect.x, eventRect.y),
@@ -1111,40 +1130,48 @@ public class EffectEditorWindow : EditorWindow
             new Vector3(eventRect.x, eventRect.yMax),
             new Vector3(eventRect.x, eventRect.y)
         };
-
+        // 枠線描画
         Handles.DrawAAPolyLine(3f, lines);
+        // 色を戻す
         Handles.color = old;
         Handles.EndGUI();
     }
 
+    // イベントタイプごとの詳細項目描画を行う
     private void DrawEventFields(SerializedProperty e, EffectEventType type, int index)
     {
         switch (type)
         {
+            // Hitイベント描画
             case EffectEventType.Hit:
                 DrawHitEvent(e, index);
                 break;
+            // Soundイベント描画
             case EffectEventType.Sound:
                 DrawSoundEvent(e);
                 break;
+            // CameraShakeイベント描画
             case EffectEventType.CameraShake:
                 DrawCameraShakeEvent(e);
                 break;
+            // Functionイベント描画
             case EffectEventType.Function:
                 DrawFunctionEvent(e);
                 break;
         }
     }
 
+    // Hitイベントの詳細項目を描画
     private void DrawHitEvent(SerializedProperty e, int index)
     {
+        // 共通パラメータ描画
         EditorGUILayout.PropertyField(e.FindPropertyRelative("hitId"));
         EditorGUILayout.PropertyField(e.FindPropertyRelative("colliderType"));
         EditorGUILayout.PropertyField(e.FindPropertyRelative("hitOffset"));
         EditorGUILayout.PropertyField(e.FindPropertyRelative("previewColor"));
-
+        // コライダータイプ取得
         HitColliderType type = (HitColliderType)e.FindPropertyRelative("colliderType").enumValueIndex;
-
+        // コライダータイプ別パラメータ描画
         switch (type)
         {
             case HitColliderType.Sphere:
@@ -1159,21 +1186,28 @@ public class EffectEditorWindow : EditorWindow
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("capsuleDirection"));
                 break;
         }
-
+        // 編集ボタン
         if (GUILayout.Button("Edit"))
         {
+            // 選択イベント更新
             selectedEventIndex = index;
+            // 編集イベント更新
             editingEventIndex = index;
+            // 編集対象保持
             editHitEvent = (EffectEvent)e.boxedValue;
+            // プレビュー位置更新
             PreviewFrame(e.FindPropertyRelative("frame").intValue);
         }
     }
 
+    // Soundイベントの詳細項目を描画
     private void DrawSoundEvent(SerializedProperty e)
     {
+        // BGMかSEかのフラグ
         SerializedProperty useBGM = e.FindPropertyRelative("useBGM");
         EditorGUILayout.PropertyField(useBGM, new GUIContent("Use BGM"));
 
+        // BGMならbgmフィールド、SEならseフィールドを表示
         if (useBGM.boolValue)
         {
             EditorGUILayout.PropertyField(e.FindPropertyRelative("bgm"));
@@ -1184,6 +1218,7 @@ public class EffectEditorWindow : EditorWindow
         }
     }
 
+    // CameraShakeイベントの詳細項目を描画
     private void DrawCameraShakeEvent(SerializedProperty e)
     {
         EditorGUILayout.PropertyField(e.FindPropertyRelative("shakePower"));
@@ -1192,14 +1227,17 @@ public class EffectEditorWindow : EditorWindow
         EditorGUILayout.PropertyField(e.FindPropertyRelative("shakeCurve"));
     }
 
+    // Functionイベントの詳細項目を描画
     private void DrawFunctionEvent(SerializedProperty e)
     {
         EditorGUILayout.PropertyField(e.FindPropertyRelative("onEvent"));
     }
 
+    // SceneView上のPositionHandleを描画
     private bool DrawPositionHandle(ref Vector3 position, string undoName)
     {
         EditorGUI.BeginChangeCheck();
+        // PositionHandle描画
         Vector3 newPos = Handles.PositionHandle(position, Quaternion.identity);
 
         if (!EditorGUI.EndChangeCheck())
@@ -1212,6 +1250,7 @@ public class EffectEditorWindow : EditorWindow
         return true;
     }
 
+    // 指定フレーム時点のパーティクル状態をプレビュー
     private void PreviewFrame(int frame)
     {
         if (currentData == null)
@@ -1221,8 +1260,9 @@ public class EffectEditorWindow : EditorWindow
         {
             DestroyImmediate(previewInstance);
         }
-
+        // プレビュー用Prefab生成
         previewInstance = Instantiate(currentData.prefab);
+        // ヒエラルキー非表示設定
         previewInstance.hideFlags = HideFlags.HideAndDontSave;
 
         // 子オブジェクトを含むすべてのパーティクルシステムを取得
@@ -1230,9 +1270,10 @@ public class EffectEditorWindow : EditorWindow
         
         if (allParticles == null || allParticles.Length == 0)
             return;
-
+        // EffectPlayer取得
         EffectPlayer player = previewInstance.GetComponent<EffectPlayer>();
         SerializedObject so = new SerializedObject(player);
+        // フレームレート取得し、秒数変換
         int frameRate = so.FindProperty("frameRate").intValue;
         float time = frame / (float)Mathf.Max(1, frameRate);
 
