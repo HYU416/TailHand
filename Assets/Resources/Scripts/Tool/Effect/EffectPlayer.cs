@@ -238,7 +238,7 @@ public class EffectPlayer : MonoBehaviour
         rb.isKinematic = true;
         rb.useGravity = false;
 
-        obj.tag = e.hitTag;
+        if (e.hitTag != null) obj.tag = e.hitTag;
         switch (e.colliderType)
         {
             case HitColliderType.Sphere:
@@ -336,6 +336,11 @@ public class EffectPlayer : MonoBehaviour
                 RemoveHitCollider(e.hitId);
             }
         }
+    }
+
+    public void SetEffectType(EffectType type)
+    {
+        effectType = type;
     }
 
     private void OnTriggerEnter(Collider other)

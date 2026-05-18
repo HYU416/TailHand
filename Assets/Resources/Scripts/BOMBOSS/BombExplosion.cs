@@ -15,6 +15,7 @@
  * ==========================================================
  */
 
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BombExplosion : MonoBehaviour
@@ -281,24 +282,15 @@ public class BombExplosion : MonoBehaviour
 
         if (explosionEffectPrefab != null)
         {
-            GameObject effect = Instantiate(
-                explosionEffectPrefab,
-                transform.position,
-                Quaternion.identity
-            );
 
-            effect.transform.localScale *= explosionEffectScaleMultiplier;
-
-            BombEffect bombEffect = effect.GetComponent<BombEffect>();
-
-            if (bombEffect == null)
+            //エフェクトの生成
+            if (transform.localScale.x  == 2.0f)
             {
-                bombEffect = effect.GetComponentInChildren<BombEffect>();
+                EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
             }
-
-            if (bombEffect != null)
+            else
             {
-                bombEffect.maxScale *= explosionEffectScaleMultiplier;
+                EffectManager.Instance.Play(EffectType.Explosion, transform.position);
             }
         }
         else

@@ -130,7 +130,9 @@ public class EffectManager : MonoBehaviour
         //プールから指定したタイプのエフェクトプレイヤーを取得
         if (pool[type].Count > 0)
         {
-            return pool[type].Dequeue();
+            EffectPlayer poolPlayer = pool[type].Dequeue();
+            poolPlayer.SetEffectType(type);
+            return poolPlayer;
         }
         //プールに指定したタイプのエフェクトプレイヤーが存在しない場合は、新規に作成
         if (!prefabTable.ContainsKey(type))
@@ -148,6 +150,8 @@ public class EffectManager : MonoBehaviour
             Debug.LogError( "EffectPlayer Missing"  );
             return null;
         }
+
+        player.SetEffectType(type);
 
         return player;
     }

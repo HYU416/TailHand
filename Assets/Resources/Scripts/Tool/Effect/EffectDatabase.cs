@@ -6,6 +6,7 @@ using UnityEngine;
 public enum EffectType
 {
     Explosion,          //”š”­
+    Explosion2,          //”š”­2
     Slash,              //ŽaŒ‚
     Fire                //‰Š
 }
