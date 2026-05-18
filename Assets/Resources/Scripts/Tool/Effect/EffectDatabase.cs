@@ -21,6 +21,8 @@ public class EffectData
     //エフェクトのタグ
     [TagSelector]
     public string targetTag;
+    //エフェクト再生速度
+    public float playSpeed = 1f;
 }
 
 //エフェクトデータベースを管理するScriptableObjectクラス
