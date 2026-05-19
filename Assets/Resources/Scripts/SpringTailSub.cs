@@ -8,6 +8,7 @@ public class SpringTailSub : MonoBehaviour
     {
         public Transform transform;                           // 自身のTransform情報
         public Rigidbody rb;
+        public Quaternion storeQuat;
 
         [HideInInspector] public Vector3 currentPos;          // 現在の座標
         [HideInInspector] public Vector3 lastPos;             // 前回の座標
@@ -34,8 +35,6 @@ public class SpringTailSub : MonoBehaviour
     [Header("XZ方向の加速の最大値")]
     [SerializeField] private float maxForceXZ = 120.0f;
     private const int loopCount = 5;
-    public Vector3 tipPos;
-    public Vector3 rearEndPos;
 
     void Start()
     {
@@ -44,6 +43,7 @@ public class SpringTailSub : MonoBehaviour
         for (int i = 0; i < chainCount; ++i)
         {
             // chainデータの初期化
+            chainsData[i].storeQuat = chainsData[i].transform.rotation;
             chainsData[i].currentPos = chainsData[i].transform.position;
             chainsData[i].lastPos = chainsData[i].transform.position;
             chainsData[i].attractiveForce = new Vector3(0, 0, 0);
@@ -166,10 +166,11 @@ public class SpringTailSub : MonoBehaviour
     {
         // 親への方向へ向くように補正
         var parentData = chainsData[data.prevChainIndex];
-        Vector3 dir = (parentData.currentPos - rearEndPos) - (data.currentPos - tipPos);
+        Vector3 dir = (parentData.currentPos) - (data.currentPos);
 
         if (dir.sqrMagnitude > 0.0001f)
         {
+            dir = data.storeQuat * dir;
             var quat = Quaternion.LookRotation(dir);
             data.rb.MoveRotation(quat);
         }
@@ -197,8 +198,6 @@ public class SpringTailSub : MonoBehaviour
             vec.y -= 9.81f * 0.06f;
 
         data.rb.linearVelocity = vec;
-
-        //Debug.Log("aa");
     }
 
     // 指定した許容値よりおおきければTrueを返す
