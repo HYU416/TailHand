@@ -1,9 +1,18 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerCatchEnemy : MonoBehaviour
 {
     public Transform tailEnd;
+
+    [Header("投げる強さ")]
+    [SerializeField] private float normalThrowMultiplier = 1.0f;
+
+    [Header("不発弾を投げる時の設定")]
+    [SerializeField] private float dudBombMassWhileCaught = 0.1f;
+    [SerializeField] private float dudBombThrowMultiplier = 3.0f;
+    [SerializeField] private float dudBombMassRestoreTime = 1.0f;
 
     [HideInInspector]
     public Transform touchingTarget;
@@ -13,13 +22,22 @@ public class PlayerCatchEnemy : MonoBehaviour
     private Vector3 prevTailPos;
     private Vector3 tailVelocity;
 
+    private Rigidbody massChangedRb;
+    private float originalMass;
+    private bool caughtTargetIsDudBomb;
+
     void Start()
     {
-        prevTailPos = tailEnd.position;
+        if (tailEnd != null)
+        {
+            prevTailPos = tailEnd.position;
+        }
     }
 
     void Update()
     {
+        if (tailEnd == null) return;
+
         tailVelocity = (tailEnd.position - prevTailPos) / Time.deltaTime;
         prevTailPos = tailEnd.position;
     }
@@ -39,15 +57,25 @@ public class PlayerCatchEnemy : MonoBehaviour
     void CatchTarget()
     {
         if (caughtTarget != null) return;
-
         if (touchingTarget == null) return;
+        if (tailEnd == null) return;
 
         Rigidbody rb = touchingTarget.GetComponent<Rigidbody>();
+
+        caughtTargetIsDudBomb = IsDudBomb(touchingTarget);
 
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
+
+            if (caughtTargetIsDudBomb)
+            {
+                massChangedRb = rb;
+                originalMass = rb.mass;
+                rb.mass = dudBombMassWhileCaught;
+            }
+
             rb.isKinematic = true;
         }
 
@@ -58,7 +86,6 @@ public class PlayerCatchEnemy : MonoBehaviour
             col.enabled = false;
         }
 
-        // 元のスケール保存
         Vector3 originalScale = touchingTarget.localScale;
 
         touchingTarget.SetParent(tailEnd, false);
@@ -66,13 +93,13 @@ public class PlayerCatchEnemy : MonoBehaviour
         touchingTarget.localPosition = Vector3.zero;
         touchingTarget.localRotation = Quaternion.identity;
 
-        // 親スケール打ち消し
         Vector3 parentScale = tailEnd.lossyScale;
 
         touchingTarget.localScale = new Vector3(
-            originalScale.x / parentScale.x,
-            originalScale.y / parentScale.y,
-            originalScale.z / parentScale.z);
+            parentScale.x != 0 ? originalScale.x / parentScale.x : originalScale.x,
+            parentScale.y != 0 ? originalScale.y / parentScale.y : originalScale.y,
+            parentScale.z != 0 ? originalScale.z / parentScale.z : originalScale.z
+        );
 
         caughtTarget = touchingTarget;
         touchingTarget = null;
@@ -84,11 +111,12 @@ public class PlayerCatchEnemy : MonoBehaviour
     {
         if (caughtTarget == null) return;
 
-        Rigidbody rb = caughtTarget.GetComponent<Rigidbody>();
+        Transform releasedTarget = caughtTarget;
+        Rigidbody rb = releasedTarget.GetComponent<Rigidbody>();
 
-        caughtTarget.SetParent(null);
+        releasedTarget.SetParent(null);
 
-        Collider[] cols = caughtTarget.GetComponentsInChildren<Collider>();
+        Collider[] cols = releasedTarget.GetComponentsInChildren<Collider>();
 
         foreach (Collider col in cols)
         {
@@ -98,11 +126,42 @@ public class PlayerCatchEnemy : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = false;
-            rb.linearVelocity = tailVelocity;
+
+            float throwMultiplier = caughtTargetIsDudBomb
+                ? dudBombThrowMultiplier
+                : normalThrowMultiplier;
+
+            rb.linearVelocity = tailVelocity * throwMultiplier;
+
+            if (caughtTargetIsDudBomb && massChangedRb == rb)
+            {
+                StartCoroutine(RestoreMassAfterDelay(rb, originalMass, dudBombMassRestoreTime));
+            }
         }
 
         Debug.Log("投げた！");
 
         caughtTarget = null;
+        caughtTargetIsDudBomb = false;
+        massChangedRb = null;
+    }
+
+    private bool IsDudBomb(Transform target)
+    {
+        if (target == null) return false;
+
+        string objName = target.name.Replace("(Clone)", "").Trim();
+
+        return objName == "NO BOM";
+    }
+
+    private IEnumerator RestoreMassAfterDelay(Rigidbody rb, float mass, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (rb != null)
+        {
+            rb.mass = mass;
+        }
     }
 }

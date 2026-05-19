@@ -37,63 +37,78 @@ public class DudBomb : MonoBehaviour
 
         if (other.CompareTag(explosionEffectTag))
         {
-            ChainExplode();
+            Explode("不発弾が爆発エフェクトに触れて誘爆しました");
         }
     }
 
-    void ChainExplode()
+    public void ExplodeByBossHit()
+    {
+        if (hasExploded) return;
+
+        Explode("不発弾がボスの壁またはコアに当たって爆発しました");
+    }
+
+    private void Explode(string logMessage)
     {
         if (hasExploded) return;
 
         hasExploded = true;
 
-        Debug.Log("不発弾が爆発エフェクトに触れて誘爆しました");
+        Debug.Log(logMessage);
 
-        if (explosionEffectPrefab != null)
-        {
-            GameObject effect = Instantiate(
-                explosionEffectPrefab,
-                transform.position,
-                Quaternion.identity
-            );
+        SpawnExplosionEffect();
+        CheckExplosionHit();
 
-            effect.transform.localScale *= explosionEffectScaleMultiplier;
+        Destroy(gameObject);
+    }
 
-            BombEffect bombEffect = effect.GetComponent<BombEffect>();
-
-            if (bombEffect == null)
-            {
-                bombEffect = effect.GetComponentInChildren<BombEffect>();
-            }
-
-            if (bombEffect != null)
-            {
-                bombEffect.maxScale *= explosionEffectScaleMultiplier;
-            }
-        }
-        else
+    private void SpawnExplosionEffect()
+    {
+        if (explosionEffectPrefab == null)
         {
             Debug.LogWarning("不発弾の Explosion Effect Prefab が設定されていません");
+            return;
         }
 
+        GameObject effect = Instantiate(
+            explosionEffectPrefab,
+            transform.position,
+            Quaternion.identity
+        );
+
+        effect.transform.localScale *= explosionEffectScaleMultiplier;
+
+        BombEffect bombEffect = effect.GetComponent<BombEffect>();
+
+        if (bombEffect == null)
+        {
+            bombEffect = effect.GetComponentInChildren<BombEffect>();
+        }
+
+        if (bombEffect != null)
+        {
+            bombEffect.maxScale *= explosionEffectScaleMultiplier;
+        }
+    }
+
+    private void CheckExplosionHit()
+    {
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
 
         foreach (Collider hit in hits)
         {
             if (hit.CompareTag("Player"))
             {
-                Debug.Log("プレイヤーが不発弾の誘爆に当たりました");
+                Debug.Log("プレイヤーが不発弾の爆発に当たりました");
 
-                //PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
-
-                //if (playerHealth != null)
-                //{
-                //    playerHealth.TakeDamage(damage);
-                //}
+                // PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                //
+                // if (playerHealth != null)
+                // {
+                //     playerHealth.TakeDamage(damage);
+                // }
             }
         }
-
-        Destroy(gameObject);
     }
 
     void OnDrawGizmosSelected()
