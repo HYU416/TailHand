@@ -8,6 +8,18 @@ public class BossCorePart : MonoBehaviour
     [Header("壁が壊れるまでコアを攻撃不可にする")]
     [SerializeField] private bool requireArmorBroken = true;
 
+    [Header("テスト用：不発弾がコアに当たったら一撃で段階破壊")]
+    [SerializeField] private bool dudBombOneShotCore = true;
+
+    [Header("通常時：不発弾でコアに与えるダメージ")]
+    [SerializeField] private int dudBombCoreDamage = 1;
+
+    [Header("一撃破壊時に与えるダメージ")]
+    [SerializeField] private int oneShotCoreDamage = 999;
+
+    [Header("デバッグログ")]
+    [SerializeField] private bool showDebugLog = true;
+
     private bool isAttackable;
 
     public void Setup(BossPhaseController controller)
@@ -19,46 +31,200 @@ public class BossCorePart : MonoBehaviour
     public void SetAttackable(bool value)
     {
         isAttackable = value;
+
+        if (showDebugLog)
+        {
+            Debug.Log(gameObject.name + " コア攻撃可能状態: " + isAttackable);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        BossBombHitMarker bombMarker = collision.gameObject.GetComponent<BossBombHitMarker>();
-
-        if (bombMarker == null)
-        {
-            bombMarker = collision.gameObject.GetComponentInParent<BossBombHitMarker>();
-        }
-
-        if (bombMarker == null)
+        if (collision == null)
         {
             return;
         }
 
-        if (!isAttackable)
+        CheckHit(collision.gameObject, collision.collider, collision.rigidbody);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        CheckHit(other != null ? other.gameObject : null, other, other != null ? other.attachedRigidbody : null);
+    }
+
+    private void CheckHit(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        DudBomb dudBomb = FindDudBomb(hitObject, hitCollider, hitRigidbody);
+        BossBombHitMarker bombMarker = FindBombMarker(hitObject, hitCollider, hitRigidbody);
+
+        if (dudBomb == null && bombMarker == null)
         {
+            if (showDebugLog && hitObject != null)
+            {
+                Debug.Log("コアに何か当たったが、不発弾でも爆弾マーカーでもありません: " + hitObject.name);
+            }
+
             return;
         }
 
-        if (bossController != null)
+        if (showDebugLog)
         {
-            bossController.OnCoreHit(bombMarker.CoreDamage);
-        }
-
-        DudBomb dudBomb = collision.gameObject.GetComponent<DudBomb>();
-
-        if (dudBomb == null)
-        {
-            dudBomb = collision.gameObject.GetComponentInParent<DudBomb>();
+            string hitName = hitObject != null ? hitObject.name : "null";
+            Debug.Log("コアに命中判定: " + hitName + " / DudBomb: " + (dudBomb != null) + " / Marker: " + (bombMarker != null) + " / 攻撃可能: " + isAttackable);
         }
 
         if (dudBomb != null)
         {
+            int damage = dudBombCoreDamage;
+
+            if (dudBombOneShotCore)
+            {
+                damage = oneShotCoreDamage;
+            }
+            else if (bombMarker != null)
+            {
+                damage = bombMarker.CoreDamage;
+            }
+
+            if (isAttackable)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("不発弾がコアに命中。コアにダメージ: " + damage);
+                }
+
+                HitCore(damage);
+            }
+            else
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("不発弾がコアに当たりましたが、コアはまだ攻撃不可です。爆発だけします。");
+                }
+            }
+
             dudBomb.ExplodeByBossHit();
+            return;
+        }
+
+        if (bombMarker != null)
+        {
+            if (!isAttackable)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("爆弾マーカーがコアに当たりましたが、コアはまだ攻撃不可です。");
+                }
+
+                return;
+            }
+
+            if (showDebugLog)
+            {
+                Debug.Log("爆弾マーカーがコアに命中。コアにダメージ: " + bombMarker.CoreDamage);
+            }
+
+            HitCore(bombMarker.CoreDamage);
+            bombMarker.Consume();
+        }
+    }
+
+    private DudBomb FindDudBomb(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        DudBomb dudBomb = null;
+
+        if (hitObject != null)
+        {
+            dudBomb = hitObject.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitObject.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitObject.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        if (hitCollider != null)
+        {
+            dudBomb = hitCollider.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitCollider.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitCollider.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        if (hitRigidbody != null)
+        {
+            dudBomb = hitRigidbody.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitRigidbody.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitRigidbody.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        return null;
+    }
+
+    private BossBombHitMarker FindBombMarker(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        BossBombHitMarker marker = null;
+
+        if (hitObject != null)
+        {
+            marker = hitObject.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitObject.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitObject.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        if (hitCollider != null)
+        {
+            marker = hitCollider.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitCollider.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitCollider.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        if (hitRigidbody != null)
+        {
+            marker = hitRigidbody.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitRigidbody.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitRigidbody.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        return null;
+    }
+
+    private void HitCore(int damage)
+    {
+        if (bossController != null)
+        {
+            bossController.OnCoreHit(damage);
         }
         else
         {
-            bombMarker.Consume();
+            Debug.LogWarning("BossCorePart: bossController が設定されていません");
         }
     }
 }

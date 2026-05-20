@@ -16,6 +16,8 @@ public class TailCollisionDetector : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (playerCatch == null) return;
+
         Transform target = GetTargetTransform(other);
 
         if (target == playerCatch.touchingTarget)
@@ -31,26 +33,40 @@ public class TailCollisionDetector : MonoBehaviour
         Transform target = GetTargetTransform(other);
         if (target == null) return;
 
-        string objName = target.gameObject.name.Replace("(Clone)", "");
+        if (!IsCatchableTarget(target.gameObject))
+        {
+            return;
+        }
 
-        bool isTarget =
-            objName == "BOM" ||
+        Debug.Log("íÕÇﬂÇÈëŒè€Ç…ìñÇΩÇ¡ÇƒÇ¢Ç‹Ç∑ÅF" + target.name);
+        playerCatch.touchingTarget = target;
+    }
+
+    private bool IsCatchableTarget(GameObject targetObject)
+    {
+        if (targetObject == null)
+        {
+            return false;
+        }
+
+        string objName = targetObject.name.Replace("(Clone)", "").Trim();
+
+        bool isCatchable =
             objName == "NO BOM" ||
             objName == "Flint" ||
-            objName == "Missile" ||
-            objName == "Razer" ||
             objName == "Rubble" ||
             objName == "Obsidian";
 
-        if (isTarget)
-        {
-            Debug.Log("îöíeÇæÇüÇüÇüÅIìñÇΩÇ¡ÇΩÇºÇßÇßÇßÅF" + target.name);
-            playerCatch.touchingTarget = target;
-        }
+        return isCatchable;
     }
 
     private Transform GetTargetTransform(Collider other)
     {
+        if (other == null)
+        {
+            return null;
+        }
+
         if (other.attachedRigidbody != null)
         {
             return other.attachedRigidbody.transform;
