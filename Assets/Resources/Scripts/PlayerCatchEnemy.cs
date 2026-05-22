@@ -142,6 +142,8 @@ public class PlayerCatchEnemy : MonoBehaviour
         touchingTarget = null;
 
         Debug.Log("キャッチ！");
+
+        MySoundManeger.Play(gameObject, SEList.SE_CATCH);
     }
 
     void ReleaseTarget()

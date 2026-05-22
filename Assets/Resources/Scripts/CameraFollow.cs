@@ -19,6 +19,8 @@ public class CameraFollow : MonoBehaviour
 
     private void Start()
     {
+        MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+
         player = GameObject.FindGameObjectWithTag("Player");
         Boss = GameObject.FindGameObjectWithTag("Boss");
 

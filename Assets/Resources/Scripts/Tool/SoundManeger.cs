@@ -13,8 +13,8 @@ using static UnityEngine.GraphicsBuffer;
 //SE‚ÌŽí—Þ
 public enum SEList
 {
-    SE_PLAYER_JUMP,
-    SE_PLAYER_LAND,
+   SE_CATCH,
+   SE_CRUSH,
     MAX,
 }
 
