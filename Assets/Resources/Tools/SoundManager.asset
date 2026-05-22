@@ -12,31 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fad74e03f9dbdb84882938c3e5237827, type: 3}
   m_Name: SoundManager
   m_EditorClassIdentifier: Assembly-CSharp::SoundManeger
-  seList: 0
+  seList: 1
   seListData:
-  - audioClip: {fileID: 0}
-    volume: 0
-    pitch: 0
+  - audioClip: {fileID: 8300000, guid: 79863e7e5e7836c43950ae46319173f6, type: 3}
+    volume: 1
+    pitch: 1
     spatialBlend: 0
     velumeRollOffType: 0
     isLoop: 0
-    audioMixerGroup: {fileID: 0}
-  - audioClip: {fileID: 0}
-    volume: 0
-    pitch: 0
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+  - audioClip: {fileID: 8300000, guid: 17fcfbe4a73b92d45854e77392e836da, type: 3}
+    volume: 1
+    pitch: 1
     spatialBlend: 0
     velumeRollOffType: 0
     isLoop: 0
-    audioMixerGroup: {fileID: 0}
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
   bgmList: 0
   bgmListData:
-  - audioClip: {fileID: 0}
-    volume: 0
-    pitch: 0
+  - audioClip: {fileID: 8300000, guid: 9638d714f6db2634395ef3d0321dd92e, type: 3}
+    volume: 1
+    pitch: 1
     spatialBlend: 0
     velumeRollOffType: 0
-    isLoop: 0
-    audioMixerGroup: {fileID: 0}
+    isLoop: 1
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
   audioMixer: {fileID: 24100000, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
   MixerGroupName:
   - Master
