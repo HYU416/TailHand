@@ -1,21 +1,3 @@
-/*
- * ==========================================================
- * 制作責任者：小林大悟
- *
- * 爆弾の爆発処理を管理するスクリプトです。
- * BossBombShooter.cs 側の攻撃ノードから、
- * 爆発時間、爆発範囲、ダメージ、爆発エフェクト倍率などを
- * 攻撃ごとに変更できるようにしています。
- *
- * 不発弾に設定された場合は爆発しません。
- *
- * 【今回の追加】
- * ・爆発する少し前から点滅できるようにしました。
- * ・爆発何秒前から点滅するか、点滅間隔、点滅色を変更できます。
- * ==========================================================
- */
-
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BombExplosion : MonoBehaviour
@@ -54,7 +36,7 @@ public class BombExplosion : MonoBehaviour
     public Color blinkColor = Color.red;
 
     [Header("【不発弾にする】")]
-    [Tooltip("ONにすると爆発しません。攻撃ノード側からも変更できます")]
+    [Tooltip("ONにすると時間経過では爆発しません")]
     public bool isDudBomb = false;
 
     [Header("【不発弾を自動で消す時間】")]
@@ -71,12 +53,17 @@ public class BombExplosion : MonoBehaviour
     private Renderer[] renderers;
     private MaterialPropertyBlock propertyBlock;
 
-    void Start()
+    public bool HasExploded
+    {
+        get { return hasExploded; }
+    }
+
+    private void Start()
     {
         StartExplosionTimer();
     }
 
-    void Update()
+    private void Update()
     {
         if (!timerStarted) return;
         if (hasExploded) return;
@@ -95,15 +82,11 @@ public class BombExplosion : MonoBehaviour
 
         if (elapsedTime >= explosionTime)
         {
-            Explode();
+            ExplodeByTimer();
         }
     }
 
-    /// <summary>
-    /// 爆発タイマーを開始します。
-    /// BossBombShooter側で設定変更された後にStartが呼ばれる想定です。
-    /// </summary>
-    void StartExplosionTimer()
+    private void StartExplosionTimer()
     {
         if (timerStarted) return;
 
@@ -114,7 +97,6 @@ public class BombExplosion : MonoBehaviour
 
         SetupBlinkRenderer();
 
-        // 不発弾なら爆発予約をしない
         if (isDudBomb)
         {
             if (dudDestroyTime > 0f)
@@ -126,7 +108,7 @@ public class BombExplosion : MonoBehaviour
         }
     }
 
-    void SetupBlinkRenderer()
+    private void SetupBlinkRenderer()
     {
         renderers = GetComponentsInChildren<Renderer>();
 
@@ -136,7 +118,7 @@ public class BombExplosion : MonoBehaviour
         }
     }
 
-    void UpdateBlink()
+    private void UpdateBlink()
     {
         if (renderers == null || renderers.Length == 0)
         {
@@ -160,7 +142,7 @@ public class BombExplosion : MonoBehaviour
         }
     }
 
-    void SetBlinkColor()
+    private void SetBlinkColor()
     {
         if (renderers == null) return;
 
@@ -172,11 +154,6 @@ public class BombExplosion : MonoBehaviour
 
             targetRenderer.GetPropertyBlock(propertyBlock);
 
-            /*
-             * Standard系なら _Color、
-             * URP Lit系なら _BaseColor が使われることが多いので、
-             * 両方に入れておきます。
-             */
             propertyBlock.SetColor("_Color", blinkColor);
             propertyBlock.SetColor("_BaseColor", blinkColor);
 
@@ -184,7 +161,7 @@ public class BombExplosion : MonoBehaviour
         }
     }
 
-    void ResetBlinkColor()
+    private void ResetBlinkColor()
     {
         if (renderers == null) return;
 
@@ -194,17 +171,10 @@ public class BombExplosion : MonoBehaviour
 
             if (targetRenderer == null) continue;
 
-            /*
-             * PropertyBlockを消すことで元のマテリアル色に戻します。
-             */
             targetRenderer.SetPropertyBlock(null);
         }
     }
 
-    /// <summary>
-    /// BossBombShooterから爆発内容を変更するための関数です。
-    /// 攻撃ノードごとに爆発時間、範囲、ダメージなどを変えられます。
-    /// </summary>
     public void SetExplosionData(
         float newExplosionTime,
         float newExplosionRadius,
@@ -228,9 +198,6 @@ public class BombExplosion : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// 点滅設定も含めて爆発内容を変更するための関数です。
-    /// </summary>
     public void SetExplosionData(
         float newExplosionTime,
         float newExplosionRadius,
@@ -265,26 +232,49 @@ public class BombExplosion : MonoBehaviour
         StartExplosionTimer();
     }
 
-    /// <summary>
-    /// 爆発処理です。
-    /// プレイヤーが範囲内にいればダメージ処理を行います。
-    /// </summary>
-    void Explode()
+    public void ExplodeByTimer()
     {
         if (hasExploded) return;
         if (isDudBomb) return;
+
+        Explode("BOM時間経過爆発: " + gameObject.name);
+    }
+
+    public void ExplodeByBossHit()
+    {
+        if (hasExploded) return;
+
+        Explode("BOMがボス壁またはコアに当たって爆発しました: " + gameObject.name);
+    }
+
+    public void ForceExplode()
+    {
+        if (hasExploded) return;
+
+        Explode("BOM強制爆発: " + gameObject.name);
+    }
+
+    private void Explode(string logMessage)
+    {
+        if (hasExploded) return;
 
         hasExploded = true;
 
         ResetBlinkColor();
 
-        Debug.Log("BOM爆発: " + gameObject.name);
+        Debug.Log(logMessage);
 
+        SpawnExplosionEffect();
+        CheckExplosionHit();
+
+        Destroy(gameObject);
+    }
+
+    private void SpawnExplosionEffect()
+    {
         if (explosionEffectPrefab != null)
         {
-
-            //エフェクトの生成
-            if (transform.localScale.x  == 2.0f)
+            if (transform.localScale.x == 2.0f)
             {
                 EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
             }
@@ -292,12 +282,15 @@ public class BombExplosion : MonoBehaviour
             {
                 EffectManager.Instance.Play(EffectType.Explosion, transform.position);
             }
-        }
-        else
-        {
-            Debug.LogWarning("Explosion Effect Prefab が設定されていません");
+
+            return;
         }
 
+        Debug.LogWarning("Explosion Effect Prefab が設定されていません");
+    }
+
+    private void CheckExplosionHit()
+    {
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
 
         foreach (Collider hit in hits)
@@ -306,24 +299,22 @@ public class BombExplosion : MonoBehaviour
             {
                 Debug.Log("プレイヤーが爆発範囲に入りました。ダメージ：" + damage);
 
-                // プレイヤーHP処理を使う場合はここを有効化してください
                 // PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                //
                 // if (playerHealth != null)
                 // {
                 //     playerHealth.TakeDamage(damage);
                 // }
             }
         }
-
-        Destroy(gameObject);
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         ResetBlinkColor();
     }
 
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, explosionRadius);

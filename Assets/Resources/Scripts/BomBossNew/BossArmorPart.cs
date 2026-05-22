@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class BossArmorPart : MonoBehaviour
@@ -9,22 +8,32 @@ public class BossArmorPart : MonoBehaviour
     [Header("壁HP")]
     [SerializeField] private int maxHp = 30;
 
-    [Header("HPがこの値以下になったら点滅")]
-    [SerializeField] private int blinkHpThreshold = 10;
+    [Header("プレイヤーが投げた不発弾だけ壁に有効にする")]
+    [SerializeField] private bool requireThrownDudBomb = true;
 
-    [Header("点滅設定")]
-    [SerializeField] private float blinkInterval = 0.15f;
+    [Header("プレイヤーが投げた通常爆弾だけ壁に有効にする")]
+    [SerializeField] private bool requireThrownNormalBomb = true;
+
+    [Header("破壊時にオブジェクトを非表示にする")]
+    [SerializeField] private bool hideOnBroken = true;
+
+    [Header("デバッグログ")]
+    [SerializeField] private bool showDebugLog = true;
 
     private int currentHp;
     private bool isBroken;
-    private Coroutine blinkCoroutine;
     private Renderer[] renderers;
+    private Collider[] colliders;
 
-    public bool IsBroken => isBroken;
+    public bool IsBroken
+    {
+        get { return isBroken; }
+    }
 
     private void Awake()
     {
-        renderers = GetComponentsInChildren<Renderer>();
+        renderers = GetComponentsInChildren<Renderer>(true);
+        colliders = GetComponentsInChildren<Collider>(true);
         currentHp = maxHp;
     }
 
@@ -37,74 +46,115 @@ public class BossArmorPart : MonoBehaviour
 
         gameObject.SetActive(true);
         SetVisible(true);
+        SetCollidersEnabled(true);
 
-        Collider[] colliders = GetComponentsInChildren<Collider>();
-
-        foreach (Collider col in colliders)
+        if (showDebugLog)
         {
-            col.enabled = true;
-        }
-
-        if (blinkCoroutine != null)
-        {
-            StopCoroutine(blinkCoroutine);
-            blinkCoroutine = null;
+            Debug.Log(gameObject.name + " 壁セットアップ / HP: " + currentHp);
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (isBroken)
+        if (collision == null) return;
+
+        CheckHit(
+            collision.gameObject,
+            collision.collider,
+            collision.rigidbody
+        );
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other == null) return;
+
+        CheckHit(
+            other.gameObject,
+            other,
+            other.attachedRigidbody
+        );
+    }
+
+    private void CheckHit(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        if (isBroken) return;
+
+        BossBombHitMarker bombMarker = FindBombMarker(hitObject, hitCollider, hitRigidbody);
+
+        if (bombMarker == null)
         {
             return;
         }
 
-        BossBombHitMarker bombMarker = collision.gameObject.GetComponent<BossBombHitMarker>();
+        DudBomb dudBomb = FindDudBomb(hitObject, hitCollider, hitRigidbody);
+        ThrowableBomb throwableBomb = FindThrowableBomb(hitObject, hitCollider, hitRigidbody);
 
-        if (bombMarker == null)
+        if (dudBomb != null && requireThrownDudBomb)
         {
-            bombMarker = collision.gameObject.GetComponentInParent<BossBombHitMarker>();
+            if (!dudBomb.CanAffectBoss())
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("投げられていない不発弾なので壁には効きません: " + GetHitName(hitObject));
+                }
+
+                return;
+            }
         }
 
-        if (bombMarker == null)
+        if (throwableBomb != null && requireThrownNormalBomb)
         {
+            if (!throwableBomb.CanAffectBoss())
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("投げられていない通常爆弾なので壁には効きません: " + GetHitName(hitObject));
+                }
+
+                return;
+            }
+        }
+
+        int damage = bombMarker.ArmorDamage;
+
+        if (damage <= 0)
+        {
+            if (showDebugLog)
+            {
+                Debug.Log("壁ダメージが0以下なので無視しました: " + gameObject.name);
+            }
+
             return;
         }
 
-        TakeDamage(bombMarker.ArmorDamage);
-
-        DudBomb dudBomb = collision.gameObject.GetComponent<DudBomb>();
-
-        if (dudBomb == null)
-        {
-            dudBomb = collision.gameObject.GetComponentInParent<DudBomb>();
-        }
+        TakeDamage(damage);
 
         if (dudBomb != null)
         {
             dudBomb.ExplodeByBossHit();
+            return;
         }
-        else
+
+        if (throwableBomb != null)
         {
-            bombMarker.Consume();
+            throwableBomb.ExplodeByBossHit();
+            return;
         }
+
+        bombMarker.Consume();
     }
 
     private void TakeDamage(int damage)
     {
-        if (isBroken)
-        {
-            return;
-        }
+        if (isBroken) return;
 
         currentHp -= damage;
         currentHp = Mathf.Max(currentHp, 0);
 
-        Debug.Log(gameObject.name + " HP: " + currentHp + " / " + maxHp);
-
-        if (currentHp <= blinkHpThreshold && blinkCoroutine == null)
+        if (showDebugLog)
         {
-            blinkCoroutine = StartCoroutine(Blink());
+            Debug.Log(gameObject.name + " 壁HP: " + currentHp + " / " + maxHp + " / Damage: " + damage);
         }
 
         if (currentHp <= 0)
@@ -113,53 +163,176 @@ public class BossArmorPart : MonoBehaviour
         }
     }
 
-    private void BreakArmor()
+    public void BreakArmor()
     {
-        if (isBroken)
-        {
-            return;
-        }
+        if (isBroken) return;
 
         isBroken = true;
 
-        if (blinkCoroutine != null)
+        if (showDebugLog)
         {
-            StopCoroutine(blinkCoroutine);
-            blinkCoroutine = null;
-        }
-
-        SetVisible(false);
-
-        Collider[] colliders = GetComponentsInChildren<Collider>();
-
-        foreach (Collider col in colliders)
-        {
-            col.enabled = false;
+            Debug.Log(gameObject.name + " が破壊されました");
         }
 
         if (bossController != null)
         {
             bossController.OnArmorBroken(this);
         }
-    }
+        else
+        {
+            Debug.LogWarning(gameObject.name + " BossPhaseController が設定されていません");
+        }
 
-    private IEnumerator Blink()
-    {
-        while (!isBroken)
+        if (hideOnBroken)
         {
             SetVisible(false);
-            yield return new WaitForSeconds(blinkInterval);
-
-            SetVisible(true);
-            yield return new WaitForSeconds(blinkInterval);
+            SetCollidersEnabled(false);
         }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+    public void ForceBreakArmor()
+    {
+        BreakArmor();
+    }
+
+    private DudBomb FindDudBomb(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        DudBomb dudBomb = null;
+
+        if (hitObject != null)
+        {
+            dudBomb = hitObject.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitObject.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitObject.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        if (hitCollider != null)
+        {
+            dudBomb = hitCollider.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitCollider.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitCollider.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        if (hitRigidbody != null)
+        {
+            dudBomb = hitRigidbody.GetComponent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitRigidbody.GetComponentInParent<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+
+            dudBomb = hitRigidbody.GetComponentInChildren<DudBomb>();
+            if (dudBomb != null) return dudBomb;
+        }
+
+        return null;
+    }
+
+    private ThrowableBomb FindThrowableBomb(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        ThrowableBomb throwableBomb = null;
+
+        if (hitObject != null)
+        {
+            throwableBomb = hitObject.GetComponent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitObject.GetComponentInParent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitObject.GetComponentInChildren<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+        }
+
+        if (hitCollider != null)
+        {
+            throwableBomb = hitCollider.GetComponent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitCollider.GetComponentInParent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitCollider.GetComponentInChildren<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+        }
+
+        if (hitRigidbody != null)
+        {
+            throwableBomb = hitRigidbody.GetComponent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitRigidbody.GetComponentInParent<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+
+            throwableBomb = hitRigidbody.GetComponentInChildren<ThrowableBomb>();
+            if (throwableBomb != null) return throwableBomb;
+        }
+
+        return null;
+    }
+
+    private BossBombHitMarker FindBombMarker(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        BossBombHitMarker marker = null;
+
+        if (hitObject != null)
+        {
+            marker = hitObject.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitObject.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitObject.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        if (hitCollider != null)
+        {
+            marker = hitCollider.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitCollider.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitCollider.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        if (hitRigidbody != null)
+        {
+            marker = hitRigidbody.GetComponent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitRigidbody.GetComponentInParent<BossBombHitMarker>();
+            if (marker != null) return marker;
+
+            marker = hitRigidbody.GetComponentInChildren<BossBombHitMarker>();
+            if (marker != null) return marker;
+        }
+
+        return null;
     }
 
     private void SetVisible(bool visible)
     {
         if (renderers == null)
         {
-            return;
+            renderers = GetComponentsInChildren<Renderer>(true);
         }
 
         foreach (Renderer rend in renderers)
@@ -169,5 +342,31 @@ public class BossArmorPart : MonoBehaviour
                 rend.enabled = visible;
             }
         }
+    }
+
+    private void SetCollidersEnabled(bool enabled)
+    {
+        if (colliders == null)
+        {
+            colliders = GetComponentsInChildren<Collider>(true);
+        }
+
+        foreach (Collider col in colliders)
+        {
+            if (col != null)
+            {
+                col.enabled = enabled;
+            }
+        }
+    }
+
+    private string GetHitName(GameObject hitObject)
+    {
+        if (hitObject == null)
+        {
+            return "null";
+        }
+
+        return hitObject.name;
     }
 }

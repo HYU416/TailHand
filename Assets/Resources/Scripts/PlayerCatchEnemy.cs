@@ -26,6 +26,8 @@ public class PlayerCatchEnemy : MonoBehaviour
     private float originalMass;
     private bool caughtTargetIsDudBomb;
 
+    private DudBomb caughtDudBomb;
+
     void Start()
     {
         if (tailEnd != null)
@@ -38,7 +40,11 @@ public class PlayerCatchEnemy : MonoBehaviour
     {
         if (tailEnd == null) return;
 
-        tailVelocity = (tailEnd.position - prevTailPos) / Time.deltaTime;
+        if (Time.deltaTime > 0.0f)
+        {
+            tailVelocity = (tailEnd.position - prevTailPos) / Time.deltaTime;
+        }
+
         prevTailPos = tailEnd.position;
     }
 
@@ -60,9 +66,20 @@ public class PlayerCatchEnemy : MonoBehaviour
         if (touchingTarget == null) return;
         if (tailEnd == null) return;
 
+        caughtDudBomb = FindDudBomb(touchingTarget);
+        caughtTargetIsDudBomb = caughtDudBomb != null;
+
         Rigidbody rb = touchingTarget.GetComponent<Rigidbody>();
 
-        caughtTargetIsDudBomb = IsDudBomb(touchingTarget);
+        if (rb == null)
+        {
+            rb = touchingTarget.GetComponentInParent<Rigidbody>();
+        }
+
+        if (rb == null)
+        {
+            rb = touchingTarget.GetComponentInChildren<Rigidbody>();
+        }
 
         if (rb != null)
         {
@@ -90,8 +107,28 @@ public class PlayerCatchEnemy : MonoBehaviour
 
         touchingTarget.SetParent(tailEnd, false);
 
-        touchingTarget.localPosition = Vector3.zero;
-        touchingTarget.localRotation = Quaternion.identity;
+        BossHeadCatchable bossHeadCatchable = touchingTarget.GetComponent<BossHeadCatchable>();
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = touchingTarget.GetComponentInParent<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = touchingTarget.GetComponentInChildren<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable != null)
+        {
+            touchingTarget.localPosition = bossHeadCatchable.CatchLocalPositionOffset;
+            touchingTarget.localRotation = Quaternion.Euler(bossHeadCatchable.CatchLocalRotationOffset);
+        }
+        else
+        {
+            touchingTarget.localPosition = Vector3.zero;
+            touchingTarget.localRotation = Quaternion.identity;
+        }
 
         Vector3 parentScale = tailEnd.lossyScale;
 
@@ -112,7 +149,18 @@ public class PlayerCatchEnemy : MonoBehaviour
         if (caughtTarget == null) return;
 
         Transform releasedTarget = caughtTarget;
+
         Rigidbody rb = releasedTarget.GetComponent<Rigidbody>();
+
+        if (rb == null)
+        {
+            rb = releasedTarget.GetComponentInParent<Rigidbody>();
+        }
+
+        if (rb == null)
+        {
+            rb = releasedTarget.GetComponentInChildren<Rigidbody>();
+        }
 
         releasedTarget.SetParent(null);
 
@@ -121,6 +169,45 @@ public class PlayerCatchEnemy : MonoBehaviour
         foreach (Collider col in cols)
         {
             col.enabled = true;
+        }
+
+        if (caughtTargetIsDudBomb)
+        {
+            DudBomb dudBomb = caughtDudBomb;
+
+            if (dudBomb == null)
+            {
+                dudBomb = FindDudBomb(releasedTarget);
+            }
+
+            if (dudBomb != null)
+            {
+                dudBomb.ArmByPlayerThrow();
+                Debug.Log("PlayerCatchEnemy: 不発弾に投げ判定を付けました");
+            }
+            else
+            {
+                Debug.LogWarning("PlayerCatchEnemy: 不発弾扱いですが DudBomb が見つかりませんでした");
+            }
+        }
+
+
+        ThrowableBomb throwableBomb = releasedTarget.GetComponent<ThrowableBomb>();
+
+        if (throwableBomb == null)
+        {
+            throwableBomb = releasedTarget.GetComponentInParent<ThrowableBomb>();
+        }
+
+        if (throwableBomb == null)
+        {
+            throwableBomb = releasedTarget.GetComponentInChildren<ThrowableBomb>();
+        }
+
+        if (throwableBomb != null)
+        {
+            throwableBomb.ArmByPlayerThrow();
+            Debug.Log("PlayerCatchEnemy: 通常爆弾に投げ判定を付けました");
         }
 
         if (rb != null)
@@ -143,16 +230,27 @@ public class PlayerCatchEnemy : MonoBehaviour
 
         caughtTarget = null;
         caughtTargetIsDudBomb = false;
+        caughtDudBomb = null;
         massChangedRb = null;
     }
 
-    private bool IsDudBomb(Transform target)
+    private DudBomb FindDudBomb(Transform target)
     {
-        if (target == null) return false;
+        if (target == null) return null;
 
-        string objName = target.name.Replace("(Clone)", "").Trim();
+        DudBomb dudBomb = target.GetComponent<DudBomb>();
 
-        return objName == "NO BOM";
+        if (dudBomb == null)
+        {
+            dudBomb = target.GetComponentInParent<DudBomb>();
+        }
+
+        if (dudBomb == null)
+        {
+            dudBomb = target.GetComponentInChildren<DudBomb>();
+        }
+
+        return dudBomb;
     }
 
     private IEnumerator RestoreMassAfterDelay(Rigidbody rb, float mass, float delay)
