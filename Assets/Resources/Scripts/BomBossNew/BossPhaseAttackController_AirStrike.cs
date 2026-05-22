@@ -1,10 +1,23 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public partial class BossPhaseAttackController
 {
     [Header("壁が全破壊された後は特殊攻撃パターンにする")]
     [SerializeField] private bool useSpecialAttackAfterAllWallsBroken = true;
+
+    [Header("空爆後、撃った爆弾が全部消えるまで待つ")]
+    [SerializeField] private bool waitUntilAirStrikeBombsDestroyed = true;
+
+    [Header("空爆爆弾を待つ最大時間")]
+    [SerializeField] private float maxAirStrikeBombWaitTime = 20.0f;
+
+    [Header("空爆待機ログを出す")]
+    [SerializeField] private bool showAirStrikeWaitLog = true;
+
+    [Header("空爆待機ログの間隔")]
+    [SerializeField] private float airStrikeWaitLogInterval = 1.0f;
 
     private bool allWallsBroken;
     private bool airStrikeDudBombAlreadySpawnedThisAttack;
@@ -18,7 +31,7 @@ public partial class BossPhaseAttackController
 
         if (showDebugLog)
         {
-            Debug.Log("壁がすべて破壊されたため、空爆とスピンの交互攻撃に変更します");
+            Debug.Log("壁がすべて破壊されたため、空爆と移動の交互攻撃に変更します");
         }
     }
 
@@ -77,23 +90,106 @@ public partial class BossPhaseAttackController
             dudBombIndex = Random.Range(0, setting.airStrikeCount);
         }
 
+        List<GameObject> spawnedBombs = new List<GameObject>();
+
         for (int i = 0; i < setting.airStrikeCount; i++)
         {
             bool spawnDudBomb = allWallsBroken && i == dudBombIndex;
-            SpawnAirStrikeBomb(setting, centerTransform, spawnDudBomb);
+
+            GameObject bomb = SpawnAirStrikeBomb(setting, centerTransform, spawnDudBomb);
+
+            if (bomb != null)
+            {
+                spawnedBombs.Add(bomb);
+            }
         }
 
-        yield return null;
+        if (showAirStrikeWaitLog)
+        {
+            Debug.Log("空爆爆弾を生成しました。待機対象: " + spawnedBombs.Count + "個");
+        }
+
+        if (waitUntilAirStrikeBombsDestroyed)
+        {
+            yield return StartCoroutine(WaitUntilAirStrikeBombsDestroyed(spawnedBombs));
+        }
     }
 
-    private void SpawnAirStrikeBomb(PhaseAttackSetting setting, Transform centerTransform, bool spawnDudBomb)
+    private IEnumerator WaitUntilAirStrikeBombsDestroyed(List<GameObject> bombs)
+    {
+        if (bombs == null || bombs.Count == 0)
+        {
+            if (showAirStrikeWaitLog)
+            {
+                Debug.LogWarning("空爆爆弾の待機対象が0個なので、次の行動へ進みます");
+            }
+
+            yield break;
+        }
+
+        float timer = 0.0f;
+        float logTimer = 0.0f;
+
+        if (showAirStrikeWaitLog)
+        {
+            Debug.Log("空爆爆弾がすべて爆発して消えるまで待機開始");
+        }
+
+        while (timer < maxAirStrikeBombWaitTime)
+        {
+            timer += Time.deltaTime;
+            logTimer += Time.deltaTime;
+
+            for (int i = bombs.Count - 1; i >= 0; i--)
+            {
+                GameObject bomb = bombs[i];
+
+                if (bomb == null)
+                {
+                    bombs.RemoveAt(i);
+                    continue;
+                }
+
+                if (!bomb.activeInHierarchy)
+                {
+                    bombs.RemoveAt(i);
+                    continue;
+                }
+            }
+
+            if (bombs.Count <= 0)
+            {
+                if (showAirStrikeWaitLog)
+                {
+                    Debug.Log("空爆で撃った爆弾がすべて消えました。次の行動へ進みます");
+                }
+
+                yield break;
+            }
+
+            if (showAirStrikeWaitLog && logTimer >= airStrikeWaitLogInterval)
+            {
+                logTimer = 0.0f;
+                Debug.Log("空爆爆弾待機中。残り: " + bombs.Count + "個");
+            }
+
+            yield return null;
+        }
+
+        if (showAirStrikeWaitLog)
+        {
+            Debug.LogWarning("空爆爆弾の待機が最大時間を超えました。残り: " + bombs.Count + "個。次の行動へ進みます");
+        }
+    }
+
+    private GameObject SpawnAirStrikeBomb(PhaseAttackSetting setting, Transform centerTransform, bool spawnDudBomb)
     {
         GameObject prefab = GetAirStrikeBombPrefab(spawnDudBomb);
 
         if (prefab == null)
         {
             Debug.LogWarning("空爆用の爆弾Prefabが設定されていません");
-            return;
+            return null;
         }
 
         Vector3 center = centerTransform.position;
@@ -147,8 +243,10 @@ public partial class BossPhaseAttackController
         }
         else
         {
-            Debug.LogWarning("空爆爆弾にRigidbodyがありません");
+            Debug.LogWarning("空爆爆弾にRigidbodyがありません: " + bomb.name);
         }
+
+        return bomb;
     }
 
     private GameObject GetAirStrikeBombPrefab(bool spawnDudBomb)

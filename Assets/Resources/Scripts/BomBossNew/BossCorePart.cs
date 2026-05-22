@@ -17,6 +17,9 @@ public class BossCorePart : MonoBehaviour
     [Header("一撃破壊時に与えるダメージ")]
     [SerializeField] private int oneShotCoreDamage = 999;
 
+    [Header("未投げの不発弾はコアに効かない")]
+    [SerializeField] private bool requireThrownDudBomb = true;
+
     [Header("デバッグログ")]
     [SerializeField] private bool showDebugLog = true;
 
@@ -50,7 +53,11 @@ public class BossCorePart : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        CheckHit(other != null ? other.gameObject : null, other, other != null ? other.attachedRigidbody : null);
+        CheckHit(
+            other != null ? other.gameObject : null,
+            other,
+            other != null ? other.attachedRigidbody : null
+        );
     }
 
     private void CheckHit(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
@@ -71,11 +78,37 @@ public class BossCorePart : MonoBehaviour
         if (showDebugLog)
         {
             string hitName = hitObject != null ? hitObject.name : "null";
-            Debug.Log("コアに命中判定: " + hitName + " / DudBomb: " + (dudBomb != null) + " / Marker: " + (bombMarker != null) + " / 攻撃可能: " + isAttackable);
+            Debug.Log(
+                "コアに命中判定: " + hitName +
+                " / DudBomb: " + (dudBomb != null) +
+                " / Marker: " + (bombMarker != null) +
+                " / 攻撃可能: " + isAttackable
+            );
         }
 
         if (dudBomb != null)
         {
+            if (requireThrownDudBomb && !dudBomb.CanAffectBoss())
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("未投げの不発弾がコアに当たりましたが、コアダメージを無視しました");
+                }
+
+                return;
+            }
+
+            if (!isAttackable)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("不発弾がコアに当たりましたが、コアはまだ攻撃不可です。");
+                }
+
+                dudBomb.ExplodeByBossHit();
+                return;
+            }
+
             int damage = dudBombCoreDamage;
 
             if (dudBombOneShotCore)
@@ -87,29 +120,40 @@ public class BossCorePart : MonoBehaviour
                 damage = bombMarker.CoreDamage;
             }
 
-            if (isAttackable)
+            if (damage <= 0)
             {
                 if (showDebugLog)
                 {
-                    Debug.Log("不発弾がコアに命中。コアにダメージ: " + damage);
+                    Debug.Log("不発弾のコアダメージが0以下なので無視しました");
                 }
 
-                HitCore(damage);
+                return;
             }
-            else
+
+            if (showDebugLog)
             {
-                if (showDebugLog)
-                {
-                    Debug.Log("不発弾がコアに当たりましたが、コアはまだ攻撃不可です。爆発だけします。");
-                }
+                Debug.Log("プレイヤーが投げた不発弾がコアに命中。コアにダメージ: " + damage);
             }
 
+            HitCore(damage);
             dudBomb.ExplodeByBossHit();
             return;
         }
 
         if (bombMarker != null)
         {
+            int damage = bombMarker.CoreDamage;
+
+            if (damage <= 0)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("爆弾マーカーのコアダメージが0以下なので無視しました");
+                }
+
+                return;
+            }
+
             if (!isAttackable)
             {
                 if (showDebugLog)
@@ -122,10 +166,10 @@ public class BossCorePart : MonoBehaviour
 
             if (showDebugLog)
             {
-                Debug.Log("爆弾マーカーがコアに命中。コアにダメージ: " + bombMarker.CoreDamage);
+                Debug.Log("爆弾マーカーがコアに命中。コアにダメージ: " + damage);
             }
 
-            HitCore(bombMarker.CoreDamage);
+            HitCore(damage);
             bombMarker.Consume();
         }
     }
@@ -218,6 +262,11 @@ public class BossCorePart : MonoBehaviour
 
     private void HitCore(int damage)
     {
+        if (damage <= 0)
+        {
+            return;
+        }
+
         if (bossController != null)
         {
             bossController.OnCoreHit(damage);

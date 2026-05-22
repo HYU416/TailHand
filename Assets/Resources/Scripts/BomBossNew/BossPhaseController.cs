@@ -37,6 +37,15 @@ public class BossPhaseController : MonoBehaviour
     [Header("壁が壊れていなくてもコアヒットを許可する")]
     [SerializeField] private bool allowCoreHitBeforeAllArmorsBroken = true;
 
+    [Header("壁が全部壊れたらその段階を自動破壊する")]
+    [SerializeField] private bool breakPhaseWhenAllArmorsBroken = true;
+
+    [Header("壁全破壊時にコアへ入れる破壊ダメージ")]
+    [SerializeField] private int allArmorBrokenCoreDamage = 999;
+
+    [Header("壁全破壊時に攻撃パターンを切り替える")]
+    [SerializeField] private bool notifyAttackControllerWhenAllArmorsBroken = false;
+
     [Header("段移動設定")]
     [SerializeField] private bool autoCalculateStepDownDistance = true;
 
@@ -301,10 +310,10 @@ public class BossPhaseController : MonoBehaviour
             return;
         }
 
-        OpenCoreAndForceAirStrikeOnly();
+        OnAllCurrentArmorsBroken();
     }
 
-    private void OpenCoreAndForceAirStrikeOnly()
+    private void OnAllCurrentArmorsBroken()
     {
         if (allCurrentArmorsBroken)
         {
@@ -322,16 +331,17 @@ public class BossPhaseController : MonoBehaviour
             SetCollidersEnabled(currentCore.gameObject, true);
         }
 
-        if (attackController != null)
+        if (notifyAttackControllerWhenAllArmorsBroken && attackController != null)
         {
             attackController.NotifyAllWallsBroken();
         }
-        else
-        {
-            Debug.LogWarning("AttackController が設定されていないため、空爆のみに切り替えできません");
-        }
 
-        Debug.Log("壁がすべて壊れました。空爆のみになります。");
+        Debug.Log("現在の段階の壁がすべて破壊されました。コアを自動破壊扱いにします。");
+
+        if (breakPhaseWhenAllArmorsBroken)
+        {
+            OnCoreHit(allArmorBrokenCoreDamage);
+        }
     }
 
     private bool AreAllCurrentArmorsBroken()
@@ -407,6 +417,11 @@ public class BossPhaseController : MonoBehaviour
         if (!coreOpened && !allowCoreHitBeforeAllArmorsBroken)
         {
             Debug.Log("コアに当たりましたが、まだ攻撃不可です");
+            return;
+        }
+
+        if (damage <= 0)
+        {
             return;
         }
 
@@ -554,7 +569,7 @@ public class BossPhaseController : MonoBehaviour
 
     private void DropHead()
     {
-        Debug.Log("最終段階破壊。頭を落とします。");
+        Debug.Log("最終段階破壊。頭を落として掴めるようにします。");
 
         isBossDefeated = true;
         isChangingPhase = false;
@@ -567,6 +582,16 @@ public class BossPhaseController : MonoBehaviour
 
         bossHead.transform.SetParent(null);
 
+        Collider col = bossHead.GetComponent<Collider>();
+
+        if (col == null)
+        {
+            col = bossHead.AddComponent<BoxCollider>();
+        }
+
+        col.enabled = true;
+        col.isTrigger = false;
+
         Rigidbody rb = bossHead.GetComponent<Rigidbody>();
 
         if (rb == null)
@@ -576,14 +601,17 @@ public class BossPhaseController : MonoBehaviour
 
         rb.isKinematic = false;
         rb.useGravity = true;
+        rb.mass = 1.0f;
+        rb.linearDamping = 0.2f;
+        rb.angularDamping = 0.2f;
 
-        Collider col = bossHead.GetComponent<Collider>();
+        BossHeadCatchable catchable = bossHead.GetComponent<BossHeadCatchable>();
 
-        if (col == null)
+        if (catchable == null)
         {
-            col = bossHead.AddComponent<BoxCollider>();
+            catchable = bossHead.AddComponent<BossHeadCatchable>();
         }
 
-        col.enabled = true;
+        catchable.SetCanCatch(true);
     }
 }

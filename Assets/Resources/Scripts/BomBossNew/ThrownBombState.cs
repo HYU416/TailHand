@@ -1,12 +1,12 @@
 using UnityEngine;
 
-public class DudBombState : MonoBehaviour
+public class ThrownBombState : MonoBehaviour
 {
-    [Header("プレイヤーが投げた不発弾か")]
+    [Header("プレイヤーが投げた爆弾か")]
     [SerializeField] private bool thrownByPlayer;
 
     [Header("投げられた判定後、何秒間だけ有効にするか")]
-    [SerializeField] private float thrownActiveTime = 8.0f;
+    [SerializeField] private float thrownActiveTime = 5.0f;
 
     private float thrownTimer;
 
@@ -35,7 +35,7 @@ public class DudBombState : MonoBehaviour
         thrownByPlayer = true;
         thrownTimer = thrownActiveTime;
 
-        Debug.Log("DudBombState: 不発弾を投げ状態にしました");
+        Debug.Log("ThrownBombState: 爆弾をプレイヤー投げ状態にしました");
     }
 
     public void ClearThrownByPlayer()
@@ -43,6 +43,6 @@ public class DudBombState : MonoBehaviour
         thrownByPlayer = false;
         thrownTimer = 0.0f;
 
-        Debug.Log("DudBombState: 不発弾の投げ状態を解除しました");
+        Debug.Log("ThrownBombState: 爆弾の投げ状態を解除しました");
     }
 }

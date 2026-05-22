@@ -49,10 +49,28 @@ public class TailCollisionDetector : MonoBehaviour
             return false;
         }
 
+        BossHeadCatchable bossHeadCatchable = targetObject.GetComponent<BossHeadCatchable>();
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = targetObject.GetComponentInParent<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = targetObject.GetComponentInChildren<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable != null)
+        {
+            return bossHeadCatchable.CanCatch;
+        }
+
         string objName = targetObject.name.Replace("(Clone)", "").Trim();
 
         bool isCatchable =
             objName == "NO BOM" ||
+            objName == "BOM" ||
             objName == "Flint" ||
             objName == "Rubble" ||
             objName == "Obsidian";
