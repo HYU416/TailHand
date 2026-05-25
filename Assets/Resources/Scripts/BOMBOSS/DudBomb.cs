@@ -224,31 +224,32 @@ public class DudBomb : MonoBehaviour
 
     private void SpawnExplosionEffect()
     {
-        if (explosionEffectPrefab == null)
-        {
-            Debug.LogWarning("ïsî≠íeÇÃ Explosion Effect Prefab Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
-            return;
-        }
+        EffectManager.Instance.Play(EffectType.Explosion, transform.position);
+        //if (explosionEffectPrefab == null)
+        //{
+        //    Debug.LogWarning("ïsî≠íeÇÃ Explosion Effect Prefab Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
+        //    return;
+        //}
 
-        GameObject effect = Instantiate(
-            explosionEffectPrefab,
-            transform.position,
-            Quaternion.identity
-        );
+        //GameObject effect = Instantiate(
+        //    explosionEffectPrefab,
+        //    transform.position,
+        //    Quaternion.identity
+        //);
 
-        effect.transform.localScale *= explosionEffectScaleMultiplier;
+        //effect.transform.localScale *= explosionEffectScaleMultiplier;
 
-        BombEffect bombEffect = effect.GetComponent<BombEffect>();
+        //BombEffect bombEffect = effect.GetComponent<BombEffect>();
 
-        if (bombEffect == null)
-        {
-            bombEffect = effect.GetComponentInChildren<BombEffect>();
-        }
+        //if (bombEffect == null)
+        //{
+        //    bombEffect = effect.GetComponentInChildren<BombEffect>();
+        //}
 
-        if (bombEffect != null)
-        {
-            bombEffect.maxScale *= explosionEffectScaleMultiplier;
-        }
+        //if (bombEffect != null)
+        //{
+        //    bombEffect.maxScale *= explosionEffectScaleMultiplier;
+        //}
     }
 
     private void CheckExplosionHit()

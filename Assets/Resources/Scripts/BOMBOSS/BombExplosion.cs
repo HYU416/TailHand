@@ -53,6 +53,7 @@ public class BombExplosion : MonoBehaviour
     private Renderer[] renderers;
     private MaterialPropertyBlock propertyBlock;
 
+    private EffectPlayer damageZoneEffect;
     public bool HasExploded
     {
         get { return hasExploded; }
@@ -61,6 +62,7 @@ public class BombExplosion : MonoBehaviour
     private void Start()
     {
         StartExplosionTimer();
+        damageZoneEffect = EffectManager.Instance.Play(EffectType.DamageZone, transform.position);
     }
 
     private void Update()
@@ -68,11 +70,10 @@ public class BombExplosion : MonoBehaviour
         if (!timerStarted) return;
         if (hasExploded) return;
         if (isDudBomb) return;
-
-        elapsedTime += Time.deltaTime;
-
+       elapsedTime += Time.deltaTime;
+        
         float remainingTime = explosionTime - elapsedTime;
-
+        damageZoneEffect.SetEffectPos(transform.position);
         if (useBlinkBeforeExplosion &&
             blinkBeforeExplosionTime > 0f &&
             remainingTime <= blinkBeforeExplosionTime)
@@ -82,6 +83,7 @@ public class BombExplosion : MonoBehaviour
 
         if (elapsedTime >= explosionTime)
         {
+            EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
             ExplodeByTimer();
         }
     }

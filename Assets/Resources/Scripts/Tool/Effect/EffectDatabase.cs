@@ -5,10 +5,11 @@ using UnityEngine;
 //エフェクトの種類を定義する列挙型
 public enum EffectType
 {
-    Explosion,          //爆発
-    Explosion2,          //爆発2
-    Slash,              //斬撃
-    Fire                //炎
+    Explosion = 0,          //爆発
+    Explosion2 = 1,          //爆発2
+    Explosion_Missile = 2,          //ミサイル爆発
+    CoreBreak = 3,           //コア破壊
+    DamageZone = 4,           //ダメージゾーン 
 }
 
 [Serializable]
@@ -23,6 +24,7 @@ public class EffectData
     public string targetTag;
     //エフェクト再生速度
     public float playSpeed = 1f;
+
 }
 
 //エフェクトデータベースを管理するScriptableObjectクラス

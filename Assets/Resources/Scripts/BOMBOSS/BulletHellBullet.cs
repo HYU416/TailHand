@@ -153,6 +153,8 @@ public class BulletHellBullet : MonoBehaviour
 
         if (destroyOnPlayerHit)
         {
+            //仮で爆発エフェクトを再生する処理を入れておきます
+            EffectManager.Instance.Play(EffectType.Explosion, transform.position);
             Destroy(gameObject);
         }
     }

@@ -373,8 +373,15 @@ public class EffectPlayer : MonoBehaviour
         playSpeed = Mathf.Max(0.01f, speed);
     }
 
+
+    public void SetEffectPos(Vector3 pos)
+    {
+        transform.position = pos;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log($"{effectType} Hit : {other.name}");
     }
+
 }

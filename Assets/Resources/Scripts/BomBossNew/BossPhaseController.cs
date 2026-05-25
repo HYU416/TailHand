@@ -448,6 +448,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (currentPhase == 1)
         {
+            EffectManager.Instance.Play(EffectType.CoreBreak, phase1Core.transform.position);
             if (bossStep1 != null)
             {
                 bossStep1.SetActive(false);
@@ -466,6 +467,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (currentPhase == 2)
         {
+            EffectManager.Instance.Play(EffectType.CoreBreak, phase2Core.transform.position);
             if (bossStep2 != null)
             {
                 bossStep2.SetActive(false);
@@ -483,6 +485,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (currentPhase == 3)
         {
+            EffectManager.Instance.Play(EffectType.CoreBreak, phase3Core.transform.position);
             if (bossStep3 != null)
             {
                 bossStep3.SetActive(false);
@@ -614,4 +617,19 @@ public class BossPhaseController : MonoBehaviour
 
         catchable.SetCanCatch(true);
     }
+
+    /// デバッグ用：コアをを強制的に破壊する
+#if UNITY_EDITOR
+    [ContextMenu("Debug/Core Break Current Phase")]
+    private void DebugCoreBreakCurrentPhase()
+    {
+        if (Application.isPlaying == false)
+        {
+            Debug.LogWarning("再生中のみ実行できます");
+            return;
+        }
+
+        StartCoroutine(BreakCurrentPhaseRoutine());
+    }
+#endif
 }
