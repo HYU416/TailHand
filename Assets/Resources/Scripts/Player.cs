@@ -81,8 +81,6 @@ public class Player : MonoBehaviour
         //    if (!movebutton) move = Vector3.zero;
         //    rb.MovePosition(rb.position + move);
         //}
-
-        rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
         Vector3 camForward = cameraTransform.forward;
@@ -139,7 +137,8 @@ public class Player : MonoBehaviour
             currentSpeed = Mathf.Max(currentSpeed, 0);
         }
 
-        // 移動
+        //移動
+
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
         rb.MovePosition(rb.position + move);
 

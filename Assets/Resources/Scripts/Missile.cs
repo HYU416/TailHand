@@ -58,9 +58,6 @@ public class Missile : MonoBehaviour
     [Tooltip("プレイヤーに与えるダメージです")]
     public int damage = 20;
 
-    [Header("【爆発エフェクト設定】")]
-    [Tooltip("ミサイル爆発時に出すエフェクトPrefabです。BOMと同じ爆発エフェクトをここに入れてください")]
-    public GameObject explosionEffectPrefab;
 
     [Tooltip("爆発エフェクトのサイズ倍率です")]
     public float explosionEffectScaleMultiplier = 1f;
@@ -281,24 +278,7 @@ public class Missile : MonoBehaviour
 
     void SpawnExplosionEffect()
     {
-        if (explosionEffectPrefab == null)
-        {
-            Debug.LogWarning("ミサイルの爆発エフェクトPrefabが設定されていません。Missile.cs の Explosion Effect Prefab にBOMと同じ爆発エフェクトを入れてください。");
-            return;
-        }
-
-        GameObject effect = Instantiate(
-            explosionEffectPrefab,
-            transform.position,
-            Quaternion.identity
-        );
-
-        effect.transform.localScale *= explosionEffectScaleMultiplier;
-
-        if (destroyExplosionEffect)
-        {
-            Destroy(effect, explosionEffectDestroyTime);
-        }
+        EffectManager.Instance.Play(EffectType.Explosion_Missile, transform.position);   
     }
 
     void DamagePlayerInRadius()
@@ -365,15 +345,18 @@ public class Missile : MonoBehaviour
         explosionRadius = newExplosionRadius;
         damage = newDamage;
 
-        /*
-         * ここが重要。
-         * BossBombShooter側からエフェクトPrefabが渡された場合だけ上書きする。
-         * 空の場合は、ミサイルPrefab側に設定してあるエフェクトを残す。
-         */
-        if (newExplosionEffectPrefab != null)
-        {
-            explosionEffectPrefab = newExplosionEffectPrefab;
-        }
+        //エフェクトの設定がいるなら後で追加
+        ///*
+        // * ここが重要。
+        // * BossBombShooter側からエフェクトPrefabが渡された場合だけ上書きする。
+        // * 空の場合は、ミサイルPrefab側に設定してあるエフェクトを残す。
+        // */
+        //if (newExplosionEffectPrefab != null)
+        //{
+        //    explosionEffectPrefab = newExplosionEffectPrefab;
+        //}
+
+
 
         explosionEffectScaleMultiplier = newExplosionEffectScaleMultiplier;
         homing = newHoming;

@@ -17,15 +17,24 @@ MonoBehaviour:
     prefab: {fileID: 8411288342181989615, guid: 261f057c6c3b23e4b8f3d5efa3858284, type: 3}
     targetTag: ExplosionEffect
     playSpeed: 6
+    loop: 0
   - type: 1
     prefab: {fileID: 8411288342181989615, guid: 8af233b2cc1b03f4aacafeca2fc21d1f, type: 3}
     targetTag: ExplosionEffect
     playSpeed: 6
+    loop: 0
   - type: 2
-    prefab: {fileID: 0}
-    targetTag: 
-    playSpeed: 1
+    prefab: {fileID: 8411288342181989615, guid: 6d5ef2245d07bd94a9fd845f0333ad3c, type: 3}
+    targetTag: ExplosionEffect
+    playSpeed: 6
+    loop: 0
   - type: 3
-    prefab: {fileID: 0}
-    targetTag: 
+    prefab: {fileID: 8431550548859425588, guid: daf733cb8ae064e4b8595b8589fdbb18, type: 3}
+    targetTag: DamageZoneEffect
     playSpeed: 1
+    loop: 0
+  - type: 4
+    prefab: {fileID: 3604196800244312306, guid: 3f8ba824d3f90bb429e3a564e1069630, type: 3}
+    targetTag: DamageZoneEffect
+    playSpeed: 1
+    loop: 1
