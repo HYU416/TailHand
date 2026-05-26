@@ -216,11 +216,21 @@ public class PlayerCatchEnemy : MonoBehaviour
         {
             rb.isKinematic = false;
 
-            float throwMultiplier = caughtTargetIsDudBomb
+            float baseMultiplier = caughtTargetIsDudBomb
                 ? dudBombThrowMultiplier
                 : normalThrowMultiplier;
 
-            rb.linearVelocity = tailVelocity * throwMultiplier;
+            float speed = tailVelocity.magnitude;
+
+            // 超過分だけ圧縮
+            float extraMultiplier = baseMultiplier - 1f;
+
+            float compressedExtra =
+                extraMultiplier / (1f + speed * 0.05f);
+
+            float finalMultiplier = 1f + compressedExtra;
+
+            rb.linearVelocity = tailVelocity * finalMultiplier;
 
             if (caughtTargetIsDudBomb && massChangedRb == rb)
             {

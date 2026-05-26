@@ -60,27 +60,6 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        //rb.linearVelocity = Vector3.zero;
-        //rb.angularVelocity = Vector3.zero;
-        //// 入力を3Dベクトルに変換
-        //Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
-
-        //if (direction.sqrMagnitude > 0.01f)
-        //{
-        //    // 向きの回転
-        //    Quaternion targetRotation = Quaternion.LookRotation(direction);
-        //    transform.rotation = Quaternion.Slerp(
-        //        transform.rotation,
-        //        targetRotation,
-        //        rotateSpeed * Time.fixedDeltaTime
-        //    );
-        //    Debug.Log(movebutton);
-
-        //    // 前方向に移動
-        //    Vector3 move = transform.forward * moveSpeed * Time.fixedDeltaTime;
-        //    if (!movebutton) move = Vector3.zero;
-        //    rb.MovePosition(rb.position + move);
-        //}
         rb.angularVelocity = Vector3.zero;
 
         Vector3 camForward = cameraTransform.forward;
@@ -138,11 +117,8 @@ public class Player : MonoBehaviour
         }
 
         //移動
-
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
         rb.MovePosition(rb.position + move);
-
-        //Debug.Log("ギア：　"　+ currentGear);
     }
 
     private void StartGearUp()
