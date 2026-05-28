@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -22,6 +23,7 @@ public class FindPrefabWindow : EditorWindow
     // UI state
     private string _typeName = "";
     private bool _includeInactive = true;
+    private bool _searchAllScenes = true;
     private Vector2 _scroll;
 
     // results
@@ -30,17 +32,20 @@ public class FindPrefabWindow : EditorWindow
     private class ResultRow
     {
         public GameObject go;
-        public Component componentSample; // Œ©‚Â‚¯‚½ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‘ã•\1‚Â
+        public Component componentSample; // ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ì‘ï¿½\1ï¿½ï¿½
         public string sceneName;
         public string pathInHierarchy;
         public bool isActiveInHierarchy;
     }
 
     private static readonly GUIContent GC_TypeName = new GUIContent("Type / Interface Name",
-        "—á: PlayerAttack / MyNamespace.PlayerAttack / IDamageable ‚È‚ÇiŠ®‘SCü‚à‰Âj");
+        "ï¿½ï¿½: PlayerAttack / MyNamespace.PlayerAttack / IDamageable ï¿½È‚Çiï¿½ï¿½ï¿½Sï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Âj");
 
     private static readonly GUIContent GC_IncludeInactive = new GUIContent("Include Inactive",
-        "”ñƒAƒNƒeƒBƒu‚ÌGameObject‚àŒŸõ‘ÎÛ‚ÉŠÜ‚ß‚é");
+        "ï¿½ï¿½Aï¿½Nï¿½eï¿½Bï¿½uï¿½ï¿½GameObjectï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎÛ‚ÉŠÜ‚ß‚ï¿½");
+
+    private static readonly GUIContent GC_SearchAllScenes = new GUIContent("Search All Scenes",
+        "Projectï¿½ï¿½ï¿½Ì‘SSceneï¿½ï¿½ï¿½Jï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Prefabï¿½Cï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 
     private void OnGUI()
     {
@@ -50,7 +55,7 @@ public class FindPrefabWindow : EditorWindow
         _typeName = EditorGUILayout.TextField(GC_TypeName, _typeName);
         if (GUILayout.Button("SelectPrefab", GUILayout.Width(90)))
         {
-            // Assets/Resources/Scripts ˆÈ‰º‚ÌƒXƒNƒŠƒvƒg‚Ì–¼‘O‚ğ‚·‚×‚ÄƒŠƒXƒg‚É‚·‚é
+            // Assets/Resources/Scripts ï¿½È‰ï¿½ï¿½ÌƒXï¿½Nï¿½ï¿½ï¿½vï¿½gï¿½Ì–ï¿½ï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½×‚Äƒï¿½ï¿½Xï¿½gï¿½É‚ï¿½ï¿½ï¿½
             var scripts = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Resources/prefabs" })
                 .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
                 .Select(path => System.IO.Path.GetFileNameWithoutExtension(path))
@@ -67,7 +72,7 @@ public class FindPrefabWindow : EditorWindow
                 });
             }
             menu.ShowAsContext();
-            // ƒeƒLƒXƒg‚ğ‘I‘ğ‚µ‚½Œã‰æ–Ê‚É•\¦
+            // ï¿½eï¿½Lï¿½Xï¿½gï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê‚É•\ï¿½ï¿½
             GUI.FocusControl(null);
         }
         if (GUILayout.Button("Search", GUILayout.Width(90)))
@@ -78,6 +83,7 @@ public class FindPrefabWindow : EditorWindow
 
         EditorGUILayout.BeginHorizontal();
         _includeInactive = EditorGUILayout.Toggle(GC_IncludeInactive, _includeInactive);
+        _searchAllScenes = EditorGUILayout.Toggle(GC_SearchAllScenes, _searchAllScenes);
         if (GUILayout.Button("Select All", GUILayout.Width(100)))
         {
             Selection.objects = _results.Select(r => (UnityEngine.Object)r.go).ToArray();
@@ -101,7 +107,7 @@ public class FindPrefabWindow : EditorWindow
 
             if (_results.Count == 0)
             {
-                EditorGUILayout.HelpBox("ƒqƒbƒg‚È‚µBType/Interface–¼‚ğ“ü—Í‚µ‚Ä Search ‚ğ‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢B", MessageType.Info);
+                EditorGUILayout.HelpBox("ï¿½qï¿½bï¿½gï¿½È‚ï¿½ï¿½BType/Interfaceï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ Search ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½B", MessageType.Info);
             }
             else
             {
@@ -109,7 +115,7 @@ public class FindPrefabWindow : EditorWindow
                 {
                     using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
                     {
-                        // ¶FƒIƒuƒWƒFƒNƒg‚ÆƒpƒXî•ñ
+                        // ï¿½ï¿½ï¿½Fï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Æƒpï¿½Xï¿½ï¿½ï¿½
                         EditorGUILayout.BeginVertical();
                         EditorGUILayout.ObjectField(r.go, typeof(GameObject), true);
                         EditorGUILayout.LabelField($"{r.sceneName}  |  {(r.isActiveInHierarchy ? "Active" : "Inactive")}",
@@ -122,7 +128,7 @@ public class FindPrefabWindow : EditorWindow
                         }
                         EditorGUILayout.EndVertical();
 
-                        // ‰EF‘€ìƒ{ƒ^ƒ“
+                        // ï¿½Eï¿½Fï¿½ï¿½ï¿½ï¿½{ï¿½^ï¿½ï¿½
                         using (new EditorGUILayout.VerticalScope(GUILayout.Width(90)))
                         {
                             if (GUILayout.Button("Ping"))
@@ -146,29 +152,95 @@ public class FindPrefabWindow : EditorWindow
         _results.Clear();
 
         var searchName = _typeName.Trim();
+        if (string.IsNullOrEmpty(searchName))
+        {
+            ShowNotification(new GUIContent("Prefabï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"));
+            return;
+        }
 
         string[] prefabGuids =
             AssetDatabase.FindAssets($"t:Prefab {searchName}");
 
-        foreach (string guid in prefabGuids)
+        var targetPrefabPaths = prefabGuids
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Where(path => !string.IsNullOrEmpty(path))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (targetPrefabPaths.Count == 0)
         {
-            string path =
-                AssetDatabase.GUIDToAssetPath(guid);
-
-            GameObject prefab =
-                AssetDatabase.LoadAssetAtPath<GameObject>(path);
-
-            if (prefab == null)
-                continue;
-
-            _results.Add(new ResultRow
-            {
-                go = prefab,
-                sceneName = "Prefab",
-                pathInHierarchy = path,
-                isActiveInHierarchy = true
-            });
+            Repaint();
+            ShowNotification(new GUIContent("ï¿½Yï¿½ï¿½ï¿½Prefabï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½"));
+            return;
         }
+
+        if (!_searchAllScenes)
+        {
+            foreach (var path in targetPrefabPaths)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null) continue;
+
+                _results.Add(new ResultRow
+                {
+                    go = prefab,
+                    sceneName = "Prefab",
+                    pathInHierarchy = path,
+                    isActiveInHierarchy = true
+                });
+            }
+            Repaint();
+            return;
+        }
+
+        var scenePaths = AssetDatabase.FindAssets("t:Scene", new[] { "Assets" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Where(path => !string.IsNullOrEmpty(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var setup = EditorSceneManager.GetSceneManagerSetup();
+        try
+        {
+            foreach (var scenePath in scenePaths)
+            {
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                if (!scene.IsValid()) continue;
+
+                foreach (var go in EnumerateAllSceneGameObjects(_includeInactive))
+                {
+                    if (go == null || go.scene.path != scene.path) continue;
+
+                    var instanceRoot = PrefabUtility.GetNearestPrefabInstanceRoot(go);
+                    if (instanceRoot == null) continue;
+
+                    var source = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);
+                    var sourcePath = source != null ? AssetDatabase.GetAssetPath(source) : string.Empty;
+                    if (string.IsNullOrEmpty(sourcePath) || !targetPrefabPaths.Contains(sourcePath)) continue;
+
+                    var uniqueKey = $"{scene.path}:{instanceRoot.GetInstanceID()}";
+                    if (!seen.Add(uniqueKey)) continue;
+
+                    _results.Add(new ResultRow
+                    {
+                        go = instanceRoot,
+                        sceneName = scene.name,
+                        pathInHierarchy = BuildHierarchyPath(instanceRoot),
+                        isActiveInHierarchy = instanceRoot.activeInHierarchy
+                    });
+                }
+            }
+        }
+        finally
+        {
+            EditorSceneManager.RestoreSceneManagerSetup(setup);
+        }
+
+        _results = _results
+            .OrderBy(r => r.sceneName)
+            .ThenBy(r => r.pathInHierarchy, StringComparer.Ordinal)
+            .ToList();
 
         Repaint();
     }
@@ -179,8 +251,8 @@ public class FindPrefabWindow : EditorWindow
 
     private static IEnumerable<GameObject> EnumerateAllSceneGameObjects(bool includeInactive)
     {
-        // ƒV[ƒ“‚É‘®‚µA‚©‚ÂƒAƒZƒbƒg‚Å‚È‚¢‚à‚ÌiPrefabƒAƒZƒbƒg‚ğœŠOj‚ğE‚¤
-        // Unity 2023+ ‚Í FindObjectsByType ‚ª‘¬‚¢BŒÃ‚¢”ÅŒü‚¯‚É Resources ‚àƒtƒH[ƒ‹ƒoƒbƒNB
+        // ï¿½Vï¿½[ï¿½ï¿½ï¿½É‘ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÂƒAï¿½Zï¿½bï¿½gï¿½Å‚È‚ï¿½ï¿½ï¿½ï¿½ÌiPrefabï¿½Aï¿½Zï¿½bï¿½gï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½jï¿½ï¿½ï¿½Eï¿½ï¿½
+        // Unity 2023+ ï¿½ï¿½ FindObjectsByType ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½Ã‚ï¿½ï¿½ÅŒï¿½ï¿½ï¿½ï¿½ï¿½ Resources ï¿½ï¿½ï¿½tï¿½Hï¿½[ï¿½ï¿½ï¿½oï¿½bï¿½Nï¿½B
 #if UNITY_2023_1_OR_NEWER
         var all = GameObject.FindObjectsByType<GameObject>(
             includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude,
@@ -196,9 +268,9 @@ public class FindPrefabWindow : EditorWindow
 
     private static bool IsSceneObject(GameObject go)
     {
-        // ƒV[ƒ“‚É‘®‚µ‚Ä‚¢‚ÄAƒAƒZƒbƒgiPrefabƒtƒ@ƒCƒ‹“àj‚Å‚Í‚È‚¢
+        // ï¿½Vï¿½[ï¿½ï¿½ï¿½É‘ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ÄAï¿½Aï¿½Zï¿½bï¿½gï¿½iPrefabï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½jï¿½Å‚Í‚È‚ï¿½
         if (!go.scene.IsValid()) return false;
-        if (EditorUtility.IsPersistent(go)) return false; // Project“à‚ÌƒAƒZƒbƒg‚ÍœŠO
+        if (EditorUtility.IsPersistent(go)) return false; // Projectï¿½ï¿½ï¿½ÌƒAï¿½Zï¿½bï¿½gï¿½Íï¿½ï¿½O
         return true;
     }
 
@@ -217,11 +289,11 @@ public class FindPrefabWindow : EditorWindow
     private static bool TypeNameMatches(Type t, string query)
     {
         if (t == null) return false;
-        // Š®‘SCü–¼ or ’Pƒ–¼‚Å‘å¬–³‹ˆê’v
+        // ï¿½ï¿½ï¿½Sï¿½Cï¿½ï¿½ï¿½ï¿½ or ï¿½Pï¿½ï¿½ï¿½ï¿½ï¿½Å‘å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½v
         if (string.Equals(t.FullName, query, StringComparison.OrdinalIgnoreCase)) return true;
         if (string.Equals(t.Name, query, StringComparison.OrdinalIgnoreCase)) return true;
 
-        // À‘•ƒCƒ“ƒ^[ƒtƒFƒCƒX–¼‚Æ‚àÆ‡
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½^ï¿½[ï¿½tï¿½Fï¿½Cï¿½Xï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Æï¿½
         foreach (var itf in t.GetInterfaces())
         {
             if (string.Equals(itf.FullName, query, StringComparison.OrdinalIgnoreCase)) return true;
@@ -232,7 +304,7 @@ public class FindPrefabWindow : EditorWindow
 
     private static Type ResolveTypeByName(string name)
     {
-        // ‚Ü‚¸Š®‘Sˆê’v‚ğŠeƒAƒZƒ“ƒuƒŠ‚©‚ç’T‚·
+        // ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½Sï¿½ï¿½vï¿½ï¿½ï¿½eï¿½Aï¿½Zï¿½ï¿½ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Tï¿½ï¿½
         foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
         {
             try
@@ -240,10 +312,10 @@ public class FindPrefabWindow : EditorWindow
                 var t1 = asm.GetType(name, throwOnError: false, ignoreCase: true);
                 if (t1 != null) return t1;
             }
-            catch { /* ’Ê‚ç‚È‚¢ƒAƒZƒ“ƒuƒŠ‚à‚ ‚é‚Ì‚Åˆ¬‚è‚Â‚Ô‚· */ }
+            catch { /* ï¿½Ê‚ï¿½È‚ï¿½ï¿½Aï¿½Zï¿½ï¿½ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚Åˆï¿½ï¿½ï¿½Â‚Ô‚ï¿½ */ }
         }
 
-        // ’Pƒ–¼ˆê’vi–¼‘OÕ“Ë‚Ì‰Â”\«‚ª‚ ‚é‚Ì‚ÅÅ‰‚ÉŒ©‚Â‚©‚Á‚½‚à‚Ìj
+        // ï¿½Pï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vï¿½iï¿½ï¿½ï¿½Oï¿½Õ“Ë‚Ì‰Â”\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ÅÅï¿½ï¿½ÉŒï¿½ï¿½Â‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìj
         foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
         {
             Type match = null;
@@ -256,7 +328,7 @@ public class FindPrefabWindow : EditorWindow
             if (match != null) return match;
         }
 
-        // Œ©‚Â‚©‚ç‚È‚¢ê‡‚Í nulli–¼‘Oˆê’vƒ‚[ƒh‚ÉƒtƒH[ƒ‹ƒoƒbƒNj
+        // ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½È‚ï¿½ï¿½ê‡ï¿½ï¿½ nullï¿½iï¿½ï¿½ï¿½Oï¿½ï¿½vï¿½ï¿½ï¿½[ï¿½hï¿½Éƒtï¿½Hï¿½[ï¿½ï¿½ï¿½oï¿½bï¿½Nï¿½j
         return null;
     }
 }
