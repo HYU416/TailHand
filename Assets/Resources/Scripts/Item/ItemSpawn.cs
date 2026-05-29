@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class ItemSpawn : MonoBehaviour
 {
+
     [Header("瓦礫の出現率（％）")]
     [Range(0, 100)]
     [SerializeField] private int rubbleSpawnRate = 25;
@@ -25,9 +26,11 @@ public class ItemSpawn : MonoBehaviour
     [Header("火打石のプレハブ")]
     [SerializeField] private GameObject flintPrefab;
 
+    private float spawnposition_y = 5.0f;
+
     void Start()
     {
-     
+        
     }
     // 出現率を100%に補正するメソッド
     public void NormalizeRates()
@@ -89,15 +92,15 @@ public class ItemSpawn : MonoBehaviour
         // ランダムな整数に基づいてアイテムをスポーン
         if (rand < rubbleSpawnRate)
         {
-            Instantiate(rubblePrefab, transform.position, Quaternion.identity);
+            Instantiate(rubblePrefab, new Vector3(transform.position.x, spawnposition_y, transform.position.z), Quaternion.identity);
         }
         else if (rand < rubbleSpawnRate + obsidianSpawnRate)
         {
-            Instantiate(obsidianPrefab, transform.position, Quaternion.identity);
+            Instantiate(obsidianPrefab, new Vector3(transform.position.x, spawnposition_y, transform.position.z), Quaternion.identity);
         }
         else if (rand < rubbleSpawnRate + obsidianSpawnRate + flintSpawnRate)
         {
-            Instantiate(flintPrefab, transform.position, Quaternion.identity);
+            Instantiate(flintPrefab, new Vector3(transform.position.x, spawnposition_y, transform.position.z), Quaternion.identity);
         }
         // 何も出ない場合は何もしない
 
