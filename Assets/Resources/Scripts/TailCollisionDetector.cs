@@ -73,6 +73,7 @@ public class TailCollisionDetector : MonoBehaviour
             objName == "BOM" ||
             objName == "Flint" ||
             objName == "Rubble" ||
+            objName == "Missile" ||
             objName == "Obsidian";
 
         return isCatchable;
