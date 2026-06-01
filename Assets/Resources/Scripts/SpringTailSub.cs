@@ -8,7 +8,7 @@ public class SpringTailSub : MonoBehaviour
     {
         public Transform transform;                           // 自身のTransform情報
         public Rigidbody rb;
-        public Quaternion storeQuat;
+        [HideInInspector] public Quaternion storeQuat;
 
         [HideInInspector] public Vector3 currentPos;          // 現在の座標
         [HideInInspector] public Vector3 lastPos;             // 前回の座標
