@@ -36,6 +36,10 @@ public class Player : MonoBehaviour
     float gearTimer;
     float gearUpTime;
 
+    [SerializeField] private PlayerMotion playerMotion;
+    [SerializeField] private AnimeState animeState;
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -118,7 +122,48 @@ public class Player : MonoBehaviour
 
         //移動
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
-        rb.MovePosition(rb.position + move);
+
+        //capsuleキャストで前方に衝突するオブジェクトを検出
+        RaycastHit hit;
+        CapsuleCollider capsule = GetComponent<CapsuleCollider>();
+        Vector3 point1 = transform.position;
+        Vector3 point2 = transform.position + Vector3.up * 2f;
+        float radius = 0.5f;
+        if (capsule != null)
+        {
+            //カプセルの中心から上方向に半分の高さを加えた位置を始点とする
+            point1 = transform.position + capsule.center + Vector3.up * (capsule.height / 2 - capsule.radius);
+            //カプセルの中心から下方向に半分の高さを加えた位置を終点とする
+            point2 = transform.position + capsule.center - Vector3.up * (capsule.height / 2 - capsule.radius);
+            radius = capsule.radius;
+        }
+        if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime))
+        {
+            Debug.Log("Hit: " + hit.collider.name);
+            //貫通対策
+            //反射する
+            if (hit.collider.gameObject.CompareTag("Boss") || hit.collider.gameObject.CompareTag("ItemBox"))
+            {
+
+                float skin = 0.05f;
+
+                rb.MovePosition(
+                    rb.position +
+                    transform.forward *
+                    Mathf.Max(0f, hit.distance - skin)
+                );
+            }
+        }
+        else
+        {
+            rb.MovePosition(rb.position + move);
+        }
+
+
+        // アニメーション切り替え
+        SwitchAnimation();
+        if (playerMotion)
+            playerMotion.SwitchMotion(animeState);
     }
 
     private void StartGearUp()
@@ -162,6 +207,14 @@ public class Player : MonoBehaviour
                 Debug.Log("ギアが上がりました : " + debugGear);
             }
         }
+    }
+
+    private void SwitchAnimation()
+    {
+        if (currentSpeed >= 1e-4)
+            animeState = AnimeState.Run;
+        else
+            animeState = AnimeState.Idle;
     }
 }
 
