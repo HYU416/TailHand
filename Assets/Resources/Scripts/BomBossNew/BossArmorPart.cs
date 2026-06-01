@@ -14,6 +14,15 @@ public class BossArmorPart : MonoBehaviour
     [Header("プレイヤーが投げた通常爆弾だけ壁に有効にする")]
     [SerializeField] private bool requireThrownNormalBomb = true;
 
+    [Header("Flint / Obsidian / Rubble が当たったら壁も破壊する")]
+    [SerializeField] private bool destroyArmorByItemHit = true;
+
+    [Header("アイテム命中時、壁を一撃で壊す")]
+    [SerializeField] private bool itemOneShotArmor = true;
+
+    [Header("一撃で壊さない場合のアイテムダメージ")]
+    [SerializeField] private int itemArmorDamage = 10;
+
     [Header("破壊時にオブジェクトを非表示にする")]
     [SerializeField] private bool hideOnBroken = true;
 
@@ -80,6 +89,32 @@ public class BossArmorPart : MonoBehaviour
     {
         if (isBroken) return;
 
+        if (destroyArmorByItemHit)
+        {
+            GameObject itemObject = FindDestroyableItemObject(hitObject, hitCollider, hitRigidbody);
+
+            if (itemObject != null)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("アイテムが壁に当たりました。アイテムを消して壁も破壊します: " + itemObject.name);
+                }
+
+                Destroy(itemObject);
+
+                if (itemOneShotArmor)
+                {
+                    BreakArmor();
+                }
+                else
+                {
+                    TakeDamage(itemArmorDamage);
+                }
+
+                return;
+            }
+        }
+
         BossBombHitMarker bombMarker = FindBombMarker(hitObject, hitCollider, hitRigidbody);
 
         if (bombMarker == null)
@@ -143,6 +178,81 @@ public class BossArmorPart : MonoBehaviour
         }
 
         bombMarker.Consume();
+    }
+
+    private GameObject FindDestroyableItemObject(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        GameObject target = null;
+
+        if (hitRigidbody != null)
+        {
+            target = hitRigidbody.gameObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+        }
+
+        if (hitObject != null)
+        {
+            target = hitObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+
+            Transform parent = hitObject.transform.parent;
+
+            while (parent != null)
+            {
+                if (IsDestroyableItemName(parent.name))
+                {
+                    return parent.gameObject;
+                }
+
+                parent = parent.parent;
+            }
+        }
+
+        if (hitCollider != null)
+        {
+            target = hitCollider.gameObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+
+            Transform parent = hitCollider.transform.parent;
+
+            while (parent != null)
+            {
+                if (IsDestroyableItemName(parent.name))
+                {
+                    return parent.gameObject;
+                }
+
+                parent = parent.parent;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsDestroyableItemName(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName))
+        {
+            return false;
+        }
+
+        string fixedName = objectName.Replace("(Clone)", "").Trim();
+
+        return fixedName == "Flint" ||
+               fixedName == "Obsidian" ||
+               fixedName == "Rubble";
     }
 
     private void TakeDamage(int damage)
