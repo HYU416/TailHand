@@ -1,23 +1,52 @@
+using SimplestarGame;
 using UnityEngine;
+using UnityEngine.UIElements;
+using System.Collections;
 
 public class BreakBoxTest : MonoBehaviour
 {
-    [Header("破壊後のオブジェクト")]
     [SerializeField]
-    private Transform breakPrefab;
-   
-    // Update is called once per frame
-    void Update()
+     private Transform camereTf;
+    [Header("爆発力")]
+    [SerializeField] float explosionForce = 300f;
+    [Header("爆発半径")]
+    [SerializeField] float explosionRadius = 1f;
+    
+    private void Update()
     {
-        if(Input.GetMouseButtonDown(0))
+        Vector3 objPos = transform.position;
+        Vector3 camPos = camereTf.position;
+        if (Input.GetMouseButtonDown(0))
         {
-            Transform brokenTransform = Instantiate(breakPrefab,transform.position,transform.rotation);
-            brokenTransform.localScale  =transform.localScale;
-            foreach(Rigidbody rigidbody in brokenTransform.GetComponentsInChildren<Rigidbody>())
+            RaycastHit hit;
+            if (Physics.Raycast(camPos, objPos - camPos, out hit))
             {
-                rigidbody.AddExplosionForce(1050.0f, transform.position + Vector3.up * 0.5f, 5.0f);
+                if (hit.collider.gameObject == gameObject)
+                {
+                    var frag = hit.collider.GetComponent<VoronoiFragmenter>();
+                    if (frag)
+                    {
+                        float scale = 1.0f;
+                         frag.Fragment(hit);
+                        StartCoroutine(this.CoExplodeObjects(hit, scale));
+                    }
+                }
             }
-           Destroy(gameObject);
+
+        }
+    }
+
+    IEnumerator CoExplodeObjects(RaycastHit hit, float scale)
+    {
+        yield return new WaitForFixedUpdate();
+        Collider[] colliders = Physics.OverlapSphere(hit.point, this.explosionRadius);
+        foreach (var item in colliders)
+        {
+            if (item.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.isKinematic = false;
+                rigidbody.AddExplosionForce(this.explosionForce * scale, hit.point + hit.normal * 0.1f, this.explosionRadius * scale);
+            }
         }
     }
 }

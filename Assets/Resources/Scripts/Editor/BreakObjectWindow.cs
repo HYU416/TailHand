@@ -75,101 +75,101 @@ public class BreakObjectWindow : EditorWindow
 
         if (GUILayout.Button("Generate Cube Fragments"))
         {
-            GenerateFragments();
+            //GenerateFragments();
         }
     }
 
-    void GenerateFragments()
-    {
-        if (targetObject == null)
-        {
-            Debug.LogError("Target Object Missing");
-            return;
-        }
+    //void GenerateFragments()
+    //{
+    //    if (targetObject == null)
+    //    {
+    //        Debug.LogError("Target Object Missing");
+    //        return;
+    //    }
 
-        Renderer targetRenderer = targetObject.GetComponent<Renderer>();
+    //    Renderer targetRenderer = targetObject.GetComponent<Renderer>();
 
-        if (targetRenderer == null)
-        {
-            Debug.LogError("Renderer Missing");
-            return;
-        }
+    //    if (targetRenderer == null)
+    //    {
+    //        Debug.LogError("Renderer Missing");
+    //        return;
+    //    }
 
-        Bounds bounds = targetRenderer.bounds;
+    //    Bounds bounds = targetRenderer.bounds;
 
-        GameObject root = new GameObject(targetObject.name + "_CubeFragments");
-        root.transform.position = Vector3.zero;
-        root.transform.rotation = Quaternion.identity;
-        root.transform.localScale = Vector3.one;
+    //    GameObject root = new GameObject(targetObject.name + "_CubeFragments");
+    //    root.transform.position = Vector3.zero;
+    //    root.transform.rotation = Quaternion.identity;
+    //    root.transform.localScale = Vector3.one;
 
-        Undo.RegisterCreatedObjectUndo(root, "Create Cube Fragments");
+    //    Undo.RegisterCreatedObjectUndo(root, "Create Cube Fragments");
 
-        Vector3 cellSize = new Vector3(
-            bounds.size.x / gridX,
-            bounds.size.y / gridY,
-            bounds.size.z / gridZ
-        );
+    //    Vector3 cellSize = new Vector3(
+    //        bounds.size.x / gridX,
+    //        bounds.size.y / gridY,
+    //        bounds.size.z / gridZ
+    //    );
 
-        Material useMaterial =
-            fragmentMaterial != null
-            ? fragmentMaterial
-            : targetRenderer.sharedMaterial;
+    //    Material useMaterial =
+    //        fragmentMaterial != null
+    //        ? fragmentMaterial
+    //        : targetRenderer.sharedMaterial;
 
-        int index = 0;
+    //    int index = 0;
 
-        for (int x = 0; x < gridX; x++)
-        {
-            for (int y = 0; y < gridY; y++)
-            {
-                for (int z = 0; z < gridZ; z++)
-                {
-                    Vector3 center = bounds.min + new Vector3(
-                        cellSize.x * (x + 0.5f),
-                        cellSize.y * (y + 0.5f),
-                        cellSize.z * (z + 0.5f)
-                    );
+    //    for (int x = 0; x < gridX; x++)
+    //    {
+    //        for (int y = 0; y < gridY; y++)
+    //        {
+    //            for (int z = 0; z < gridZ; z++)
+    //            {
+    //                Vector3 center = bounds.min + new Vector3(
+    //                    cellSize.x * (x + 0.5f),
+    //                    cellSize.y * (y + 0.5f),
+    //                    cellSize.z * (z + 0.5f)
+    //                );
 
-                    float randomScale = Random.Range(
-                        minRandomScale,
-                        maxRandomScale
-                    );
+    //                float randomScale = Random.Range(
+    //                    minRandomScale,
+    //                    maxRandomScale
+    //                );
 
-                    Vector3 finalSize = cellSize * randomScale;
+    //                Vector3 finalSize = cellSize * randomScale;
 
-                    GameObject fragment = ShapeFactory.Instantiate<Cube>();
-                    fragment.name = "Fragment_" + index;
+    //                GameObject fragment = ShapeFactory.Instantiate<Cube>();
+    //                fragment.name = "Fragment_" + index;
 
-                    Undo.RegisterCreatedObjectUndo(
-                        fragment,
-                        "Create Fragment"
-                    );
+    //                Undo.RegisterCreatedObjectUndo(
+    //                    fragment,
+    //                    "Create Fragment"
+    //                );
 
-                    fragment.transform.SetParent(root.transform, true);
-                    fragment.transform.position = center;
-                    fragment.transform.rotation = Quaternion.identity;
-                    fragment.transform.localScale = finalSize;
+    //                fragment.transform.SetParent(root.transform, true);
+    //                fragment.transform.position = center;
+    //                fragment.transform.rotation = Quaternion.identity;
+    //                fragment.transform.localScale = finalSize;
 
-                    Renderer fragmentRenderer =
-                        fragment.GetComponent<Renderer>();
+    //                Renderer fragmentRenderer =
+    //                    fragment.GetComponent<Renderer>();
 
-                    if (fragmentRenderer != null && useMaterial != null)
-                    {
-                        fragmentRenderer.sharedMaterial = useMaterial;
-                    }
+    //                if (fragmentRenderer != null && useMaterial != null)
+    //                {
+    //                    fragmentRenderer.sharedMaterial = useMaterial;
+    //                }
 
-                    if (addRigidbody)
-                    {
-                        Rigidbody rb = fragment.AddComponent<Rigidbody>();
-                        rb.mass = rigidbodyMass;
-                    }
+    //                if (addRigidbody)
+    //                {
+    //                    Rigidbody rb = fragment.AddComponent<Rigidbody>();
+    //                    rb.mass = rigidbodyMass;
+    //                }
 
-                    index++;
-                }
-            }
-        }
+    //                index++;
+    //            }
+    //        }
+    //    }
 
-        Selection.activeGameObject = root;
+    //    Selection.activeGameObject = root;
 
-        Debug.Log("Cube Fragment Complete");
-    }
+    //    Debug.Log("Cube Fragment Complete");
+    //}
 }
