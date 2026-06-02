@@ -1,8 +1,5 @@
 using UnityEngine;
-using UnityEditor;
-using Unity.VisualScripting;
 using UnityEngine.Audio;
-using UnityEngine.Rendering;
 
 public static class MySoundManeger
 {
@@ -10,87 +7,94 @@ public static class MySoundManeger
     public static AudioMixer AudioMixer;
     private static AudioMixer Mixer;
 
-    // ★ 追加：dBレンジ定数 & PlayerPrefsキー
+    // ボリュームのデシベル範囲。-60dBが最小、0dBが最大とする。これを超える値はクランプされる。
     private const float DB_MIN = -60f;
     private const float DB_MAX = 0f;
-    private const string PREF_PREFIX = "vol_"; // 例: "vol_Master_Volume"
+    // PlayerPrefsに保存する際のキーのプレフィックス。これに続けてMixerのパラメータ名が付加される。
+    private const string PREF_PREFIX = "vol_";
 
     private static bool initialized;
 
+    // 初期化。SoundManegerがResourcesからロードされ、AudioMixerがセットされる。失敗した場合はエラーログを出力。
     private static void Initialize()
     {
-        //既に初期化済みならスキップ
         if (initialized)
             return;
-        // ResourcesからSoundManagerをロード
-        SM = Resources.Load < SoundManeger > ( "Tools/SoundManager");
-        // ロード失敗のチェック
+        // ResourcesからSoundManegerをロード
+        SM = Resources.Load<SoundManeger>("Data/SoundData/SoundManager");
+
         if (SM == null)
         {
-            Debug.LogError( "SoundManager not found");
+            Debug.LogError("SoundManager not found");
             return;
         }
-        // AudioMixerもSoundManagerから取得
+
         Mixer = SM.audioMixer;
-        // Mixerの取得失敗のチェック
+        AudioMixer = Mixer;   
         initialized = true;
-        //volumeの保存値があれば適用
+        // すでにSoundManegerがロードされている場合は、Mixerに保存されたボリュームを適用
         LoadVolumes();
     }
 
+    // SoundManegerをセット。通常はSoundManegerのAwakeで呼び出される想定
     public static void SetSoundManeger(SoundManeger soundManeger)
     {
         SM = soundManeger;
         Mixer = SM.audioMixer;
+        AudioMixer = Mixer;  
 
-        // ★ まずは ScriptableObject の値を適用（-60?0にクランプ）
+        if (SM == null || Mixer == null)
+            return;
+
+        // SoundManegerのMixerGroupNameとAllMixerDataをループして、Mixerにボリュームを適用
         for (int i = 0; i < SM.MixerGroupName.Count; i++)
         {
-            string param = SM.MixerGroupName[i] + "_Volume"; // 例: "Master_Volume"
+            string param = SM.MixerGroupName[i] + "_Volume";
             float db = Mathf.Clamp(SM.AllMixerData[i].Volume, DB_MIN, DB_MAX);
             Mixer.SetFloat(param, db);
         }
 
-        // ★ 次に、保存されていれば復元で上書き
         LoadVolumes();
     }
 
+    // Mixerにボリュームを設定し、PlayerPrefsにも保存
     public static void SetVolume(string name, float volume)
     {
         Initialize();
 
-        // ★ -60?0dB にクランプ
+        if (Mixer == null)
+            return;
+
         float db = Mathf.Clamp(volume, DB_MIN, DB_MAX);
         Mixer.SetFloat(name, db);
 
-        // ★ 保存
         PlayerPrefs.SetFloat(PREF_PREFIX + name, db);
-        // 頻繁に呼ぶなら Save は省略可。確実に残したいなら以下を有効化:
         // PlayerPrefs.Save();
     }
 
+    // Mixerからボリュームを取得。失敗した場合はPlayerPrefsから取得。どちらも失敗した場合は-999fを返す。
     public static float GetVolume(string name)
     {
         Initialize();
 
-        float volume;
-        if (Mixer.GetFloat(name, out volume))
+        if (Mixer != null && Mixer.GetFloat(name, out float volume))
         {
-            return volume; // dB (-60?0)
+            return volume;
         }
 
-        // ★ Mixer未準備でも保存値があれば返す
         if (PlayerPrefs.HasKey(PREF_PREFIX + name))
         {
             return PlayerPrefs.GetFloat(PREF_PREFIX + name);
         }
-        return -999f; // 取得できなかったとき
+
+        return -999f;
     }
 
-    // ★ 追加：保存値の一括復元
+    // 保存されたボリュームをロードしてMixerに適用
     public static void LoadVolumes()
     {
-        if (SM == null || Mixer == null) return;
+        if (SM == null || Mixer == null)
+            return;
 
         for (int i = 0; i < SM.MixerGroupName.Count; i++)
         {
@@ -105,56 +109,103 @@ public static class MySoundManeger
         }
     }
 
-
+    //SE再生
     public static void Play(GameObject obj, SEList soundList)
     {
         Initialize();
-        AudioSource source = obj.GetComponent<AudioSource>();
-        if (source == null) source = obj.AddComponent<AudioSource>();
-        Debug.Log(SM.seListData[(int)soundList].audioClip + " " + SM.seListData[(int)soundList].volume + " " + SM.seListData[(int)soundList].pitch + " " + SM.seListData[(int)soundList].isLoop + " " + SM.seListData[(int)soundList].audioMixerGroup);
-        if (source != null)
-        {
-            //Debug.Log(source+ ""+ SEaudioClip[(int)soundList] + "" + SEvolume[(int)soundList] + "" + SEPitch[(int)soundList] + "" + SEisLoop[(int)soundList] + "" + SEaudioMixerGroup[(int)soundList]);
-            CopyAudioSourceSettings(source, SM.seListData[(int)soundList].audioClip, SM.seListData[(int)soundList].volume, SM.seListData[(int)soundList].pitch, SM.seListData[(int)soundList].isLoop, SM.seListData[(int)soundList].audioMixerGroup);
 
-            source.Play();
-        }
+        if (SM == null || obj == null)
+            return;
+
+        AudioSource source = obj.GetComponent<AudioSource>();
+        if (source == null)
+            source = obj.AddComponent<AudioSource>();
+
+        SoundManeger.AudioListData data = SM.seListData[(int)soundList];
+
+        CopyAudioSourceSettings(source, data);
+        source.Play();
     }
+
+    //BGM再生
     public static void Play(GameObject obj, BGMList soundList)
     {
         Initialize();
+
+        if (SM == null || obj == null)
+            return;
+
         AudioSource source = obj.GetComponent<AudioSource>();
-        if (source == null) source = obj.AddComponent<AudioSource>();
-        Debug.Log(SM.bgmListData[(int)soundList].audioClip + " " + SM.bgmListData[(int)soundList].volume + " " + SM.bgmListData[(int)soundList].pitch + " " + SM.bgmListData[(int)soundList].isLoop + " " + SM.bgmListData[(int)soundList].audioMixerGroup);
-        if (source != null)
+        if (source == null)
+            source = obj.AddComponent<AudioSource>();
+
+        SoundManeger.AudioListData data = SM.bgmListData[(int)soundList];
+
+
+        if (data.audioClip == null)
         {
-
-            CopyAudioSourceSettings(source, SM.bgmListData[(int)soundList].audioClip, SM.bgmListData[(int)soundList].volume, SM.bgmListData[(int)soundList].pitch, SM.bgmListData[(int)soundList].isLoop, SM.bgmListData[(int)soundList].audioMixerGroup);
-
-            source.Play();
+            Debug.LogWarning($"SE {soundList} の AudioClip が設定されていません");
+            return;
         }
+
+
+        CopyAudioSourceSettings(source, data);
+        source.Play();
     }
 
+    //停止
     public static void Stop(GameObject obj)
     {
+        if (obj == null)
+            return;
+
         AudioSource source = obj.GetComponent<AudioSource>();
-        if (source != null) source.Stop();
+        if (source != null)
+            source.Stop();
     }
 
-    private static void CopyAudioSourceSettings(AudioSource source, AudioClip clip, float volume, float Pitch, bool loop, AudioMixerGroup Group)
+    //AudioSourceの設定をSoundManeger.AudioListDataからコピー
+    private static void CopyAudioSourceSettings(AudioSource source, SoundManeger.AudioListData data)
     {
 
-        source.clip = clip;
-        source.outputAudioMixerGroup = Group;
-        source.loop = loop;
-        source.volume = volume;
-        source.pitch = Pitch;
+        if (source == null)
+            return;
 
+        source.clip = data.audioClip;
+        source.outputAudioMixerGroup = data.audioMixerGroup;
+        source.bypassEffects = data.bypassEffects;
+        source.bypassListenerEffects = data.bypassListenerEffects;
+        source.bypassReverbZones = data.bypassReverbZones;
+        source.loop = data.isLoop;
+        source.priority = data.priority;
+        source.volume = data.volume;
+        source.pitch = data.pitch;
+        source.panStereo = data.StereoPan;
+        source.spatialBlend = data.spatialBlend;
+        source.reverbZoneMix = data.reverbZoneMix;
+        source.dopplerLevel = data.dopplerLevel;
+        source.spread = data.spread;
+        source.minDistance = data.minDistance;
+        source.maxDistance = data.maxDistance;
+
+        // ボリュームのロールオフタイプに応じてAudioSourceのrolloffModeを設定。Customの場合はカスタムカーブも設定
+        switch (data.velumeRollOffType)
+        {
+            case VelumeRollOffType.Logarithmic:
+                source.rolloffMode = AudioRolloffMode.Logarithmic;
+                break;
+
+            case VelumeRollOffType.Linear:
+                source.rolloffMode = AudioRolloffMode.Linear;
+                break;
+
+            case VelumeRollOffType.Custom:
+                source.rolloffMode = AudioRolloffMode.Custom;
+                if (data.customRolloffCurve != null)
+                {
+                    source.SetCustomCurve(AudioSourceCurveType.CustomRolloff, data.customRolloffCurve);
+                }
+                break;
+        }
     }
-    private static void CopyAudioMixerSettings(AudioMixer mixer, float volume, float Pitch, bool loop, AudioMixerGroup Group)
-    {
-
-
-    }
-
 }
