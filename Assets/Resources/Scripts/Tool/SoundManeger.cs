@@ -1,7 +1,9 @@
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
+using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
 using System;
 using System.Collections.Generic;
@@ -119,6 +121,10 @@ public class SoundManeger : ScriptableObject
         [HideInInspector]
         public AnimationCurve customRolloffCurve;//カスタムロールオフ曲線
 
+        [SerializeField]
+        [HideInInspector]
+        public AudioFilterData audioFilterData;//オーディオフィルタの設定
+
     }
 
     [SerializeField]
@@ -148,6 +154,116 @@ public class SoundManeger : ScriptableObject
         [HideInInspector]
         [Range(-80.0f, 20.0f)]
         public float Volume;
+    }
+
+    //オーディオフィルタの設定
+    [System.Serializable]
+    public struct AudioFilterData
+    {
+        // Chorus
+        [SerializeField]
+        [HideInInspector]
+        public bool useChorus;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusDryMix;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusWetMix1;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusWetMix2;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusWetMix3;
+
+        [Range(0.1f, 100.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusDelay;
+
+        [Range(0.0f, 20.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusRate;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float chorusDepth;
+
+        // Distortion
+        [SerializeField]
+        [HideInInspector]
+        public bool useDistortion;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float distortionLevel;
+
+        // Echo
+        [SerializeField]
+        [HideInInspector]
+        public bool useEcho;
+
+        [Range(10.0f, 5000.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float echoDelay;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float echoDecayRatio;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float echoDryMix;
+
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float echoWetMix;
+
+        // HighPass
+        [SerializeField]
+        [HideInInspector]
+        public bool useHighPass;
+
+        [Range(10.0f, 22000.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float highPassCutoffFrequency;
+
+        [Range(1.0f, 10.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float highPassResonanceQ;
+
+        // LowPass
+        [SerializeField]
+        [HideInInspector]
+        public bool useLowPass;
+
+        [Range(10.0f, 22000.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float lowPassCutoffFrequency;
+
+        [Range(1.0f, 10.0f)]
+        [SerializeField]
+        [HideInInspector]
+        public float lowPassResonanceQ;
     }
 
     [SerializeField]
@@ -214,8 +330,36 @@ public class SoundManeger : ScriptableObject
             velumeRollOffType = VelumeRollOffType.Logarithmic,
             customRolloffCurve = AnimationCurve.Linear(0, 1, 1, 0),
             minDistance = 1.0f,
-            maxDistance = 500.0f
-           
+            maxDistance = 500.0f,
+                audioFilterData = new AudioFilterData
+                {
+                    useChorus = false,
+                    chorusDryMix = 0.5f,
+                    chorusWetMix1 = 0.5f,
+                    chorusWetMix2 = 0.5f,
+                    chorusWetMix3 = 0.5f,
+                    chorusDelay = 40.0f,
+                    chorusRate = 1.0f,
+                    chorusDepth = 0.5f,
+    
+                    useDistortion = false,
+                    distortionLevel = 0.5f,
+    
+                    useEcho = false,
+                    echoDelay = 500.0f,
+                    echoDecayRatio = 0.5f,
+                    echoDryMix = 0.5f,
+                    echoWetMix = 0.5f,
+    
+                    useHighPass = false,
+                    highPassCutoffFrequency = 5000.0f,
+                    highPassResonanceQ = 1.0f,
+    
+                    useLowPass = false,
+                    lowPassCutoffFrequency = 5000.0f,
+                    lowPassResonanceQ = 1.0f
+                }
+
         };
     }
 
@@ -293,6 +437,8 @@ public class SoundManegerInspector : Editor
 
     void OnEnable()
     {
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        EditorSceneManager.sceneOpened += OnSceneOpened;
         _target = target as SoundManeger;
         //SEの初期化
         seDataProperiy = serializedObject.FindProperty("seListData");
@@ -311,7 +457,28 @@ public class SoundManegerInspector : Editor
 
         selectIndex = serializedObject.FindProperty("selectIndex");
 
+        
+
     }
+
+    void OnDisable()
+    {
+        EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        EditorSceneManager.sceneOpened -= OnSceneOpened;
+
+        DestroyPreviewObject();
+    }
+
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        DestroyPreviewObject();
+    }
+
+    private void OnSceneOpened(UnityEngine.SceneManagement.Scene scene, OpenSceneMode mode)
+    {
+        DestroyPreviewObject();
+    }
+
     //インスペクターに表示
     public override void OnInspectorGUI()
     {
@@ -382,7 +549,7 @@ public class SoundManegerInspector : Editor
                 }
                 EditorGUILayout.PropertyField(element.FindPropertyRelative("minDistance"));
                 EditorGUILayout.PropertyField(element.FindPropertyRelative("maxDistance"));
-                
+                DrawAudioFilterProperties(element);
             }
             else
             {
@@ -406,6 +573,10 @@ public class SoundManegerInspector : Editor
                 }
                 else
                 {
+
+                    serializedObject.ApplyModifiedProperties();   
+                    serializedObject.Update();                   
+
                     AudioListData data =
                         _target.seListData[(int)_target.seList];
 
@@ -423,6 +594,9 @@ public class SoundManegerInspector : Editor
 
             GUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
         }
@@ -440,29 +614,30 @@ public class SoundManegerInspector : Editor
             //Debug.Log("インデックス" + index + "a" + BGMDataProperiy.arraySize);
             if (index >= 0 && index < BGMDataProperiy.arraySize)
             {
-                SerializedProperty element2 = BGMDataProperiy.GetArrayElementAtIndex((int)_target.bgmList);
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("audioClip"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("audioMixerGroup"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("bypassEffects"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("bypassListenerEffects"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("bypassReverbZones"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("isLoop"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("priority"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("volume"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("pitch"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("StereoPan"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("spatialBlend"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("reverbZoneMix"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("dopplerLevel"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("spread"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("velumeRollOffType"));
-                if ((VelumeRollOffType)element2.FindPropertyRelative("velumeRollOffType").enumValueIndex == VelumeRollOffType.Custom)
+                SerializedProperty element = BGMDataProperiy.GetArrayElementAtIndex((int)_target.bgmList);
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("audioClip"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("audioMixerGroup"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("bypassEffects"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("bypassListenerEffects"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("bypassReverbZones"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("isLoop"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("priority"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("volume"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("pitch"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("StereoPan"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("spatialBlend"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("reverbZoneMix"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("dopplerLevel"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("spread"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("velumeRollOffType"));
+                if ((VelumeRollOffType)element.FindPropertyRelative("velumeRollOffType").enumValueIndex == VelumeRollOffType.Custom)
                 {
-                    EditorGUILayout.PropertyField(element2.FindPropertyRelative("customRolloffCurve"));
+                    EditorGUILayout.PropertyField(element.FindPropertyRelative("customRolloffCurve"));
                 }
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("minDistance"));
-                EditorGUILayout.PropertyField(element2.FindPropertyRelative("maxDistance"));
-               
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("minDistance"));
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("maxDistance"));
+
+                DrawAudioFilterProperties(element);
             }
             else
             {
@@ -486,6 +661,9 @@ public class SoundManegerInspector : Editor
                 }
                 else
                 {
+                    serializedObject.ApplyModifiedProperties();
+                    serializedObject.Update();
+
                     AudioListData data =
                         _target.bgmListData[(int)_target.bgmList];
 
@@ -502,7 +680,10 @@ public class SoundManegerInspector : Editor
             }
             GUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+
            
+            EditorGUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
@@ -512,7 +693,7 @@ public class SoundManegerInspector : Editor
 
         //ミキサーの設定
         EditorGUILayout.PropertyField(MixcerProperiy);
-        if (MixcerProperiy != null)
+        if (MixcerProperiy.objectReferenceValue != null)
         {
             _target.audioMixer = MixcerProperiy.objectReferenceValue as AudioMixer;
 
@@ -572,37 +753,95 @@ public class SoundManegerInspector : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
+    private void DrawAudioFilterProperties(SerializedProperty element)
+    {
+        SerializedProperty filter = element.FindPropertyRelative("audioFilterData");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Audio Filter", EditorStyles.boldLabel);
+
+        // Chorus
+        EditorGUILayout.PropertyField(filter.FindPropertyRelative("useChorus"));
+        if (filter.FindPropertyRelative("useChorus").boolValue)
+        {
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusDryMix"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusWetMix1"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusWetMix2"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusWetMix3"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusDelay"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusRate"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("chorusDepth"));
+        }
+
+        // Distortion
+        EditorGUILayout.PropertyField(filter.FindPropertyRelative("useDistortion"));
+        if (filter.FindPropertyRelative("useDistortion").boolValue)
+        {
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("distortionLevel"));
+        }
+
+        // Echo
+        EditorGUILayout.PropertyField(filter.FindPropertyRelative("useEcho"));
+        if (filter.FindPropertyRelative("useEcho").boolValue)
+        {
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("echoDelay"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("echoDecayRatio"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("echoDryMix"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("echoWetMix"));
+        }
+
+        // HighPass
+        EditorGUILayout.PropertyField(filter.FindPropertyRelative("useHighPass"));
+        if (filter.FindPropertyRelative("useHighPass").boolValue)
+        {
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("highPassCutoffFrequency"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("highPassResonanceQ"));
+        }
+
+        // LowPass
+        EditorGUILayout.PropertyField(filter.FindPropertyRelative("useLowPass"));
+        if (filter.FindPropertyRelative("useLowPass").boolValue)
+        {
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("lowPassCutoffFrequency"));
+            EditorGUILayout.PropertyField(filter.FindPropertyRelative("lowPassResonanceQ"));
+        }
+    }
 
 
-    // エディタ上でのサウンド再生.
+    // エディタ上でのサウンド再生
     void PlayClip(AudioClip clip, AudioListData data, PreviewType type)
     {
         if (clip == null)
             return;
 
-        if (previewObject == null)
-        {
-            previewObject = new GameObject("PreviewAudio");
-            previewObject.hideFlags = HideFlags.HideAndDontSave;
+        // 毎回に作り直す
+        DestroyPreviewObject();
 
-            previewSource = previewObject.AddComponent<AudioSource>();
-        }
+        previewObject = new GameObject("PreviewAudio");
+        // シーン上に表示しないようにする
+        previewObject.hideFlags = HideFlags.HideAndDontSave;
+        // シーン上に表示する場合は以下の行をコメントを外す
+        //previewObject.hideFlags = HideFlags.None;
+        previewSource = previewObject.AddComponent<AudioSource>();
 
-        previewSource.Stop();
-
-
+        // AudioSource 設定
         previewSource.clip = clip;
         previewSource.priority = data.priority;
         previewSource.volume = data.volume;
         previewSource.pitch = data.pitch;
         previewSource.panStereo = data.StereoPan;
+
         previewSource.spatialBlend = data.spatialBlend;
+
         previewSource.reverbZoneMix = data.reverbZoneMix;
         previewSource.loop = data.isLoop;
+
         previewSource.outputAudioMixerGroup = data.audioMixerGroup;
-        previewSource.bypassEffects = data.bypassEffects;
-        previewSource.bypassListenerEffects = data.bypassListenerEffects;
-        previewSource.bypassReverbZones = data.bypassReverbZones;
+
+        previewSource.bypassEffects = false;
+        previewSource.bypassListenerEffects = true;
+        previewSource.bypassReverbZones = true;
+
         previewSource.dopplerLevel = data.dopplerLevel;
         previewSource.spread = data.spread;
         previewSource.minDistance = data.minDistance;
@@ -627,25 +866,25 @@ public class SoundManegerInspector : Editor
                 }
                 break;
         }
-        //再生
+
+         ApplyPreviewAudioFilters(data);
+
+       
+
         previewSource.Play();
 
         isSEPlaying = (type == PreviewType.SE);
         isBGMPlaying = (type == PreviewType.BGM);
-
     }
+
+
 
 
     void StopClip()
     {
-        if (previewSource != null)
-        {
-            previewSource.Stop();
-        }
-
-        isSEPlaying = false;
-        isBGMPlaying = false;
+        DestroyPreviewObject();
     }
+
 
     // SEを次に移動する関数
     void PrevSE()
@@ -686,8 +925,99 @@ public class SoundManegerInspector : Editor
         _target.bgmList = (BGMList)index;
     }
 
+    private T GetOrAddPreviewComponent<T>() where T : Component
+    {
+        T comp = previewObject.GetComponent<T>();
+        if (comp == null)
+        {
+            comp = previewObject.AddComponent<T>();
+        }
+        return comp;
+    }
 
+    private void DestroyPreviewObject()
+    {
+        if (previewSource != null)
+        {
+            previewSource.Stop();
+        }
 
+        if (previewObject != null)
+        {
+            DestroyImmediate(previewObject);
+            previewObject = null;
+            previewSource = null;
+        }
 
+        isSEPlaying = false;
+        isBGMPlaying = false;
+    }
+
+    private void ApplyPreviewAudioFilters(AudioListData data)
+    {
+        AudioFilterData filter = data.audioFilterData;
+
+        // 全部取得
+        AudioChorusFilter chorus = GetOrAddPreviewComponent<AudioChorusFilter>();
+        AudioDistortionFilter distortion = GetOrAddPreviewComponent<AudioDistortionFilter>();
+        AudioEchoFilter echo = GetOrAddPreviewComponent<AudioEchoFilter>();
+        AudioHighPassFilter highPass = GetOrAddPreviewComponent<AudioHighPassFilter>();
+        AudioLowPassFilter lowPass = GetOrAddPreviewComponent<AudioLowPassFilter>();
+
+        // 全部無効化
+        chorus.enabled = false;
+        distortion.enabled = false;
+        echo.enabled = false;
+        highPass.enabled = false;
+        lowPass.enabled = false;
+
+        // Chorus
+        if (filter.useChorus)
+        {
+            chorus.dryMix = filter.chorusDryMix;
+            chorus.wetMix1 = filter.chorusWetMix1;
+            chorus.wetMix2 = filter.chorusWetMix2;
+            chorus.wetMix3 = filter.chorusWetMix3;
+            chorus.delay = filter.chorusDelay;
+            chorus.rate = filter.chorusRate;
+            chorus.depth = filter.chorusDepth;
+            chorus.enabled = true;
+        }
+
+        // Distortion
+        if (filter.useDistortion)
+        {
+            distortion.distortionLevel = filter.distortionLevel;
+            distortion.enabled = true;
+        }
+
+        // Echo
+        if (filter.useEcho)
+        {
+            echo.delay = filter.echoDelay;
+            echo.decayRatio = filter.echoDecayRatio;
+            echo.dryMix = filter.echoDryMix;
+            echo.wetMix = filter.echoWetMix;
+            echo.enabled = true;
+        }
+
+        // HighPass
+        if (filter.useHighPass)
+        {
+            highPass.cutoffFrequency = filter.highPassCutoffFrequency;
+            highPass.highpassResonanceQ = filter.highPassResonanceQ;
+            highPass.enabled = true;
+        }
+
+        // LowPass
+        if (filter.useLowPass)
+        {
+            lowPass.cutoffFrequency = filter.lowPassCutoffFrequency;
+            lowPass.lowpassResonanceQ = filter.lowPassResonanceQ;
+            lowPass.enabled = true;
+        }
+    }
+
+    
 }
 #endif
