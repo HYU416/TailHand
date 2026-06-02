@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class EffectManager : MonoBehaviour
 {
@@ -31,6 +32,8 @@ public class EffectManager : MonoBehaviour
 
     private Dictionary<EffectType, EffectData> dataTable = new();
 
+    private static bool isInitialized = false;
+
     /// エフェクトマネージャーの作成
     private static void CreateManager()
     {
@@ -51,9 +54,29 @@ public class EffectManager : MonoBehaviour
         instance = this;
         
         DontDestroyOnLoad(gameObject);
-        //初期化
-        Initialize();
+        // エフェクトデータベースの初期化
+        if (!isInitialized)
+        {
+            Initialize();
+            isInitialized = true;
+        }
     }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        pool.Clear();
+    }
+
 
     private void Initialize()
     {
