@@ -15,6 +15,7 @@ MonoBehaviour:
   seList: 1
   seListData:
   - audioClip: {fileID: 8300000, guid: 79863e7e5e7836c43950ae46319173f6, type: 3}
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
     bypassReverbZones: 0
@@ -54,8 +55,30 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0
+      chorusWetMix1: 0
+      chorusWetMix2: 0
+      chorusWetMix3: 0
+      chorusDelay: 0
+      chorusRate: 0
+      chorusDepth: 0
+      useDistortion: 0
+      distortionLevel: 0
+      useEcho: 0
+      echoDelay: 0
+      echoDecayRatio: 0
+      echoDryMix: 0
+      echoWetMix: 0
+      useHighPass: 0
+      highPassCutoffFrequency: 0
+      highPassResonanceQ: 0
+      useLowPass: 0
+      lowPassCutoffFrequency: 0
+      lowPassResonanceQ: 0
   - audioClip: {fileID: 8300000, guid: 17fcfbe4a73b92d45854e77392e836da, type: 3}
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
     bypassReverbZones: 0
@@ -77,10 +100,32 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0
+      chorusWetMix1: 0
+      chorusWetMix2: 0
+      chorusWetMix3: 0
+      chorusDelay: 0
+      chorusRate: 0
+      chorusDepth: 0
+      useDistortion: 0
+      distortionLevel: 0
+      useEcho: 0
+      echoDelay: 3760
+      echoDecayRatio: 0.796
+      echoDryMix: 0.605
+      echoWetMix: 0.599
+      useHighPass: 0
+      highPassCutoffFrequency: 0
+      highPassResonanceQ: 0
+      useLowPass: 0
+      lowPassCutoffFrequency: 0
+      lowPassResonanceQ: 0
   bgmList: 0
   bgmListData:
   - audioClip: {fileID: 8300000, guid: 9638d714f6db2634395ef3d0321dd92e, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
     bypassReverbZones: 0
@@ -102,7 +147,28 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.51
+      chorusWetMix1: 0.49
+      chorusWetMix2: 0.497
+      chorusWetMix3: 0.478
+      chorusDelay: 48.5
+      chorusRate: 10.1
+      chorusDepth: 0.49
+      useDistortion: 0
+      distortionLevel: 0.2
+      useEcho: 0
+      echoDelay: 400
+      echoDecayRatio: 0.4
+      echoDryMix: 1
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 1500
+      highPassResonanceQ: 1.2
+      useLowPass: 0
+      lowPassCutoffFrequency: 800
+      lowPassResonanceQ: 1.2
   audioMixer: {fileID: 24100000, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
   MixerGroupName:
   - Master

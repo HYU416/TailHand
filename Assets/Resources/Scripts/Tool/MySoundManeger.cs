@@ -123,7 +123,14 @@ public static class MySoundManeger
 
         SoundManeger.AudioListData data = SM.seListData[(int)soundList];
 
+        if (data.audioClip == null)
+        {
+            Debug.LogWarning($"SE {soundList} ÇÃ AudioClip Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
+            return;
+        }
+
         CopyAudioSourceSettings(source, data);
+        ApplyAudioFilters(obj, data);
         source.Play();
     }
 
@@ -144,12 +151,13 @@ public static class MySoundManeger
 
         if (data.audioClip == null)
         {
-            Debug.LogWarning($"SE {soundList} ÇÃ AudioClip Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
+            Debug.LogWarning($"BGM {soundList} ÇÃ AudioClip Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
             return;
         }
 
 
         CopyAudioSourceSettings(source, data);
+        ApplyAudioFilters(obj, data);
         source.Play();
     }
 
@@ -208,4 +216,95 @@ public static class MySoundManeger
                 break;
         }
     }
+
+    private static void ApplyAudioFilters(GameObject obj, SoundManeger.AudioListData data)
+    {
+        if (obj == null)
+            return;
+
+        SoundManeger.AudioFilterData filter = data.audioFilterData;
+
+        // Chorus
+        AudioChorusFilter chorus = GetOrAddComponent<AudioChorusFilter>(obj);
+        if (filter.useChorus)
+        {
+            chorus.dryMix = filter.chorusDryMix;
+            chorus.wetMix1 = filter.chorusWetMix1;
+            chorus.wetMix2 = filter.chorusWetMix2;
+            chorus.wetMix3 = filter.chorusWetMix3;
+            chorus.delay = filter.chorusDelay;
+            chorus.rate = filter.chorusRate;
+            chorus.depth = filter.chorusDepth;
+            chorus.enabled = true;
+        }
+        else
+        {
+            chorus.enabled = false;
+        }
+
+        // Distortion
+        AudioDistortionFilter distortion = GetOrAddComponent<AudioDistortionFilter>(obj);
+        if (filter.useDistortion)
+        {
+            distortion.distortionLevel = filter.distortionLevel;
+            distortion.enabled = true;
+        }
+        else
+        {
+            distortion.enabled = false;
+        }
+
+        // Echo
+        AudioEchoFilter echo = GetOrAddComponent<AudioEchoFilter>(obj);
+        if (filter.useEcho)
+        {
+            echo.delay = filter.echoDelay;
+            echo.decayRatio = filter.echoDecayRatio;
+            echo.dryMix = filter.echoDryMix;
+            echo.wetMix = filter.echoWetMix;
+            echo.enabled = true;
+        }
+        else
+        {
+            echo.enabled = false;
+        }
+
+        // HighPass
+        AudioHighPassFilter highPass = GetOrAddComponent<AudioHighPassFilter>(obj);
+        if (filter.useHighPass)
+        {
+            highPass.cutoffFrequency = filter.highPassCutoffFrequency;
+            highPass.highpassResonanceQ = filter.highPassResonanceQ;
+            highPass.enabled = true;
+        }
+        else
+        {
+            highPass.enabled = false;
+        }
+
+        // LowPass
+        AudioLowPassFilter lowPass = GetOrAddComponent<AudioLowPassFilter>(obj);
+        if (filter.useLowPass)
+        {
+            lowPass.cutoffFrequency = filter.lowPassCutoffFrequency;
+            lowPass.lowpassResonanceQ = filter.lowPassResonanceQ;
+            lowPass.enabled = true;
+        }
+        else
+        {
+            lowPass.enabled = false;
+        }
+    }
+
+    private static T GetOrAddComponent<T>(GameObject obj) where T : Component
+    {
+        T comp = obj.GetComponent<T>();
+        if (comp == null)
+        {
+            comp = obj.AddComponent<T>();
+        }
+        return comp;
+    }
+
+  
 }
