@@ -20,6 +20,15 @@ public class BossCorePart : MonoBehaviour
     [Header("未投げの不発弾はコアに効かない")]
     [SerializeField] private bool requireThrownDudBomb = true;
 
+    [Header("Flint / Obsidian / Rubble が当たったらコアにもダメージを与える")]
+    [SerializeField] private bool damageCoreByItemHit = true;
+
+    [Header("アイテム命中時、コアを一撃で壊す")]
+    [SerializeField] private bool itemOneShotCore = true;
+
+    [Header("一撃で壊さない場合のアイテムダメージ")]
+    [SerializeField] private int itemCoreDamage = 1;
+
     [Header("デバッグログ")]
     [SerializeField] private bool showDebugLog = true;
 
@@ -62,6 +71,42 @@ public class BossCorePart : MonoBehaviour
 
     private void CheckHit(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
     {
+        if (damageCoreByItemHit)
+        {
+            GameObject itemObject = FindDestroyableItemObject(hitObject, hitCollider, hitRigidbody);
+
+            if (itemObject != null)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("アイテムがコアに当たりました。アイテムを消してコアにダメージを与えます: " + itemObject.name);
+                }
+
+                Destroy(itemObject);
+
+                if (!isAttackable)
+                {
+                    if (showDebugLog)
+                    {
+                        Debug.Log("アイテムがコアに当たりましたが、コアはまだ攻撃不可です。");
+                    }
+
+                    return;
+                }
+
+                if (itemOneShotCore)
+                {
+                    HitCore(oneShotCoreDamage);
+                }
+                else
+                {
+                    HitCore(itemCoreDamage);
+                }
+
+                return;
+            }
+        }
+
         DudBomb dudBomb = FindDudBomb(hitObject, hitCollider, hitRigidbody);
         BossBombHitMarker bombMarker = FindBombMarker(hitObject, hitCollider, hitRigidbody);
 
@@ -172,6 +217,81 @@ public class BossCorePart : MonoBehaviour
             HitCore(damage);
             bombMarker.Consume();
         }
+    }
+
+    private GameObject FindDestroyableItemObject(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        GameObject target = null;
+
+        if (hitRigidbody != null)
+        {
+            target = hitRigidbody.gameObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+        }
+
+        if (hitObject != null)
+        {
+            target = hitObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+
+            Transform parent = hitObject.transform.parent;
+
+            while (parent != null)
+            {
+                if (IsDestroyableItemName(parent.name))
+                {
+                    return parent.gameObject;
+                }
+
+                parent = parent.parent;
+            }
+        }
+
+        if (hitCollider != null)
+        {
+            target = hitCollider.gameObject;
+
+            if (IsDestroyableItemName(target.name))
+            {
+                return target;
+            }
+
+            Transform parent = hitCollider.transform.parent;
+
+            while (parent != null)
+            {
+                if (IsDestroyableItemName(parent.name))
+                {
+                    return parent.gameObject;
+                }
+
+                parent = parent.parent;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsDestroyableItemName(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName))
+        {
+            return false;
+        }
+
+        string fixedName = objectName.Replace("(Clone)", "").Trim();
+
+        return fixedName == "Flint" ||
+               fixedName == "Obsidian" ||
+               fixedName == "Rubble";
     }
 
     private DudBomb FindDudBomb(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)

@@ -4,12 +4,22 @@ public class RespawnTrigger : MonoBehaviour
 {
     [Header("リスポーン地点")]
     [SerializeField] private Transform respawnPoint;
+    [Header("ゲームクリア")]
+    [SerializeField] private GameClear gameClear;
 
     private void OnTriggerEnter(Collider other)
     {
-        // Playerタグだけ反応
+        // BossHeadタグに反応
+        if (other.CompareTag("BossHead"))
+        {
+            Debug.Log("BossHeadがRespownBoxに当たりました");
+            gameClear.StartWin();
+        }
+        // Playerタグに反応
         if (!other.CompareTag("Player"))
+        {
             return;
+        }
 
         Rigidbody rb = other.attachedRigidbody;
 

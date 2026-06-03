@@ -21,11 +21,11 @@ public class CameraFollow : MonoBehaviour
     {
         MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
 
-        player = GameObject.FindGameObjectWithTag("Player");
-        Boss = GameObject.FindGameObjectWithTag("Boss");
+        //player = GameObject.FindGameObjectWithTag("Player");
+        //Boss = GameObject.FindGameObjectWithTag("Boss");
 
-        if (player == null) Debug.LogError("Playerタグが見つかりません。");
-        if (Boss == null) Debug.LogError("Bossタグが見つかりません。");
+        //if (player == null) Debug.LogError("Playerタグが見つかりません。");
+        //if (Boss == null) Debug.LogError("Bossタグが見つかりません。");
     }
 
     private void LateUpdate()

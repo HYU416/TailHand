@@ -135,6 +135,12 @@ public partial class BossPhaseAttackController : MonoBehaviour
     [Header("回転させる本体")]
     [SerializeField] private Transform rotateRoot;
 
+    [Header("3段階目の回転中心")]
+    [SerializeField] private Transform phase3RotateCenter;
+
+    [Header("3段階目は必ず回転中心を使う")]
+    [SerializeField] private bool forcePhase3RotateAroundCenter = true;
+
     [Header("空爆中心")]
     [SerializeField] private Transform airStrikeCenter;
 
@@ -391,6 +397,45 @@ public partial class BossPhaseAttackController : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void RotateBossForAttack(float rotateSpeed)
+    {
+        if (rotateRoot == null)
+        {
+            rotateRoot = transform;
+        }
+
+        float rotateAmount = rotateSpeed * Time.deltaTime;
+
+        if (forcePhase3RotateAroundCenter && GetCurrentPhase() == 3 && phase3RotateCenter != null)
+        {
+            rotateRoot.RotateAround(
+                phase3RotateCenter.position,
+                Vector3.up,
+                rotateAmount
+            );
+
+            return;
+        }
+
+        rotateRoot.Rotate(
+            Vector3.up,
+            rotateAmount,
+            Space.World
+        );
+    }
+
+    private void RotateBossForAttack(float rotateSpeed, RotateDirection rotateDirection)
+    {
+        float direction = 1f;
+
+        if (rotateDirection == RotateDirection.反時計回り)
+        {
+            direction = -1f;
+        }
+
+        RotateBossForAttack(rotateSpeed * direction);
     }
 
     private Vector3 GetShootDirection(Transform gun, ShootAxis axis)
