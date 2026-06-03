@@ -13,6 +13,7 @@ TagManager:
   - BossCore
   - CoreBreakEffect
   - DamageZoneEffect
+  - BossHead
   layers:
   - Default
   - TransparentFX

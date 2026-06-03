@@ -77,6 +77,7 @@ public class PlayerHPBar : MonoBehaviour
 
         if (currentHP <= 0f)
         {
+
             Die();
         }
     }
