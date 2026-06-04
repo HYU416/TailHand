@@ -1,8 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 public static class MySoundManeger
 {
+    private class PlayingAudio
+    {
+        public AudioSource Source;
+        public bool IsBGM;
+    }
+
     public static SoundManeger SM;
     public static AudioMixer AudioMixer;
     private static AudioMixer Mixer;
@@ -14,6 +22,7 @@ public static class MySoundManeger
     private const string PREF_PREFIX = "vol_";
 
     private static bool initialized;
+    private static Dictionary<GameObject, List<PlayingAudio>> playingSources  = new Dictionary<GameObject, List<PlayingAudio>>();
 
     // 初期化。SoundManegerがResourcesからロードされ、AudioMixerがセットされる。失敗した場合はエラーログを出力。
     private static void Initialize()
@@ -34,6 +43,37 @@ public static class MySoundManeger
         initialized = true;
         // すでにSoundManegerがロードされている場合は、Mixerに保存されたボリュームを適用
         LoadVolumes();
+    }
+
+    //シーンロード時に初期化
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void OnAfterSceneLoad()
+    {
+        Cleanup();
+    }
+
+    private static void Cleanup()
+    {
+        var removeKeys = new List<GameObject>();
+
+        foreach (var pair in playingSources)
+        {
+            if (pair.Key == null)
+            {
+                removeKeys.Add(pair.Key);
+                continue;
+            }
+
+            pair.Value.RemoveAll(audio =>
+     audio == null ||
+     audio.Source == null ||
+     (!audio.IsBGM && !audio.Source.isPlaying));
+        }
+
+        foreach (var key in removeKeys)
+        {
+            playingSources.Remove(key);
+        }
     }
 
     // SoundManegerをセット。通常はSoundManegerのAwakeで呼び出される想定
@@ -110,41 +150,60 @@ public static class MySoundManeger
     }
 
     //SE再生
-    public static void Play(GameObject obj, SEList soundList)
+    public static AudioSource Play(GameObject parent, SEList soundList)
     {
         Initialize();
 
-        if (SM == null || obj == null)
-            return;
+        if (SM == null || parent == null)
+            return null;
 
-        AudioSource source = obj.GetComponent<AudioSource>();
-        if (source == null)
-            source = obj.AddComponent<AudioSource>();
-
-        SoundManeger.AudioListData data = SM.seListData[(int)soundList];
+        SoundManeger.AudioListData data =
+            SM.seListData[(int)soundList];
 
         if (data.audioClip == null)
         {
             Debug.LogWarning($"SE {soundList} の AudioClip が設定されていません");
-            return;
+            return null;
         }
 
+        GameObject audioObj =
+            new GameObject($"Audio_{soundList}");
+
+        audioObj.transform.SetParent(parent.transform);
+        audioObj.transform.localPosition = Vector3.zero;
+
+        AudioSource source = audioObj.AddComponent<AudioSource>();
+        RegisterAudio(parent, source, false);
+
         CopyAudioSourceSettings(source, data);
-        ApplyAudioFilters(obj, data);
+        ApplyAudioFilters(audioObj, data);
+
         source.Play();
+
+        if (!data.isLoop)
+        {
+            Object.Destroy(audioObj,data.audioClip.length + 0.5f);
+        }
+
+        return source;
     }
 
     //BGM再生
-    public static void Play(GameObject obj, BGMList soundList)
+    public static AudioSource Play(GameObject obj, BGMList soundList)
     {
         Initialize();
 
         if (SM == null || obj == null)
-            return;
+            return null;
 
-        AudioSource source = obj.GetComponent<AudioSource>();
-        if (source == null)
-            source = obj.AddComponent<AudioSource>();
+        GameObject audioObj = new GameObject($"BGM_{soundList}");
+
+        audioObj.transform.SetParent(obj.transform);
+        audioObj.transform.localPosition = Vector3.zero;
+
+        AudioSource source = audioObj.AddComponent<AudioSource>();
+
+        RegisterAudio(obj, source, true);
 
         SoundManeger.AudioListData data = SM.bgmListData[(int)soundList];
 
@@ -152,24 +211,75 @@ public static class MySoundManeger
         if (data.audioClip == null)
         {
             Debug.LogWarning($"BGM {soundList} の AudioClip が設定されていません");
-            return;
+            return null;
         }
 
 
         CopyAudioSourceSettings(source, data);
-        ApplyAudioFilters(obj, data);
+        ApplyAudioFilters(audioObj, data);
         source.Play();
+
+        return source;
     }
 
-    //停止
+    //全停止
     public static void Stop(GameObject obj)
     {
-        if (obj == null)
+        if (!playingSources.TryGetValue(obj, out var sources))
             return;
 
-        AudioSource source = obj.GetComponent<AudioSource>();
-        if (source != null)
-            source.Stop();
+        foreach (var audio in sources)
+        {
+            if (audio?.Source != null)
+            {
+                audio.Source.Stop();
+                Object.Destroy(audio.Source.gameObject);
+            }
+        }
+
+        sources.Clear();
+    }
+
+    //特定のSEを停止
+    public static void Stop(GameObject obj, SEList soundList)
+    {
+        if (!playingSources.TryGetValue(obj, out var sources))
+            return;
+        SoundManeger.AudioListData data = SM.seListData[(int)soundList];
+        for (int i = sources.Count - 1; i >= 0; i--)
+        {
+            PlayingAudio audio = sources[i];
+            if (audio?.Source != null && !audio.IsBGM && audio.Source.clip == data.audioClip)
+            {
+                audio.Source.Stop();
+                Object.Destroy(audio.Source.gameObject);
+                sources.RemoveAt(i);
+            }
+        }
+    }
+
+    //特定のBGMを停止
+    public static void Stop(GameObject obj, BGMList soundList)
+    {
+        if (!playingSources.TryGetValue(obj, out var sources))
+            return;
+
+        SoundManeger.AudioListData data =
+            SM.bgmListData[(int)soundList];
+
+        for (int i = sources.Count - 1; i >= 0; i--)
+        {
+            PlayingAudio audio = sources[i];
+
+            if (audio?.Source != null &&
+                audio.IsBGM &&
+                audio.Source.clip == data.audioClip)
+            {
+                audio.Source.Stop();
+                Object.Destroy(audio.Source.gameObject);
+                sources.RemoveAt(i);
+            }
+        }
     }
 
     //AudioSourceの設定をSoundManeger.AudioListDataからコピー
@@ -306,5 +416,18 @@ public static class MySoundManeger
         return comp;
     }
 
-  
+    private static void RegisterAudio(GameObject owner, AudioSource source,bool isBGM)
+    {
+        if (!playingSources.ContainsKey(owner))
+        {
+            playingSources[owner] = new List<PlayingAudio>();
+        }
+
+        playingSources[owner].Add(
+            new PlayingAudio
+            {
+                Source = source,
+                IsBGM = isBGM
+            });
+    }
 }
