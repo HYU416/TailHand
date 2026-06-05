@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
-    public float moveSpeed = 5.0f; //Playerの速さ
     public float rotateSpeed = 10.0f; //Playerの回転の速さ
     public float currentSpeed = 0f;
     public float deceleration = 3.0f;// 1秒あたりの減速量
@@ -25,6 +24,10 @@ public class Player : MonoBehaviour
     {
         50.0f,30.0f,20.0f
     };
+
+    [Header("Runアニメーションへ移行する値")]
+    [SerializeField]
+    private float runMotionSpeed = 1e-4f;
 
     Rigidbody rb;
     Vector2 moveInput;
@@ -161,7 +164,7 @@ public class Player : MonoBehaviour
 
 
         // アニメーション切り替え
-        SwitchAnimation();
+        SwitchAnimation(move);
         if (playerMotion)
             playerMotion.SwitchMotion(animeState);
     }
@@ -209,9 +212,10 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void SwitchAnimation()
+    private void SwitchAnimation(Vector3 move)
     {
-        if (currentSpeed >= 1e-4)
+        move.y = 0.0f;
+        if (move.magnitude >= runMotionSpeed)
             animeState = AnimeState.Run;
         else
             animeState = AnimeState.Idle;
