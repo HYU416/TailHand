@@ -8,8 +8,28 @@ public partial class BossPhaseAttackController
 
     [SerializeField] private float maxBossRotationSpeed = 720.0f;
 
+    [Header("スピン攻撃ダメージ")]
+    [SerializeField] private int spinDamage = 10;
+
+    [SerializeField] private bool useSpinDamage = true;
+
+    [SerializeField] private float spinDamageInterval = 0.5f;
+
+    [SerializeField] private string spinDamageMethodName = "TakeDamage";
+
+    [Header("スピン攻撃ノックバック")]
+    [SerializeField] private bool useSpinKnockback = true;
+
+    [SerializeField] private float spinKnockbackInterval = 0.5f;
+
+    [SerializeField] private float characterControllerKnockbackTime = 0.2f;
+
+    [SerializeField] private float characterControllerKnockbackSpeedMultiplier = 1.0f;
+
     private float rotationLimitPreviousY;
     private bool hasRotationLimitPreviousY;
+
+    private Coroutine characterControllerKnockbackCoroutine;
 
     private IEnumerator Attack_Move(PhaseAttackSetting setting)
     {
@@ -126,7 +146,8 @@ public partial class BossPhaseAttackController
         }
 
         float timer = 0f;
-        bool rigidbodyKnockbackApplied = false;
+        float spinDamageTimer = 0f;
+        float spinKnockbackTimer = 0f;
 
         while (timer < spinAttackTime)
         {
@@ -153,7 +174,8 @@ public partial class BossPhaseAttackController
                 Space.World
             );
 
-            TryApplySpinKnockback(ref rigidbodyKnockbackApplied);
+            UpdateSpinDamage(ref spinDamageTimer);
+            UpdateSpinKnockback(ref spinKnockbackTimer);
 
             yield return null;
         }
@@ -218,16 +240,122 @@ public partial class BossPhaseAttackController
         }
     }
 
-    private void TryApplySpinKnockback(ref bool rigidbodyKnockbackApplied)
+    private void UpdateSpinDamage(ref float spinDamageTimer)
+    {
+        if (!useSpinDamage)
+        {
+            return;
+        }
+
+        if (player == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(spinDamageMethodName))
+        {
+            return;
+        }
+
+        if (spinDamageInterval <= 0f)
+        {
+            spinDamageInterval = 0.5f;
+        }
+
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        if (distance > spinDetectRange)
+        {
+            spinDamageTimer = 0f;
+            return;
+        }
+
+        spinDamageTimer -= Time.deltaTime;
+
+        if (spinDamageTimer > 0f)
+        {
+            return;
+        }
+
+        ApplySpinDamage();
+
+        spinDamageTimer = spinDamageInterval;
+    }
+
+    private void ApplySpinDamage()
     {
         if (player == null)
         {
             return;
         }
 
+        GameObject damageTarget = player.gameObject;
+
+        damageTarget.SendMessage(
+            spinDamageMethodName,
+            spinDamage,
+            SendMessageOptions.DontRequireReceiver
+        );
+
+        Transform parent = player.parent;
+
+        while (parent != null)
+        {
+            parent.gameObject.SendMessage(
+                spinDamageMethodName,
+                spinDamage,
+                SendMessageOptions.DontRequireReceiver
+            );
+
+            parent = parent.parent;
+        }
+
+        if (showDebugLog)
+        {
+            Debug.Log("スピン攻撃：" + spinDamage + " ダメージを与えました");
+        }
+    }
+
+    private void UpdateSpinKnockback(ref float spinKnockbackTimer)
+    {
+        if (!useSpinKnockback)
+        {
+            return;
+        }
+
+        if (player == null)
+        {
+            return;
+        }
+
+        if (spinKnockbackInterval <= 0f)
+        {
+            spinKnockbackInterval = 0.5f;
+        }
+
         float distance = Vector3.Distance(transform.position, player.position);
 
         if (distance > spinDetectRange)
+        {
+            spinKnockbackTimer = 0f;
+            return;
+        }
+
+        spinKnockbackTimer -= Time.deltaTime;
+
+        if (spinKnockbackTimer > 0f)
+        {
+            return;
+        }
+
+        ApplySpinKnockback();
+
+        spinKnockbackTimer = spinKnockbackInterval;
+    }
+
+    private void ApplySpinKnockback()
+    {
+        if (player == null)
         {
             return;
         }
@@ -251,19 +379,14 @@ public partial class BossPhaseAttackController
 
         if (playerRb != null)
         {
-            if (!rigidbodyKnockbackApplied)
+            playerRb.AddForce(
+                direction * spinKnockbackPower + Vector3.up * spinKnockbackUpPower,
+                ForceMode.Impulse
+            );
+
+            if (showDebugLog)
             {
-                playerRb.AddForce(
-                    direction * spinKnockbackPower + Vector3.up * spinKnockbackUpPower,
-                    ForceMode.Impulse
-                );
-
-                rigidbodyKnockbackApplied = true;
-
-                if (showDebugLog)
-                {
-                    Debug.Log("スピン攻撃：Rigidbodyプレイヤーを吹き飛ばしました");
-                }
+                Debug.Log("スピン攻撃：Rigidbodyプレイヤーを吹き飛ばしました");
             }
 
             return;
@@ -278,11 +401,47 @@ public partial class BossPhaseAttackController
 
         if (controller != null)
         {
-            Vector3 move =
-                direction * spinKnockbackPower +
+            if (characterControllerKnockbackCoroutine != null)
+            {
+                StopCoroutine(characterControllerKnockbackCoroutine);
+            }
+
+            Vector3 knockbackVelocity =
+                direction * spinKnockbackPower * characterControllerKnockbackSpeedMultiplier +
                 Vector3.up * spinKnockbackUpPower;
 
-            controller.Move(move * Time.deltaTime);
+            characterControllerKnockbackCoroutine = StartCoroutine(
+                CharacterControllerKnockbackRoutine(controller, knockbackVelocity)
+            );
+
+            if (showDebugLog)
+            {
+                Debug.Log("スピン攻撃：CharacterControllerプレイヤーを吹き飛ばしました");
+            }
         }
+    }
+
+    private IEnumerator CharacterControllerKnockbackRoutine(
+        CharacterController controller,
+        Vector3 knockbackVelocity
+    )
+    {
+        float timer = 0f;
+
+        while (timer < characterControllerKnockbackTime)
+        {
+            timer += Time.deltaTime;
+
+            if (controller == null)
+            {
+                yield break;
+            }
+
+            controller.Move(knockbackVelocity * Time.deltaTime);
+
+            yield return null;
+        }
+
+        characterControllerKnockbackCoroutine = null;
     }
 }
