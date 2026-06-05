@@ -8,6 +8,7 @@
  * ・指定方向へ直進
  * ・一定時間後に小さくなりながら消える
  * ・プレイヤーに当たった時のダメージ処理にも対応
+ * ・命中時のエフェクトを出すかどうかをInspectorで切り替え可能
  *
  * ※爆弾とは別のPrefabに付けてください。
  * ==========================================================
@@ -45,12 +46,20 @@ public class BulletHellBullet : MonoBehaviour
     [Tooltip("プレイヤーのタグ名です")]
     public string playerTag = "Player";
 
+    [Header("【命中エフェクト設定】")]
+    [Tooltip("ONにすると、プレイヤーに当たった時にエフェクトを出します。RazerではOFF推奨です")]
+    public bool playHitEffect = false;
+
+    [Tooltip("命中時に再生するエフェクトの種類です")]
+    public EffectType hitEffectType = EffectType.Explosion;
+
     private Rigidbody rb;
     private float timer = 0f;
     private bool shrinking = false;
     private Vector3 startScale;
+    private bool alreadyHit = false;
 
-    void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
 
@@ -60,22 +69,12 @@ public class BulletHellBullet : MonoBehaviour
         }
     }
 
-    void Start()
+    private void Start()
     {
-        moveDirection.Normalize();
-
-        transform.localScale = Vector3.one * bulletScale;
-        startScale = transform.localScale;
-
-        if (rb != null)
-        {
-            rb.useGravity = false;
-            rb.isKinematic = false;
-            rb.linearVelocity = moveDirection * speed;
-        }
+        InitializeBullet();
     }
 
-    void Update()
+    private void Update()
     {
         timer += Time.deltaTime;
 
@@ -96,7 +95,27 @@ public class BulletHellBullet : MonoBehaviour
         }
     }
 
-    void UpdateShrink()
+    private void InitializeBullet()
+    {
+        if (moveDirection.sqrMagnitude <= 0.0001f)
+        {
+            moveDirection = transform.forward;
+        }
+
+        moveDirection.Normalize();
+
+        transform.localScale = Vector3.one * bulletScale;
+        startScale = transform.localScale;
+
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.isKinematic = false;
+            rb.linearVelocity = moveDirection * speed;
+        }
+    }
+
+    private void UpdateShrink()
     {
         if (shrinkTime <= 0f)
         {
@@ -119,33 +138,50 @@ public class BulletHellBullet : MonoBehaviour
         }
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter(Collision collision)
     {
         CheckHit(collision.gameObject);
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         CheckHit(other.gameObject);
     }
 
-    void CheckHit(GameObject hitObject)
+    private void CheckHit(GameObject hitObject)
     {
-        if (!hitObject.CompareTag(playerTag)) return;
+        if (alreadyHit)
+        {
+            return;
+        }
 
-        hitObject.SendMessage(
+        if (hitObject == null)
+        {
+            return;
+        }
+
+        GameObject playerObject = FindPlayerObject(hitObject);
+
+        if (playerObject == null)
+        {
+            return;
+        }
+
+        alreadyHit = true;
+
+        playerObject.SendMessage(
             "TakeDamage",
             damage,
             SendMessageOptions.DontRequireReceiver
         );
 
-        hitObject.SendMessage(
+        playerObject.SendMessage(
             "Damage",
             damage,
             SendMessageOptions.DontRequireReceiver
         );
 
-        hitObject.SendMessage(
+        playerObject.SendMessage(
             "ApplyDamage",
             damage,
             SendMessageOptions.DontRequireReceiver
@@ -153,10 +189,45 @@ public class BulletHellBullet : MonoBehaviour
 
         if (destroyOnPlayerHit)
         {
-            //仮で爆発エフェクトを再生する処理を入れておきます
-            EffectManager.Instance.Play(EffectType.Explosion, transform.position);
+            if (playHitEffect)
+            {
+                PlayHitEffect();
+            }
+
             Destroy(gameObject);
         }
+    }
+
+    private GameObject FindPlayerObject(GameObject hitObject)
+    {
+        if (hitObject.CompareTag(playerTag))
+        {
+            return hitObject;
+        }
+
+        Transform current = hitObject.transform.parent;
+
+        while (current != null)
+        {
+            if (current.CompareTag(playerTag))
+            {
+                return current.gameObject;
+            }
+
+            current = current.parent;
+        }
+
+        return null;
+    }
+
+    private void PlayHitEffect()
+    {
+        if (EffectManager.Instance == null)
+        {
+            return;
+        }
+
+        EffectManager.Instance.Play(hitEffectType, transform.position);
     }
 
     public void SetBulletData(
@@ -176,6 +247,10 @@ public class BulletHellBullet : MonoBehaviour
         shrinkTime = newShrinkTime;
         damage = newDamage;
         destroyOnPlayerHit = newDestroyOnPlayerHit;
+
+        timer = 0f;
+        shrinking = false;
+        alreadyHit = false;
 
         transform.localScale = Vector3.one * bulletScale;
         startScale = transform.localScale;
