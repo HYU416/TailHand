@@ -66,9 +66,33 @@ public class BossPhaseController : MonoBehaviour
 
     private readonly HashSet<BossArmorPart> brokenArmors = new HashSet<BossArmorPart>();
 
-    public int CurrentPhase => currentPhase;
-    public bool IsChangingPhase => isChangingPhase;
-    public bool IsBossDefeated => isBossDefeated;
+    public int CurrentPhase
+    {
+        get { return currentPhase; }
+    }
+
+    public bool IsChangingPhase
+    {
+        get { return isChangingPhase; }
+    }
+
+    public bool IsBossDefeated
+    {
+        get { return isBossDefeated; }
+    }
+
+    public Transform Phase3CoreTransform
+    {
+        get
+        {
+            if (phase3Core == null)
+            {
+                return null;
+            }
+
+            return phase3Core.transform;
+        }
+    }
 
     private Vector3 step1StartPosition;
     private Vector3 step2StartPosition;
@@ -449,6 +473,7 @@ public class BossPhaseController : MonoBehaviour
         if (currentPhase == 1)
         {
             EffectManager.Instance.Play(EffectType.CoreBreak, phase1Core.transform.position);
+
             if (bossStep1 != null)
             {
                 bossStep1.SetActive(false);
@@ -468,6 +493,7 @@ public class BossPhaseController : MonoBehaviour
         if (currentPhase == 2)
         {
             EffectManager.Instance.Play(EffectType.CoreBreak, phase2Core.transform.position);
+
             if (bossStep2 != null)
             {
                 bossStep2.SetActive(false);
@@ -486,6 +512,7 @@ public class BossPhaseController : MonoBehaviour
         if (currentPhase == 3)
         {
             EffectManager.Instance.Play(EffectType.CoreBreak, phase3Core.transform.position);
+
             if (bossStep3 != null)
             {
                 bossStep3.SetActive(false);
@@ -618,7 +645,6 @@ public class BossPhaseController : MonoBehaviour
         catchable.SetCanCatch(true);
     }
 
-    /// デバッグ用：コアをを強制的に破壊する
 #if UNITY_EDITOR
     [ContextMenu("Debug/Core Break Current Phase")]
     private void DebugCoreBreakCurrentPhase()

@@ -399,6 +399,21 @@ public partial class BossPhaseAttackController : MonoBehaviour
         return null;
     }
 
+    private Transform GetPhase3RotateCenter()
+    {
+        if (phaseController != null && phaseController.Phase3CoreTransform != null)
+        {
+            return phaseController.Phase3CoreTransform;
+        }
+
+        if (phase3RotateCenter != null)
+        {
+            return phase3RotateCenter;
+        }
+
+        return null;
+    }
+
     private void RotateBossForAttack(float rotateSpeed)
     {
         if (rotateRoot == null)
@@ -408,15 +423,25 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
         float rotateAmount = rotateSpeed * Time.deltaTime;
 
-        if (forcePhase3RotateAroundCenter && GetCurrentPhase() == 3 && phase3RotateCenter != null)
+        if (forcePhase3RotateAroundCenter && GetCurrentPhase() == 3)
         {
-            rotateRoot.RotateAround(
-                phase3RotateCenter.position,
-                Vector3.up,
-                rotateAmount
-            );
+            Transform center = GetPhase3RotateCenter();
 
-            return;
+            if (center != null)
+            {
+                rotateRoot.RotateAround(
+                    center.position,
+                    Vector3.up,
+                    rotateAmount
+                );
+
+                return;
+            }
+
+            if (showDebugLog)
+            {
+                Debug.LogWarning("3’iŠK–Ú‚Ì‰ñ“]’†S‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB’Êí‰ñ“]‚É–ß‚µ‚Ü‚·B");
+            }
         }
 
         rotateRoot.Rotate(
