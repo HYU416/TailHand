@@ -34,6 +34,7 @@ public class ThrownBombState : MonoBehaviour
     {
         thrownByPlayer = true;
         thrownTimer = thrownActiveTime;
+        gameObject.layer = LayerMask.NameToLayer("Tail");
 
         Debug.Log("ThrownBombState: ”š’e‚ğƒvƒŒƒCƒ„[“Š‚°ó‘Ô‚É‚µ‚Ü‚µ‚½");
     }
