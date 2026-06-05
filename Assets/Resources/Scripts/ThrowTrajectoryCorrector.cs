@@ -176,6 +176,7 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
 
         if (rb != null && disableGravityOnFlight)
         {
+            gameObject.layer = LayerMask.NameToLayer("Tail");
             rb.useGravity = false;
         }
     }
