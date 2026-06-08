@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class PlayerHPBar : MonoBehaviour
 {
+    [SerializeField] private Player player = null;
+
     [Header("HP設定")]
     [SerializeField] private float maxHP = 100f;
     [SerializeField] private float currentHP = 100f;
@@ -36,6 +38,12 @@ public class PlayerHPBar : MonoBehaviour
     {
         SetupHPImage();
         UpdateHPBar();
+        if (!player)
+        {
+            // プレイヤーオブジェクトをタグで検索して取得
+            player  = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        }
+           
     }
 
     private void SetupHPImage()
@@ -71,6 +79,8 @@ public class PlayerHPBar : MonoBehaviour
         currentHP -= damage;
         currentHP = Mathf.Clamp(currentHP, 0f, maxHP);
 
+        // ノックバックアニメーションに変更
+        player.SwitchAnimation(AnimeState.Knockback);
         UpdateHPBar();
 
         Debug.Log("プレイヤーHP: " + currentHP + " / " + maxHP);

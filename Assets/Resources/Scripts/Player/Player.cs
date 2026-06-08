@@ -2,6 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+public enum AnimeState
+{
+    Idle = 0,
+    Run = 1,
+    Knockback = 2,
+}
+
+
 public class Player : MonoBehaviour
 {
     public float rotateSpeed = 10.0f; //Playerの回転の速さ
@@ -140,7 +149,7 @@ public class Player : MonoBehaviour
             point2 = transform.position + capsule.center - Vector3.up * (capsule.height / 2 - capsule.radius);
             radius = capsule.radius;
         }
-        if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime))
+        if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime, ~0, QueryTriggerInteraction.Ignore))
         {
             Debug.Log("Hit: " + hit.collider.name);
             //貫通対策
@@ -220,5 +229,11 @@ public class Player : MonoBehaviour
         else
             animeState = AnimeState.Idle;
     }
-}
 
+    public void SwitchAnimation(AnimeState state)
+    {
+        animeState = state;
+        if (playerMotion)
+            playerMotion.SwitchMotion(animeState);
+    }
+}
