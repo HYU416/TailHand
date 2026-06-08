@@ -1,12 +1,6 @@
 using UnityEngine;
 
 
-public enum AnimeState
-{
-    Idle = 0,
-    Run = 1,
-}
-
 public class PlayerMotion : MonoBehaviour
 {
 
