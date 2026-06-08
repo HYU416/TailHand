@@ -149,7 +149,7 @@ public class Player : MonoBehaviour
             point2 = transform.position + capsule.center - Vector3.up * (capsule.height / 2 - capsule.radius);
             radius = capsule.radius;
         }
-        if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime))
+        if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime, ~0, QueryTriggerInteraction.Ignore))
         {
             Debug.Log("Hit: " + hit.collider.name);
             //貫通対策
