@@ -39,7 +39,11 @@ public class PlayerHPBar : MonoBehaviour
         SetupHPImage();
         UpdateHPBar();
         if (!player)
-            Debug.Log("Error PlayerHPBar NoneSetPlayerScript");
+        {
+            // プレイヤーオブジェクトをタグで検索して取得
+            player  = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        }
+           
     }
 
     private void SetupHPImage()
