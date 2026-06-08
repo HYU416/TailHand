@@ -2,6 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+public enum AnimeState
+{
+    Idle = 0,
+    Run = 1,
+    Knockback = 2,
+}
+
+
 public class Player : MonoBehaviour
 {
     public float rotateSpeed = 10.0f; //Playerの回転の速さ
@@ -220,5 +229,11 @@ public class Player : MonoBehaviour
         else
             animeState = AnimeState.Idle;
     }
-}
 
+    public void SwitchAnimation(AnimeState state)
+    {
+        animeState = state;
+        if (playerMotion)
+            playerMotion.SwitchMotion(animeState);
+    }
+}
