@@ -7,8 +7,14 @@
  * 【機能】
  * ・指定方向へ直進
  * ・一定時間後に小さくなりながら消える
- * ・プレイヤーに当たった時のダメージ処理にも対応
+ * ・プレイヤーに当たった時にダメージを与える
  * ・命中時のエフェクトを出すかどうかをInspectorで切り替え可能
+ *
+ * 【重要】
+ * ・プレイヤーを物理的に止めないため、当たり判定はTrigger専用
+ * ・OnCollisionEnterは使わない
+ * ・Colliderは自動でIs Trigger ONにする
+ * ・RigidbodyはKinematicにして物理衝突で押さない
  *
  * ※爆弾とは別のPrefabに付けてください。
  * ==========================================================
@@ -46,6 +52,13 @@ public class BulletHellBullet : MonoBehaviour
     [Tooltip("プレイヤーのタグ名です")]
     public string playerTag = "Player";
 
+    [Header("【物理干渉防止設定】")]
+    [Tooltip("ONにすると、この弾のColliderをすべてTriggerにします")]
+    public bool forceTriggerCollider = true;
+
+    [Tooltip("ONにすると、RigidbodyをKinematicにして物理的にプレイヤーを押さないようにします")]
+    public bool forceKinematicRigidbody = true;
+
     [Header("【命中エフェクト設定】")]
     [Tooltip("ONにすると、プレイヤーに当たった時にエフェクトを出します。RazerではOFF推奨です")]
     public bool playHitEffect = false;
@@ -67,6 +80,8 @@ public class BulletHellBullet : MonoBehaviour
         {
             rb = GetComponentInChildren<Rigidbody>();
         }
+
+        ApplyNoPhysicalBlockSettings();
     }
 
     private void Start()
@@ -78,10 +93,7 @@ public class BulletHellBullet : MonoBehaviour
     {
         timer += Time.deltaTime;
 
-        if (rb == null)
-        {
-            transform.position += moveDirection * speed * Time.deltaTime;
-        }
+        MoveBullet();
 
         if (!shrinking && timer >= lifeTime)
         {
@@ -92,6 +104,41 @@ public class BulletHellBullet : MonoBehaviour
         if (shrinking)
         {
             UpdateShrink();
+        }
+    }
+
+    private void ApplyNoPhysicalBlockSettings()
+    {
+        if (forceTriggerCollider)
+        {
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] == null)
+                {
+                    continue;
+                }
+
+                colliders[i].isTrigger = true;
+            }
+        }
+
+        if (rb != null)
+        {
+            rb.useGravity = false;
+
+            if (forceKinematicRigidbody)
+            {
+                rb.isKinematic = true;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+            else
+            {
+                rb.isKinematic = false;
+                rb.linearVelocity = moveDirection.normalized * speed;
+            }
         }
     }
 
@@ -107,12 +154,19 @@ public class BulletHellBullet : MonoBehaviour
         transform.localScale = Vector3.one * bulletScale;
         startScale = transform.localScale;
 
-        if (rb != null)
+        ApplyNoPhysicalBlockSettings();
+    }
+
+    private void MoveBullet()
+    {
+        if (moveDirection.sqrMagnitude <= 0.0001f)
         {
-            rb.useGravity = false;
-            rb.isKinematic = false;
-            rb.linearVelocity = moveDirection * speed;
+            return;
         }
+
+        Vector3 move = moveDirection.normalized * speed * Time.deltaTime;
+
+        transform.position += move;
     }
 
     private void UpdateShrink()
@@ -136,11 +190,6 @@ public class BulletHellBullet : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        CheckHit(collision.gameObject);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -169,6 +218,21 @@ public class BulletHellBullet : MonoBehaviour
 
         alreadyHit = true;
 
+        GiveDamage(playerObject);
+
+        if (destroyOnPlayerHit)
+        {
+            if (playHitEffect)
+            {
+                PlayHitEffect();
+            }
+
+            Destroy(gameObject);
+        }
+    }
+
+    private void GiveDamage(GameObject playerObject)
+    {
         playerObject.SendMessage(
             "TakeDamage",
             damage,
@@ -186,16 +250,6 @@ public class BulletHellBullet : MonoBehaviour
             damage,
             SendMessageOptions.DontRequireReceiver
         );
-
-        if (destroyOnPlayerHit)
-        {
-            if (playHitEffect)
-            {
-                PlayHitEffect();
-            }
-
-            Destroy(gameObject);
-        }
     }
 
     private GameObject FindPlayerObject(GameObject hitObject)
@@ -240,7 +294,15 @@ public class BulletHellBullet : MonoBehaviour
         bool newDestroyOnPlayerHit
     )
     {
-        moveDirection = newDirection.normalized;
+        if (newDirection.sqrMagnitude <= 0.0001f)
+        {
+            moveDirection = transform.forward;
+        }
+        else
+        {
+            moveDirection = newDirection.normalized;
+        }
+
         speed = newSpeed;
         bulletScale = newScale;
         lifeTime = newLifeTime;
@@ -255,11 +317,6 @@ public class BulletHellBullet : MonoBehaviour
         transform.localScale = Vector3.one * bulletScale;
         startScale = transform.localScale;
 
-        if (rb != null)
-        {
-            rb.useGravity = false;
-            rb.isKinematic = false;
-            rb.linearVelocity = moveDirection * speed;
-        }
+        ApplyNoPhysicalBlockSettings();
     }
 }

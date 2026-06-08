@@ -27,14 +27,12 @@ public class DamageOnHit : MonoBehaviour
         TryDamage(other);
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        TryDamage(collision.collider);
-    }
-
     private void TryDamage(Collider other)
     {
-        if (other == null) return;
+        if (other == null)
+        {
+            return;
+        }
 
         PlayerHPBar playerHP = other.GetComponentInParent<PlayerHPBar>();
 
@@ -42,6 +40,7 @@ public class DamageOnHit : MonoBehaviour
         {
             return;
         }
+
 
         if (!canHitSameTargetMultipleTimes)
         {
