@@ -53,6 +53,7 @@ public class PlayerCatchEnemy : MonoBehaviour
         if (value.isPressed)
         {
             CatchTarget();
+           
         }
         else
         {
@@ -142,7 +143,7 @@ public class PlayerCatchEnemy : MonoBehaviour
         touchingTarget = null;
 
         Debug.Log("キャッチ！");
-
+        EffectManager.Instance.Play(EffectType.Chatch, tailEnd.position);
         MySoundManeger.Play(gameObject, SEList.SE_CATCH);
     }
 

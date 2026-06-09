@@ -56,10 +56,10 @@ public partial class BossPhaseAttackController
     {
         if (afterAllWallsAttackIndex % 2 == 0)
         {
-            return AttackKind.‹ó”š;
+            return AttackKind.AirStrike;
         }
 
-        return AttackKind.ˆÚ“®;
+        return AttackKind.Move;
     }
 
     private void AdvanceAfterAllWallsAttackIndex()

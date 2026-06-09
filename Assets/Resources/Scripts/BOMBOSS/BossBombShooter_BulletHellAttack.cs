@@ -290,14 +290,17 @@ public partial class BossBombShooter
 
         spawnPosition += Vector3.up * node.bulletHellSpawnHeightOffset;
 
-        GameObject bulletObject = Instantiate(
-            node.bulletHellBulletPrefab,
-            spawnPosition,
-            Quaternion.LookRotation(shootDirection)
-        );
+        //GameObject bulletObject = Instantiate(
+        //    node.bulletHellBulletPrefab,
+        //    spawnPosition,
+        //    Quaternion.LookRotation(shootDirection)
+        //);
 
-        bulletObject.transform.localScale =
-            Vector3.one * node.bulletHellBulletScale;
+
+       GameObject bulletObject = EffectManager.Instance.Play(EffectType.Explosion, spawnPosition, Quaternion.LookRotation(shootDirection));
+
+        //bulletObject.transform.localScale =
+        //    Vector3.one * node.bulletHellBulletScale;
 
         BulletHellBullet bullet =
             bulletObject.GetComponent<BulletHellBullet>();

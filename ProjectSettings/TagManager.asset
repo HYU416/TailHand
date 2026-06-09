@@ -14,6 +14,10 @@ TagManager:
   - CoreBreakEffect
   - DamageZoneEffect
   - BossHead
+  - BeamEffect
+  - HitEffetct
+  - DashEffect
+  - ChatchEffect
   layers:
   - Default
   - TransparentFX

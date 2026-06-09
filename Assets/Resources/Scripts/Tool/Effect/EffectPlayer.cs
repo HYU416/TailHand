@@ -239,14 +239,25 @@ public class EffectPlayer : MonoBehaviour
     {
         //同じIDの当たり判定があれば削除
         RemoveHitCollider(e.hitId);
-        //　ヒットIdを名前にしたGameObjectを生成
-        GameObject obj = new GameObject($"Hit_{e.hitId}");
-        // EffectPlayerの子に設定
-        obj.transform.SetParent(transform);
 
-        //初期化
+        GameObject obj;
+
+        //trueならEffectPlayer自身に当たり判定を作る。falseなら子オブジェクトに当たり判定を作る
+        if(e.useMainParentForHit)
+        {
+            obj = gameObject;
+        }
+        else
+        {
+            //子オブジェクト生成
+            obj = new GameObject($"HitCollider_{e.hitId}");
+            obj.transform.parent = transform;
+            //初期化
         obj.transform.localPosition = Vector3.zero;
         obj.transform.localRotation = Quaternion.identity;
+        }
+
+        
         //生成したコライダー保存用
         Collider created = null;
         //rigidbody追加（なければ）
@@ -256,7 +267,7 @@ public class EffectPlayer : MonoBehaviour
             rb = obj.AddComponent<Rigidbody>();
         }
         //kinematicにして重力無効化
-        rb.isKinematic = true;
+        if(!e.useMainParentForHit)  rb.isKinematic = true;
         rb.useGravity = false;
         //タグ設定
         if (!string.IsNullOrEmpty(e.hitTag))

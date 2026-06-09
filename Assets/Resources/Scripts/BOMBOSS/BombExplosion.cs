@@ -62,7 +62,7 @@ public class BombExplosion : MonoBehaviour
     private void Start()
     {
         StartExplosionTimer();
-        damageZoneEffect = EffectManager.Instance.Play(EffectType.DamageZone, transform.position);
+        damageZoneEffect = EffectManager.Instance.Play(EffectType.DamageZone, transform.position).GetComponent<EffectPlayer>();
     }
 
     private void Update()

@@ -125,7 +125,7 @@ public class EffectManager : MonoBehaviour
     /// </summary>
     /// <param name="type">再生するエフェクトのタイプ</param>
     /// <param name="position">エフェクトを再生する位置</param>
-    public EffectPlayer Play( EffectType type,Vector3 position )
+    public GameObject Play( EffectType type,Vector3 position )
     {
         //再生
         return Play(type, position,Quaternion.identity);
@@ -136,7 +136,7 @@ public class EffectManager : MonoBehaviour
     /// <param name="type">再生するエフェクトのタイプ</param>
     /// <param name="position">エフェクトを再生する位置</param>
     /// <param name="rotation">エフェクトを再生する回転</param>
-    public EffectPlayer Play( EffectType type,Vector3 position,Quaternion rotation)
+    public GameObject Play( EffectType type,Vector3 position,Quaternion rotation)
     {
         //エフェクトプレイヤーを取得
         EffectPlayer player =GetEffect(type);
@@ -153,7 +153,16 @@ public class EffectManager : MonoBehaviour
         player.gameObject.SetActive(true);
         player.EffectStart();
 
-        return player;
+        return player.gameObject;
+    }
+
+    // 指定したエフェクトプレイヤーを停止
+    public void Stop(EffectPlayer player)
+    {
+        if (player == null)
+            return;
+
+        player.EffectStop();
     }
 
     // 指定したエフェクトタイプのエフェクトプレイヤーをプールから取得するか、新規に作成して返す
