@@ -15,18 +15,26 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
     public enum AttackKind
     {
-        ”š’eUŒ‚,
-        ‹ó”š,
-        ’Ç”öƒ~ƒTƒCƒ‹,
-        ‰ñ“]’e–‹,
-        ˆÚ“®,
-        ˆÚ“®‚µ‚È‚ª‚ç‹ó”š
+        [InspectorName("”š’eUŒ‚")]
+        BombAttack,
+        [InspectorName("‹ó”š")]
+        AirStrike,
+        [InspectorName("’Ç”öƒ~ƒTƒCƒ‹")]
+        HomingMissile,
+        [InspectorName("‰ñ“]’e–‹")]
+        BulletHell,
+        [InspectorName("ˆÚ“®")]
+        Move,
+        [InspectorName("ˆÚ“®‚µ‚È‚ª‚ç‹ó”š")]
+        MoveAndAirStrike
     }
 
     public enum RotateDirection
     {
-        Œv‰ñ‚è,
-        ”½Œv‰ñ‚è
+        [InspectorName("Œv‰ñ‚è")]
+        Clockwise,
+        [InspectorName("”½Œv‰ñ‚è")]
+        CounterClockwise
     }
 
     [System.Serializable]
@@ -100,7 +108,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
         [Header("‰ñ“]’e–‹")]
         public float bulletHellTime = 4.0f;
         public float bulletHellRotateSpeed = 120.0f;
-        public RotateDirection bulletHellRotateDirection = RotateDirection.Œv‰ñ‚è;
+        public RotateDirection bulletHellRotateDirection = RotateDirection.Clockwise;
         public float bulletHellFireInterval = 0.12f;
         public float bulletHellBulletSpeed = 10.0f;
         public float bulletHellBulletScale = 1.0f;
@@ -282,7 +290,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
             {
                 AttackKind specialAttack = GetAfterAllWallsAttackKind();
 
-                if (specialAttack == AttackKind.‹ó”š)
+                if (specialAttack == AttackKind.AirStrike)
                 {
                     if (showDebugLog)
                     {
@@ -333,7 +341,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
     {
         if (ShouldUseAfterAllWallsAttackPattern())
         {
-            attack = AttackKind.‹ó”š;
+            attack = AttackKind.AirStrike;
         }
 
         if (showDebugLog)
@@ -341,27 +349,27 @@ public partial class BossPhaseAttackController : MonoBehaviour
             Debug.Log("ƒ{ƒXUŒ‚ŠJn: " + attack + " / Phase " + GetCurrentPhase());
         }
 
-        if (attack == AttackKind.”š’eUŒ‚)
+        if (attack == AttackKind.BombAttack)
         {
             yield return StartCoroutine(Attack_DudBombShot(setting));
         }
-        else if (attack == AttackKind.‹ó”š)
+        else if (attack == AttackKind.AirStrike)
         {
             yield return StartCoroutine(Attack_AirStrike(setting));
         }
-        else if (attack == AttackKind.’Ç”öƒ~ƒTƒCƒ‹)
+        else if (attack == AttackKind.HomingMissile)
         {
             yield return StartCoroutine(Attack_HomingMissile(setting));
         }
-        else if (attack == AttackKind.‰ñ“]’e–‹)
+        else if (attack == AttackKind.BulletHell)
         {
             yield return StartCoroutine(Attack_BulletHell(setting));
         }
-        else if (attack == AttackKind.ˆÚ“®)
+        else if (attack == AttackKind.Move)
         {
             yield return StartCoroutine(Attack_Move(setting));
         }
-        else if (attack == AttackKind.ˆÚ“®‚µ‚È‚ª‚ç‹ó”š)
+        else if (attack == AttackKind.MoveAndAirStrike)
         {
             yield return StartCoroutine(Attack_MoveAndAirStrike(setting));
         }
@@ -455,7 +463,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
     {
         float direction = 1f;
 
-        if (rotateDirection == RotateDirection.”½Œv‰ñ‚è)
+        if (rotateDirection == RotateDirection.CounterClockwise )
         {
             direction = -1f;
         }
@@ -605,10 +613,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
         phase1Setting = new PhaseAttackSetting();
         phase1Setting.attackOrder = new AttackKind[]
         {
-            AttackKind.‹ó”š,
-            AttackKind.’Ç”öƒ~ƒTƒCƒ‹,
-            AttackKind.‰ñ“]’e–‹,
-            AttackKind.”š’eUŒ‚
+            AttackKind.AirStrike,
+            AttackKind.HomingMissile,
+            AttackKind.BulletHell,
+            AttackKind.BombAttack
         };
         phase1Setting.bombShotCount = 10;
         phase1Setting.bombShotInterval = 0.25f;
@@ -620,10 +628,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
         phase2Setting = new PhaseAttackSetting();
         phase2Setting.attackOrder = new AttackKind[]
         {
-            AttackKind.ˆÚ“®,
-            AttackKind.’Ç”öƒ~ƒTƒCƒ‹,
-            AttackKind.‰ñ“]’e–‹,
-            AttackKind.”š’eUŒ‚
+            AttackKind.Move,
+            AttackKind.HomingMissile,
+            AttackKind.BulletHell,
+            AttackKind.BombAttack
         };
         phase2Setting.bombShotCount = 12;
         phase2Setting.bombShotInterval = 0.22f;
@@ -637,10 +645,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
         phase3Setting = new PhaseAttackSetting();
         phase3Setting.attackOrder = new AttackKind[]
         {
-            AttackKind.ˆÚ“®‚µ‚È‚ª‚ç‹ó”š,
-            AttackKind.’Ç”öƒ~ƒTƒCƒ‹,
-            AttackKind.‰ñ“]’e–‹,
-            AttackKind.”š’eUŒ‚
+            AttackKind.MoveAndAirStrike,
+            AttackKind.HomingMissile,
+            AttackKind.BulletHell,
+            AttackKind.BombAttack
         };
         phase3Setting.bombShotCount = 15;
         phase3Setting.bombShotInterval = 0.18f;

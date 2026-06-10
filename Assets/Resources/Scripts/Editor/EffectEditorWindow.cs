@@ -1176,14 +1176,17 @@ public class EffectEditorWindow : EditorWindow
         {
             case HitColliderType.Sphere:
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("hitRadius"));
+                EditorGUILayout.PropertyField(e.FindPropertyRelative("useMainParentForHit"));
                 break;
             case HitColliderType.Box:
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("hitBoxSize"));
+                EditorGUILayout.PropertyField(e.FindPropertyRelative("useMainParentForHit"));
                 break;
             case HitColliderType.Capsule:
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("capsuleRadius"));
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("capsuleHeight"));
                 EditorGUILayout.PropertyField(e.FindPropertyRelative("capsuleDirection"));
+                EditorGUILayout.PropertyField(e.FindPropertyRelative("useMainParentForHit"));
                 break;
         }
         // ï“èWÉ{É^Éì

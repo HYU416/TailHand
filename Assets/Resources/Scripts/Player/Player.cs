@@ -225,7 +225,10 @@ public class Player : MonoBehaviour
     {
         move.y = 0.0f;
         if (move.magnitude >= runMotionSpeed)
+        {
+            EffectManager.Instance.Play(EffectType.Dash, transform.position);
             animeState = AnimeState.Run;
+        }
         else
             animeState = AnimeState.Idle;
     }

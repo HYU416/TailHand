@@ -16,7 +16,7 @@ public partial class BossPhaseAttackController
 
         float rotateDirection = 1.0f;
 
-        if (setting.bulletHellRotateDirection == RotateDirection.”½ŽžŒv‰ñ‚è)
+        if (setting.bulletHellRotateDirection == RotateDirection.CounterClockwise)
         {
             rotateDirection = -1.0f;
         }
@@ -89,14 +89,9 @@ public partial class BossPhaseAttackController
         Vector3 spawnPosition =
             gunSetting.gun.position + shootDirection * gunSetting.muzzleOffset;
 
-        GameObject bulletObject = Instantiate(
-            bulletHellBulletPrefab,
-            spawnPosition,
-            Quaternion.LookRotation(shootDirection)
-        );
+        GameObject bulletObject = EffectManager.Instance.Play(EffectType.Beam, spawnPosition, Quaternion.LookRotation(shootDirection));
 
-        bulletObject.transform.localScale =
-            Vector3.one * setting.bulletHellBulletScale;
+        
 
         BulletHellBullet bullet = bulletObject.GetComponent<BulletHellBullet>();
 

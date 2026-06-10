@@ -54,6 +54,8 @@ public class EffectEvent
     public float capsuleHeight = 2f;
     //当たり判定のカプセルコライダーの向き
     public CapsuleDirection capsuleDirection = CapsuleDirection.Y;
+    //当たり判定をメイン親か子かを設定するフラグ（trueなら親、falseなら子）
+    public bool useMainParentForHit = true;
 
     //BGMかSE、どっちを再生するか
     public bool useBGM;

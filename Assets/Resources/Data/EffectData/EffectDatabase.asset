@@ -17,24 +17,35 @@ MonoBehaviour:
     prefab: {fileID: 8411288342181989615, guid: 261f057c6c3b23e4b8f3d5efa3858284, type: 3}
     targetTag: ExplosionEffect
     playSpeed: 6
-    loop: 0
   - type: 1
     prefab: {fileID: 8411288342181989615, guid: 8af233b2cc1b03f4aacafeca2fc21d1f, type: 3}
     targetTag: ExplosionEffect
     playSpeed: 6
-    loop: 0
   - type: 2
     prefab: {fileID: 8411288342181989615, guid: 6d5ef2245d07bd94a9fd845f0333ad3c, type: 3}
     targetTag: ExplosionEffect
     playSpeed: 6
-    loop: 0
   - type: 3
     prefab: {fileID: 8431550548859425588, guid: daf733cb8ae064e4b8595b8589fdbb18, type: 3}
     targetTag: DamageZoneEffect
     playSpeed: 1
-    loop: 0
   - type: 4
     prefab: {fileID: 3604196800244312306, guid: 3f8ba824d3f90bb429e3a564e1069630, type: 3}
     targetTag: DamageZoneEffect
     playSpeed: 1
-    loop: 1
+  - type: 5
+    prefab: {fileID: 8217135788906070684, guid: 4efd654f82631a84f8a445a2de37b3ba, type: 3}
+    targetTag: BeamEffect
+    playSpeed: 1
+  - type: 6
+    prefab: {fileID: 6175767892548486341, guid: 5f3c647be6145d7468992ef7014fe8f5, type: 3}
+    targetTag: HitEffetct
+    playSpeed: 1
+  - type: 7
+    prefab: {fileID: 2931378271258518055, guid: 719344c3dbda29540aaf834026cf073f, type: 3}
+    targetTag: DashEffect
+    playSpeed: 1
+  - type: 8
+    prefab: {fileID: 8497236338287028020, guid: f53685f7b22d24c408f76fda2d9b9098, type: 3}
+    targetTag: ChatchEffect
+    playSpeed: 1

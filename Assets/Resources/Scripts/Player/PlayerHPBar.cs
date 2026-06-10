@@ -79,6 +79,13 @@ public class PlayerHPBar : MonoBehaviour
         currentHP -= damage;
         currentHP = Mathf.Clamp(currentHP, 0f, maxHP);
 
+        //コライダーの真ん中にエフェクトを出すための位置調整
+        CapsuleCollider playerCollider = player.GetComponent<CapsuleCollider>();
+        Vector3 EffectPos = player.transform.position;
+        EffectPos.y = playerCollider.center.y +1.0f;
+        //hitエフェクトの再生
+        EffectManager.Instance.Play(EffectType.Hit, EffectPos);
+
         // ノックバックアニメーションに変更
         player.SwitchAnimation(AnimeState.Knockback);
         UpdateHPBar();
