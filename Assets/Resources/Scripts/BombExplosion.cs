@@ -67,7 +67,10 @@ public class BombExplosion : MonoBehaviour
 
     private void OnDestroy()
     {
-        EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+        }
     }
 
     private void Update()
