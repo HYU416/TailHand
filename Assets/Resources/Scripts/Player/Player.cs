@@ -55,6 +55,12 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform stageCenter;
     [SerializeField] private float stageRadius = 50f;
 
+    //速度によって砂ぼこりエフェクトの数を変えるためのカーブ
+    [Header("速度とエフェクトの数の関係")]
+    [SerializeField] private AnimationCurve EffectSpawnCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+    //エフェクトのスポーンカウント
+    private int EffectSpawnCounter = 0;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -231,7 +237,14 @@ public class Player : MonoBehaviour
         move.y = 0.0f;
         if (move.magnitude >= runMotionSpeed)
         {
-            EffectManager.Instance.Play(EffectType.Dash, transform.position);
+            // 速度に応じて砂ぼこりエフェクトの数を変える
+            EffectSpawnCounter++;
+            float spawnInterval = EffectSpawnCurve.Evaluate(currentSpeed / gearSpeeds[gearSpeeds.Count - 1]);
+            if (EffectSpawnCounter >= spawnInterval)
+            {
+                EffectSpawnCounter = 0;
+                EffectManager.Instance.Play(EffectType.Dash, transform.position);
+            }
             animeState = AnimeState.Run;
         }
         else

@@ -382,6 +382,16 @@ public class EffectPlayer : MonoBehaviour
     public void SetPlaySpeed( float speed)
     {
         playSpeed = Mathf.Max(0.01f, speed);
+        if (allParticleSystems != null)
+        {
+            foreach (var particle in allParticleSystems)
+            {
+                if (particle == null) continue;
+
+                var main = particle.main;
+                main.simulationSpeed = playSpeed;
+            }
+        }
     }
 
 
