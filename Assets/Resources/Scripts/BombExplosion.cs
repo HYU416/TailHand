@@ -65,6 +65,11 @@ public class BombExplosion : MonoBehaviour
         damageZoneEffect = EffectManager.Instance.Play(EffectType.DamageZone, transform.position).GetComponent<EffectPlayer>();
     }
 
+    private void OnDestroy()
+    {
+        EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+    }
+
     private void Update()
     {
         if (!timerStarted) return;
@@ -83,7 +88,7 @@ public class BombExplosion : MonoBehaviour
 
         if (elapsedTime >= explosionTime)
         {
-            EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+            
             ExplodeByTimer();
         }
     }

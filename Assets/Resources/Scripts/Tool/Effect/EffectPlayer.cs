@@ -392,7 +392,7 @@ public class EffectPlayer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"{effectType} Hit : {other.name}");
+        //Debug.Log($"{effectType} Hit : {other.name}");
     }
 
 }
