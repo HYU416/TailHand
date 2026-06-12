@@ -30,16 +30,20 @@ public class DudBomb : MonoBehaviour
     public string bossCoreTag = "BossCore";
 
     [Header("プレイヤーが投げた時だけボスに有効")]
-    [SerializeField] private bool requirePlayerThrowForBossHit = true;
+    [SerializeField]
+    private bool requirePlayerThrowForBossHit = true;
 
     [Header("未投げ状態でボス壁に当たった時は無視する")]
-    [SerializeField] private bool ignoreBossHitWhenNotThrown = true;
+    [SerializeField]
+    private bool ignoreBossHitWhenNotThrown = true;
 
     [Header("壁・コアに当たったら対象も消す")]
-    [SerializeField] private bool destroyBossTargetOnHit = true;
+    [SerializeField]
+    private bool destroyBossTargetOnHit = true;
 
     [Header("親にタグが付いている場合は親を対象にする")]
-    [SerializeField] private bool useTaggedParentObject = true;
+    [SerializeField]
+    private bool useTaggedParentObject = true;
 
     private bool hasExploded = false;
     private bool wasThrownByPlayer = false;
@@ -80,11 +84,19 @@ public class DudBomb : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasExploded) return;
-
-        if (enableChainExplosion && IsSameTag(other.gameObject, explosionEffectTag))
+        if (hasExploded)
         {
-            Explode("不発弾が爆発エフェクトに触れて誘爆しました");
+            return;
+        }
+
+        if (enableChainExplosion &&
+            IsSameTag(other.gameObject, explosionEffectTag))
+        {
+            Explode(
+                "不発弾が爆発エフェクトに触れて誘爆しました",
+                EffectType.Explosion
+            );
+
             return;
         }
 
@@ -93,7 +105,10 @@ public class DudBomb : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (hasExploded) return;
+        if (hasExploded)
+        {
+            return;
+        }
 
         CheckBossHit(collision.gameObject);
     }
@@ -107,7 +122,10 @@ public class DudBomb : MonoBehaviour
             dudBombState.MarkThrownByPlayer();
         }
 
-        Debug.Log("不発弾がプレイヤー投げ状態になりました: " + gameObject.name);
+        Debug.Log(
+            "不発弾がプレイヤー投げ状態になりました: " +
+            gameObject.name
+        );
     }
 
     public void ClearPlayerThrow()
@@ -119,46 +137,98 @@ public class DudBomb : MonoBehaviour
             dudBombState.ClearThrownByPlayer();
         }
 
-        Debug.Log("不発弾のプレイヤー投げ状態を解除しました: " + gameObject.name);
+        Debug.Log(
+            "不発弾のプレイヤー投げ状態を解除しました: " +
+            gameObject.name
+        );
     }
 
     public void ExplodeByBossHit()
     {
-        if (hasExploded) return;
-
-        if (!CanAffectBoss())
+        if (hasExploded)
         {
-            Debug.Log("不発弾はボスに当たりましたが、プレイヤーが投げた物ではないため無視しました: " + gameObject.name);
             return;
         }
 
-        Explode("不発弾がボスの壁またはコアに当たって爆発しました");
+        if (!CanAffectBoss())
+        {
+            Debug.Log(
+                "不発弾はボスに当たりましたが、" +
+                "プレイヤーが投げた物ではないため無視しました: " +
+                gameObject.name
+            );
+
+            return;
+        }
+
+        Explode(
+            "不発弾がボスの壁またはコアに当たって爆発しました",
+            EffectType.Hit2
+        );
     }
 
     private void CheckBossHit(GameObject hitObject)
     {
-        if (hitObject == null) return;
+        if (hitObject == null)
+        {
+            return;
+        }
 
-        GameObject bossTarget = FindBossTargetObject(hitObject);
+        GameObject bossTarget =
+            FindBossTargetObject(hitObject);
 
-        if (bossTarget == null) return;
+        if (bossTarget == null)
+        {
+            return;
+        }
 
         if (!CanAffectBoss())
         {
             if (ignoreBossHitWhenNotThrown)
             {
-                Debug.Log("未投げの不発弾がボス壁またはコアに当たりましたが、無視しました: " + gameObject.name);
+                Debug.Log(
+                    "未投げの不発弾がボス壁またはコアに当たりましたが、" +
+                    "無視しました: " +
+                    gameObject.name
+                );
+
                 return;
             }
         }
 
+        Vector3 hitEffectPosition = transform.position;
+
+        Collider targetCollider =
+            bossTarget.GetComponent<Collider>();
+
+        if (targetCollider == null)
+        {
+            targetCollider =
+                bossTarget.GetComponentInChildren<Collider>();
+        }
+
+        if (targetCollider != null)
+        {
+            hitEffectPosition =
+                targetCollider.ClosestPoint(transform.position);
+        }
+
         if (destroyBossTargetOnHit)
         {
-            Debug.Log("プレイヤーが投げた不発弾が当たったため、ボス壁またはコアを消します: " + bossTarget.name);
+            Debug.Log(
+                "プレイヤーが投げた不発弾が当たったため、" +
+                "ボス壁またはコアを消します: " +
+                bossTarget.name
+            );
+
             Destroy(bossTarget);
         }
 
-        Explode("不発弾がボスの壁またはコアに当たって爆発しました");
+        Explode(
+            "不発弾がボスの壁またはコアに当たって爆発しました",
+            EffectType.Hit2,
+            hitEffectPosition
+        );
     }
 
     public bool CanAffectBoss()
@@ -171,16 +241,25 @@ public class DudBomb : MonoBehaviour
         return IsThrownByPlayer;
     }
 
-    private GameObject FindBossTargetObject(GameObject hitObject)
+    private GameObject FindBossTargetObject(
+        GameObject hitObject
+    )
     {
-        if (hitObject == null) return null;
+        if (hitObject == null)
+        {
+            return null;
+        }
 
-        if (IsSameTag(hitObject, bossWallTag) || IsSameTag(hitObject, bossCoreTag))
+        if (IsSameTag(hitObject, bossWallTag) ||
+            IsSameTag(hitObject, bossCoreTag))
         {
             return hitObject;
         }
 
-        if (!useTaggedParentObject) return null;
+        if (!useTaggedParentObject)
+        {
+            return null;
+        }
 
         Transform current = hitObject.transform.parent;
 
@@ -188,7 +267,8 @@ public class DudBomb : MonoBehaviour
         {
             GameObject parentObject = current.gameObject;
 
-            if (IsSameTag(parentObject, bossWallTag) || IsSameTag(parentObject, bossCoreTag))
+            if (IsSameTag(parentObject, bossWallTag) ||
+                IsSameTag(parentObject, bossCoreTag))
             {
                 return parentObject;
             }
@@ -199,70 +279,99 @@ public class DudBomb : MonoBehaviour
         return null;
     }
 
-    private bool IsSameTag(GameObject target, string tagName)
+    private bool IsSameTag(
+        GameObject target,
+        string tagName
+    )
     {
-        if (target == null) return false;
-        if (string.IsNullOrEmpty(tagName)) return false;
+        if (target == null)
+        {
+            return false;
+        }
 
-        // CompareTagはタグ未登録だとエラーになるため、ここでは安全に文字列比較する
+        if (string.IsNullOrEmpty(tagName))
+        {
+            return false;
+        }
+
         return target.tag == tagName;
     }
 
-    private void Explode(string logMessage)
+    private void Explode(
+        string logMessage,
+        EffectType effectType
+    )
     {
-        if (hasExploded) return;
+        Explode(
+            logMessage,
+            effectType,
+            transform.position
+        );
+    }
+
+    private void Explode(
+        string logMessage,
+        EffectType effectType,
+        Vector3 effectPosition
+    )
+    {
+        if (hasExploded)
+        {
+            return;
+        }
 
         hasExploded = true;
 
         Debug.Log(logMessage);
 
-        SpawnExplosionEffect();
+        SpawnEffect(
+            effectType,
+            effectPosition
+        );
+
         CheckExplosionHit();
 
         Destroy(gameObject);
     }
 
-    private void SpawnExplosionEffect()
+    private void SpawnEffect(
+        EffectType effectType,
+        Vector3 effectPosition
+    )
     {
-        EffectManager.Instance.Play(EffectType.Explosion, transform.position);
-        //if (explosionEffectPrefab == null)
-        //{
-        //    Debug.LogWarning("不発弾の Explosion Effect Prefab が設定されていません");
-        //    return;
-        //}
+        if (EffectManager.Instance == null)
+        {
+            Debug.LogWarning(
+                "EffectManager.Instanceが見つからないため、" +
+                "エフェクトを再生できません"
+            );
 
-        //GameObject effect = Instantiate(
-        //    explosionEffectPrefab,
-        //    transform.position,
-        //    Quaternion.identity
-        //);
+            return;
+        }
 
-        //effect.transform.localScale *= explosionEffectScaleMultiplier;
-
-        //BombEffect bombEffect = effect.GetComponent<BombEffect>();
-
-        //if (bombEffect == null)
-        //{
-        //    bombEffect = effect.GetComponentInChildren<BombEffect>();
-        //}
-
-        //if (bombEffect != null)
-        //{
-        //    bombEffect.maxScale *= explosionEffectScaleMultiplier;
-        //}
+        EffectManager.Instance.Play(
+            effectType,
+            effectPosition
+        );
     }
 
     private void CheckExplosionHit()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
+        Collider[] hits = Physics.OverlapSphere(
+            transform.position,
+            explosionRadius
+        );
 
         foreach (Collider hit in hits)
         {
             if (hit.CompareTag("Player"))
             {
-                Debug.Log("プレイヤーが不発弾の爆発に当たりました");
+                Debug.Log(
+                    "プレイヤーが不発弾の爆発に当たりました"
+                );
 
-                // PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                // PlayerHealth playerHealth =
+                //     hit.GetComponent<PlayerHealth>();
                 //
                 // if (playerHealth != null)
                 // {
@@ -275,6 +384,10 @@ public class DudBomb : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, explosionRadius);
+
+        Gizmos.DrawWireSphere(
+            transform.position,
+            explosionRadius
+        );
     }
 }

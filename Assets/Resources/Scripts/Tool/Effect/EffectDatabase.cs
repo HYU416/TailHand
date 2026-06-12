@@ -12,9 +12,10 @@ public enum EffectType
     DamageZone = 4,          //ダメージゾーン 
     Beam,                    //ビーム
 
-    Hit,                     //ヒット
+    Hit,                     //ヒット             
     Dash,                    //ダッシュ
-    Chatch,                   //キャッチ
+    Chatch, //キャッチ
+    Hit2 ,         //ヒット２       
 }
 
 [Serializable]
