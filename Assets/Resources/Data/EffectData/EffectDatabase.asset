@@ -49,3 +49,7 @@ MonoBehaviour:
     prefab: {fileID: 8497236338287028020, guid: f53685f7b22d24c408f76fda2d9b9098, type: 3}
     targetTag: ChatchEffect
     playSpeed: 1
+  - type: 9
+    prefab: {fileID: 6175767892548486341, guid: 8994719e76e261247ab2a7f0fec90502, type: 3}
+    targetTag: HitEffetct
+    playSpeed: 1
