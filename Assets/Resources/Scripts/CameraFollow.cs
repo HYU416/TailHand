@@ -17,6 +17,8 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float moveSmooth = 8.0f;
     [SerializeField] float lookSmooth = 10.0f;
 
+    [SerializeField] float bossHeight = 10.0f;
+
     private void Start()
     {
         MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
@@ -33,6 +35,7 @@ public class CameraFollow : MonoBehaviour
         if (player == null || Boss == null) return;
 
         Vector3 bossPos = Boss.transform.position;
+        bossPos.y = bossHeight;
         Vector3 playerPos = player.transform.position;
 
         // ボス→プレイヤー方向

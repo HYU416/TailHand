@@ -51,6 +51,9 @@ public class Player : MonoBehaviour
     [SerializeField] private PlayerMotion playerMotion;
     [SerializeField] private AnimeState animeState;
 
+    [Header("ステージ範囲")]
+    [SerializeField] private Transform stageCenter;
+    [SerializeField] private float stageRadius = 50f;
 
     void Start()
     {
@@ -171,6 +174,8 @@ public class Player : MonoBehaviour
             rb.MovePosition(rb.position + move);
         }
 
+        // 任意の範囲からPlayerを出れなくする
+        LimitStageArea();
 
         // アニメーション切り替え
         SwitchAnimation(move);
@@ -238,5 +243,35 @@ public class Player : MonoBehaviour
         animeState = state;
         if (playerMotion)
             playerMotion.SwitchMotion(animeState);
+    }
+
+    private void LimitStageArea()
+    {
+        if (stageCenter == null) return;
+
+        Vector3 offset = transform.position - stageCenter.position;
+
+        // 高さは無視
+        offset.y = 0f;
+
+        float distance = offset.magnitude;
+
+        if (distance > stageRadius)
+        {
+            Vector3 clampedPos =
+                stageCenter.position +
+                offset.normalized * stageRadius;
+
+            clampedPos.y = transform.position.y;
+
+            rb.position = clampedPos;
+        }
+    }
+    private void OnDrawGizmosSelected()
+    {
+        if (stageCenter == null) return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(stageCenter.position, stageRadius);
     }
 }
