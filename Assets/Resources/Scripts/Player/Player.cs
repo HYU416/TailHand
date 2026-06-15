@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using UnityEngine.UIElements;
 
 public enum AnimeState
 {
@@ -38,6 +39,11 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float runMotionSpeed = 1e-4f;
 
+    [Header("スピードメーターの角度")]
+    [SerializeField] private GameObject speedMeterAllow;
+    [SerializeField] private float minAngle = 120.0f;
+    [SerializeField] private float maxAngle = -120.0f;
+
     Rigidbody rb;
     Vector2 moveInput;
     bool movebutton;
@@ -63,6 +69,7 @@ public class Player : MonoBehaviour
         if (cameraTransform == null){
             cameraTransform = Camera.main.transform;
         }
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle); ;
     }
 
     // Input System の Move イベント
@@ -134,6 +141,14 @@ public class Player : MonoBehaviour
             // 最低速度で制限をかけて下回ったら停止する
             currentSpeed = Mathf.Max(currentSpeed, 0);
         }
+
+        // スピードメーターの動作
+        float speedRate = currentSpeed / gearSpeeds[gearSpeeds.Count - 1];
+        speedRate = Mathf.Clamp01(speedRate);
+
+        float angle = Mathf.Lerp(minAngle, maxAngle, speedRate);
+
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
 
         //移動
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
