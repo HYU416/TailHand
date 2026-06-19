@@ -66,6 +66,23 @@ public class TailCollisionDetector : MonoBehaviour
             return bossHeadCatchable.CanCatch;
         }
 
+        Missile missile = targetObject.GetComponent<Missile>();
+
+        if (missile == null)
+        {
+            missile = targetObject.GetComponentInParent<Missile>();
+        }
+
+        if (missile == null)
+        {
+            missile = targetObject.GetComponentInChildren<Missile>();
+        }
+
+        if (missile != null)
+        {
+            return true;
+        }
+
         string objName = targetObject.name.Replace("(Clone)", "").Trim();
 
         bool isCatchable =
@@ -84,6 +101,23 @@ public class TailCollisionDetector : MonoBehaviour
         if (other == null)
         {
             return null;
+        }
+
+        Missile missile = other.GetComponent<Missile>();
+
+        if (missile == null)
+        {
+            missile = other.GetComponentInParent<Missile>();
+        }
+
+        if (missile == null)
+        {
+            missile = other.GetComponentInChildren<Missile>();
+        }
+
+        if (missile != null)
+        {
+            return missile.transform;
         }
 
         if (other.attachedRigidbody != null)
