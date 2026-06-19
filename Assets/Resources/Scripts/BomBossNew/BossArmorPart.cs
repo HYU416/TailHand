@@ -14,6 +14,15 @@ public class BossArmorPart : MonoBehaviour
     [Header("プレイヤーが投げた通常爆弾だけ壁に有効にする")]
     [SerializeField] private bool requireThrownNormalBomb = true;
 
+    [Header("プレイヤーが投げたミサイルだけ壁に有効にする")]
+    [SerializeField] private bool requireThrownMissile = true;
+
+    [Header("ミサイル命中時、壁を一撃で壊す")]
+    [SerializeField] private bool missileOneShotArmor = true;
+
+    [Header("一撃で壊さない場合のミサイルダメージ")]
+    [SerializeField] private int missileArmorDamage = 30;
+
     [Header("Flint / Obsidian / Rubble が当たったら壁も破壊する")]
     [SerializeField] private bool destroyArmorByItemHit = true;
 
@@ -89,6 +98,45 @@ public class BossArmorPart : MonoBehaviour
     {
         if (isBroken) return;
 
+        Missile missile = FindMissile(hitObject, hitCollider, hitRigidbody);
+
+        if (missile != null)
+        {
+            if (requireThrownMissile && !missile.CanAffectBoss())
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("投げられていないミサイルなので壁には効きません: " + GetHitName(hitObject));
+                }
+
+                return;
+            }
+
+            if (showDebugLog)
+            {
+                Debug.Log("プレイヤーが投げたミサイルが壁に命中しました: " + GetHitName(hitObject));
+            }
+
+            if (missileOneShotArmor)
+            {
+                BreakArmor();
+            }
+            else
+            {
+                int damage = missileArmorDamage;
+
+                if (missile.ArmorDamageByPlayerThrow > 0)
+                {
+                    damage = missile.ArmorDamageByPlayerThrow;
+                }
+
+                TakeDamage(damage);
+            }
+
+            missile.ExplodeByBossHit();
+            return;
+        }
+
         if (destroyArmorByItemHit)
         {
             GameObject itemObject = FindDestroyableItemObject(hitObject, hitCollider, hitRigidbody);
@@ -151,9 +199,9 @@ public class BossArmorPart : MonoBehaviour
             }
         }
 
-        int damage = bombMarker.ArmorDamage;
+        int bombDamage = bombMarker.ArmorDamage;
 
-        if (damage <= 0)
+        if (bombDamage <= 0)
         {
             if (showDebugLog)
             {
@@ -163,7 +211,7 @@ public class BossArmorPart : MonoBehaviour
             return;
         }
 
-        TakeDamage(damage);
+        TakeDamage(bombDamage);
 
         if (dudBomb != null)
         {
@@ -390,6 +438,49 @@ public class BossArmorPart : MonoBehaviour
 
             throwableBomb = hitRigidbody.GetComponentInChildren<ThrowableBomb>();
             if (throwableBomb != null) return throwableBomb;
+        }
+
+        return null;
+    }
+
+    private Missile FindMissile(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        Missile missile = null;
+
+        if (hitObject != null)
+        {
+            missile = hitObject.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitObject.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitObject.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
+        }
+
+        if (hitCollider != null)
+        {
+            missile = hitCollider.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitCollider.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitCollider.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
+        }
+
+        if (hitRigidbody != null)
+        {
+            missile = hitRigidbody.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitRigidbody.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitRigidbody.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
         }
 
         return null;
