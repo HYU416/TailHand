@@ -27,29 +27,31 @@ public class InputCheck : MonoBehaviour
         inputController = InputController.None;
     }
 
+    
     private void OnEnable()
     {
+        // ‚Ç‚ÌƒfƒoƒCƒX‚ªÅŒã‚É‘€ì‚³‚ê‚½‚©‚ğŠÄ‹‚·‚éƒŠƒXƒi[‚ğİ’è
         listener = InputSystem.onAnyButtonPress.Call(ctrl =>
         {
             lastDevice = ctrl.device;
 
             if (lastDevice is Keyboard)
             {
-                Debug.Log("ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½Å‘ï¿½ï¿½ï¿½");
+                Debug.Log("ƒL[ƒ{[ƒh‘€ì");
                 inputController = InputController.Keyboard;
             }
             else if (lastDevice is Mouse)
             {
-                Debug.Log("ï¿½}ï¿½Eï¿½Xï¿½Å‘ï¿½ï¿½ï¿½");
+                Debug.Log("ƒ}ƒEƒX‚Å‘€ì");
             }
             else if (lastDevice is DualShockGamepad)
             {
-                Debug.Log("PSï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½Å‘ï¿½ï¿½ï¿½");
+                Debug.Log("PSŒn‚Å‘€ì");
                 inputController = InputController.PS;
             }
             else if (lastDevice is XInputController)
             {
-                Debug.Log("Xboxï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½Å‘ï¿½ï¿½ï¿½");
+                Debug.Log("XboxŒn‚Å‘€ì");
                 inputController = InputController.Xbox;
             }
             else if (lastDevice is Gamepad gamepad)
@@ -58,13 +60,13 @@ public class InputCheck : MonoBehaviour
                     gamepad.displayName.Contains("Nintendo") ||
                     gamepad.name.Contains("Switch"))
                 {
-                    Debug.Log("Nintendoï¿½nï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[");
+                    Debug.Log("NintendoŒn‚Å‘€ì");
                     inputController = InputController.Nintendo;
                 }
             }
             else if (lastDevice is Gamepad)
             {
-                Debug.Log("ï¿½ï¿½ï¿½Ì‘ï¿½ï¿½ÌƒQï¿½[ï¿½ï¿½ï¿½pï¿½bï¿½hï¿½Å‘ï¿½ï¿½ï¿½");
+                Debug.Log("‚»‚Ì‘¼ƒRƒ“ƒgƒ[ƒ‰‚Å‘€ì");
                 inputController = InputController.PS;
             }
         });
@@ -75,6 +77,7 @@ public class InputCheck : MonoBehaviour
         listener?.Dispose();
     }
 
+    //‘€ì‚µ‚Ä‚¢‚éƒRƒ“ƒgƒ[ƒ‰[‚Ìí—Ş‚ğ•Ô‚·
     public InputController GetInputController()
     {
         return inputController;
