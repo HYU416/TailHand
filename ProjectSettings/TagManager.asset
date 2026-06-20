@@ -18,6 +18,7 @@ TagManager:
   - HitEffetct
   - DashEffect
   - ChatchEffect
+  - Ground
   layers:
   - Default
   - TransparentFX
