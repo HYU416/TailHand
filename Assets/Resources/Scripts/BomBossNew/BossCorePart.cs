@@ -14,6 +14,15 @@ public class BossCorePart : MonoBehaviour
     [Header("通常時：不発弾でコアに与えるダメージ")]
     [SerializeField] private int dudBombCoreDamage = 1;
 
+    [Header("プレイヤーが投げたミサイルだけコアに有効にする")]
+    [SerializeField] private bool requireThrownMissile = true;
+
+    [Header("ミサイル命中時、コアを一撃で壊す")]
+    [SerializeField] private bool missileOneShotCore = true;
+
+    [Header("一撃で壊さない場合のミサイルダメージ")]
+    [SerializeField] private int missileCoreDamage = 1;
+
     [Header("一撃破壊時に与えるダメージ")]
     [SerializeField] private int oneShotCoreDamage = 999;
 
@@ -71,6 +80,63 @@ public class BossCorePart : MonoBehaviour
 
     private void CheckHit(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
     {
+        Missile missile = FindMissile(hitObject, hitCollider, hitRigidbody);
+
+        if (missile != null)
+        {
+            if (requireThrownMissile && !missile.CanAffectBoss())
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("未投げのミサイルがコアに当たりましたが、コアダメージを無視しました: " + GetHitName(hitObject));
+                }
+
+                return;
+            }
+
+            if (!isAttackable)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("ミサイルがコアに当たりましたが、コアはまだ攻撃不可です。ミサイルのみ爆発させます。");
+                }
+
+                missile.ExplodeByBossHit();
+                return;
+            }
+
+            int damage = missileCoreDamage;
+
+            if (missileOneShotCore)
+            {
+                damage = oneShotCoreDamage;
+            }
+            else if (missile.CoreDamageByPlayerThrow > 0)
+            {
+                damage = missile.CoreDamageByPlayerThrow;
+            }
+
+            if (damage <= 0)
+            {
+                if (showDebugLog)
+                {
+                    Debug.Log("ミサイルのコアダメージが0以下なので無視しました");
+                }
+
+                missile.ExplodeByBossHit();
+                return;
+            }
+
+            if (showDebugLog)
+            {
+                Debug.Log("プレイヤーが投げたミサイルがコアに命中。コアにダメージ: " + damage);
+            }
+
+            HitCore(damage);
+            missile.ExplodeByBossHit();
+            return;
+        }
+
         if (damageCoreByItemHit)
         {
             GameObject itemObject = FindDestroyableItemObject(hitObject, hitCollider, hitRigidbody);
@@ -114,7 +180,7 @@ public class BossCorePart : MonoBehaviour
         {
             if (showDebugLog && hitObject != null)
             {
-                Debug.Log("コアに何か当たったが、不発弾でも爆弾マーカーでもありません: " + hitObject.name);
+                Debug.Log("コアに何か当たったが、不発弾でも爆弾マーカーでもミサイルでもありません: " + hitObject.name);
             }
 
             return;
@@ -337,6 +403,49 @@ public class BossCorePart : MonoBehaviour
         return null;
     }
 
+    private Missile FindMissile(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
+    {
+        Missile missile = null;
+
+        if (hitObject != null)
+        {
+            missile = hitObject.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitObject.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitObject.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
+        }
+
+        if (hitCollider != null)
+        {
+            missile = hitCollider.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitCollider.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitCollider.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
+        }
+
+        if (hitRigidbody != null)
+        {
+            missile = hitRigidbody.GetComponent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitRigidbody.GetComponentInParent<Missile>();
+            if (missile != null) return missile;
+
+            missile = hitRigidbody.GetComponentInChildren<Missile>();
+            if (missile != null) return missile;
+        }
+
+        return null;
+    }
+
     private BossBombHitMarker FindBombMarker(GameObject hitObject, Collider hitCollider, Rigidbody hitRigidbody)
     {
         BossBombHitMarker marker = null;
@@ -395,5 +504,15 @@ public class BossCorePart : MonoBehaviour
         {
             Debug.LogWarning("BossCorePart: bossController が設定されていません");
         }
+    }
+
+    private string GetHitName(GameObject hitObject)
+    {
+        if (hitObject == null)
+        {
+            return "null";
+        }
+
+        return hitObject.name;
     }
 }

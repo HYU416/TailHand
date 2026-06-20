@@ -53,7 +53,10 @@ public class BombExplosion : MonoBehaviour
     private Renderer[] renderers;
     private MaterialPropertyBlock propertyBlock;
 
+    //エフェクトのスピードカーブ
+    public AnimationCurve effectSpeedCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
     private EffectPlayer damageZoneEffect;
+
     public bool HasExploded
     {
         get { return hasExploded; }
@@ -69,7 +72,10 @@ public class BombExplosion : MonoBehaviour
     {
         if (EffectManager.Instance != null)
         {
-            EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+            if (damageZoneEffect != null)
+            {
+                EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+            }
         }
     }
 
@@ -81,7 +87,14 @@ public class BombExplosion : MonoBehaviour
        elapsedTime += Time.deltaTime;
         
         float remainingTime = explosionTime - elapsedTime;
+
+        //ダメージゾーンポジションを更新
         damageZoneEffect.SetEffectPos(transform.position);
+        //エフェクトのスピードを時間経過に応じて変化させる
+        float speedMultiplier = effectSpeedCurve.Evaluate(elapsedTime / explosionTime);
+        damageZoneEffect.SetPlaySpeed(speedMultiplier);
+
+
         if (useBlinkBeforeExplosion &&
             blinkBeforeExplosionTime > 0f &&
             remainingTime <= blinkBeforeExplosionTime)

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using UnityEngine.UIElements;
 
 public enum AnimeState
 {
@@ -38,6 +39,11 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float runMotionSpeed = 1e-4f;
 
+    [Header("スピードメーターの角度")]
+    [SerializeField] private GameObject speedMeterAllow;
+    [SerializeField] private float minAngle = 120.0f;
+    [SerializeField] private float maxAngle = -120.0f;
+
     Rigidbody rb;
     Vector2 moveInput;
     bool movebutton;
@@ -55,6 +61,12 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform stageCenter;
     [SerializeField] private float stageRadius = 50f;
 
+    //速度によって砂ぼこりエフェクトの数を変えるためのカーブ
+    [Header("速度とエフェクトの数の関係")]
+    [SerializeField] private AnimationCurve EffectSpawnCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+    //エフェクトのスポーンカウント
+    private int EffectSpawnCounter = 0;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -63,6 +75,7 @@ public class Player : MonoBehaviour
         if (cameraTransform == null){
             cameraTransform = Camera.main.transform;
         }
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle); ;
     }
 
     // Input System の Move イベント
@@ -134,6 +147,14 @@ public class Player : MonoBehaviour
             // 最低速度で制限をかけて下回ったら停止する
             currentSpeed = Mathf.Max(currentSpeed, 0);
         }
+
+        // スピードメーターの動作
+        float speedRate = currentSpeed / gearSpeeds[gearSpeeds.Count - 1];
+        speedRate = Mathf.Clamp01(speedRate);
+
+        float angle = Mathf.Lerp(minAngle, maxAngle, speedRate);
+
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
 
         //移動
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
@@ -231,7 +252,14 @@ public class Player : MonoBehaviour
         move.y = 0.0f;
         if (move.magnitude >= runMotionSpeed)
         {
-            EffectManager.Instance.Play(EffectType.Dash, transform.position);
+            // 速度に応じて砂ぼこりエフェクトの数を変える
+            EffectSpawnCounter++;
+            float spawnInterval = EffectSpawnCurve.Evaluate(currentSpeed / gearSpeeds[gearSpeeds.Count - 1]);
+            if (EffectSpawnCounter >= spawnInterval)
+            {
+                EffectSpawnCounter = 0;
+                EffectManager.Instance.Play(EffectType.Dash, transform.position);
+            }
             animeState = AnimeState.Run;
         }
         else

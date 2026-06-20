@@ -26,6 +26,26 @@ public class Missile : MonoBehaviour
     [Tooltip("ミサイルモデルのどの軸が先端かを選びます。Y軸上側が先端なら Up_Y にしてください")]
     public MissileNoseAxis noseAxis = MissileNoseAxis.Up_Y;
 
+    [Header("【掴み設定】")]
+    [Tooltip("掴んだ時のローカル位置補正です")]
+    [SerializeField] private Vector3 catchLocalPositionOffset = Vector3.zero;
+
+    [Tooltip("掴んだ時のローカル回転補正です。横向きにしたい場合はここを調整してください")]
+    [SerializeField] private Vector3 catchLocalRotationOffset = Vector3.zero;
+
+    [Tooltip("尻尾の掴み判定レイヤー名です。このレイヤーに当たっても爆発しません")]
+    [SerializeField] private string tailLayerName = "Tail";
+
+    [Header("【投げられた後の設定】")]
+    [Tooltip("プレイヤーが投げた後、何秒後に自動爆発するかです")]
+    [SerializeField] private float explosionTimeAfterPlayerThrow = 3.0f;
+
+    [Tooltip("プレイヤーが投げたミサイルがボス壁に与えるダメージです")]
+    [SerializeField] private int armorDamageByPlayerThrow = 999;
+
+    [Tooltip("プレイヤーが投げたミサイルがボスコアに与えるダメージです")]
+    [SerializeField] private int coreDamageByPlayerThrow = 999;
+
     [Header("【移動設定】")]
     [Tooltip("ミサイルの速度です")]
     public float speed = 10f;
@@ -58,7 +78,6 @@ public class Missile : MonoBehaviour
     [Tooltip("プレイヤーに与えるダメージです")]
     public int damage = 20;
 
-
     [Tooltip("爆発エフェクトのサイズ倍率です")]
     public float explosionEffectScaleMultiplier = 1f;
 
@@ -77,10 +96,40 @@ public class Missile : MonoBehaviour
     public bool showExplosionRadius = true;
 
     private Rigidbody rb;
-    private bool exploded = false;
-    private float timer = 0f;
+    private bool exploded;
+    private float timer;
 
-    void Awake()
+    private bool isCaughtByPlayer;
+    private bool isThrownByPlayer;
+    private float thrownTimer;
+
+    private bool originalHoming;
+    private bool originalExplodeOnHit;
+    private bool originalExplodeOnlyPlayerHit;
+    private bool originalUseGravity;
+    private Transform originalTarget;
+
+    public Vector3 CatchLocalPositionOffset
+    {
+        get { return catchLocalPositionOffset; }
+    }
+
+    public Vector3 CatchLocalRotationOffset
+    {
+        get { return catchLocalRotationOffset; }
+    }
+
+    public int ArmorDamageByPlayerThrow
+    {
+        get { return armorDamageByPlayerThrow; }
+    }
+
+    public int CoreDamageByPlayerThrow
+    {
+        get { return coreDamageByPlayerThrow; }
+    }
+
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
 
@@ -90,7 +139,7 @@ public class Missile : MonoBehaviour
         }
     }
 
-    void Start()
+    private void Start()
     {
         transform.localScale = Vector3.one * missileScale;
 
@@ -120,11 +169,37 @@ public class Missile : MonoBehaviour
                 RotateNoseToDirection(targetDirection, true);
             }
         }
+
+        originalHoming = homing;
+        originalExplodeOnHit = explodeOnHit;
+        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
+        originalUseGravity = useGravity;
+        originalTarget = target;
     }
 
-    void Update()
+    private void Update()
     {
-        if (exploded) return;
+        if (exploded)
+        {
+            return;
+        }
+
+        if (isCaughtByPlayer)
+        {
+            return;
+        }
+
+        if (isThrownByPlayer)
+        {
+            thrownTimer += Time.deltaTime;
+
+            if (thrownTimer >= explosionTimeAfterPlayerThrow)
+            {
+                ExplodeWithoutPlayerDamage();
+            }
+
+            return;
+        }
 
         timer += Time.deltaTime;
 
@@ -137,7 +212,7 @@ public class Missile : MonoBehaviour
         MoveMissile();
     }
 
-    void MoveMissile()
+    private void MoveMissile()
     {
         if (homing && target != null)
         {
@@ -162,9 +237,12 @@ public class Missile : MonoBehaviour
         }
     }
 
-    void RotateNoseToDirection(Vector3 direction, bool instant)
+    private void RotateNoseToDirection(Vector3 direction, bool instant)
     {
-        if (direction.sqrMagnitude <= 0.001f) return;
+        if (direction.sqrMagnitude <= 0.001f)
+        {
+            return;
+        }
 
         direction.Normalize();
 
@@ -191,14 +269,14 @@ public class Missile : MonoBehaviour
         }
     }
 
-    Vector3 GetWorldNoseDirection()
+    private Vector3 GetWorldNoseDirection()
     {
         Vector3 localDirection = GetLocalNoseDirection();
 
         return transform.TransformDirection(localDirection).normalized;
     }
 
-    Vector3 GetLocalNoseDirection()
+    private Vector3 GetLocalNoseDirection()
     {
         switch (noseAxis)
         {
@@ -225,14 +303,41 @@ public class Missile : MonoBehaviour
         }
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter(Collision collision)
     {
-        if (!explodeOnHit) return;
-        if (exploded) return;
+        if (exploded)
+        {
+            return;
+        }
+
+        if (isCaughtByPlayer)
+        {
+            return;
+        }
+
+        if (collision == null || collision.gameObject == null)
+        {
+            return;
+        }
+
+        if (IsTailCatchObject(collision.gameObject))
+        {
+            return;
+        }
+
+        if (isThrownByPlayer)
+        {
+            return;
+        }
+
+        if (!explodeOnHit)
+        {
+            return;
+        }
 
         if (explodeOnlyPlayerHit)
         {
-            if (!collision.gameObject.CompareTag(playerTag))
+            if (!IsPlayerObject(collision.gameObject))
             {
                 return;
             }
@@ -241,14 +346,41 @@ public class Missile : MonoBehaviour
         Explode();
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (!explodeOnHit) return;
-        if (exploded) return;
+        if (exploded)
+        {
+            return;
+        }
+
+        if (isCaughtByPlayer)
+        {
+            return;
+        }
+
+        if (other == null)
+        {
+            return;
+        }
+
+        if (IsTailCatchCollider(other))
+        {
+            return;
+        }
+
+        if (isThrownByPlayer)
+        {
+            return;
+        }
+
+        if (!explodeOnHit)
+        {
+            return;
+        }
 
         if (explodeOnlyPlayerHit)
         {
-            if (!other.CompareTag(playerTag))
+            if (!IsPlayerObject(other.gameObject))
             {
                 return;
             }
@@ -257,9 +389,86 @@ public class Missile : MonoBehaviour
         Explode();
     }
 
-    public void Explode()
+    public void OnCaughtByPlayer()
     {
-        if (exploded) return;
+        if (exploded)
+        {
+            return;
+        }
+
+        isCaughtByPlayer = true;
+        isThrownByPlayer = false;
+        thrownTimer = 0f;
+
+        originalHoming = homing;
+        originalExplodeOnHit = explodeOnHit;
+        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
+        originalUseGravity = useGravity;
+        originalTarget = target;
+
+        homing = false;
+        target = null;
+        speed = 0f;
+        explodeOnHit = false;
+        explodeOnlyPlayerHit = false;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.useGravity = false;
+            rb.isKinematic = true;
+        }
+
+        Debug.Log("Missile: 掴まれたので、ミサイル処理を停止してアイテム扱いにしました");
+    }
+
+    public void OnThrownByPlayer()
+    {
+        if (exploded)
+        {
+            return;
+        }
+
+        isCaughtByPlayer = false;
+        isThrownByPlayer = true;
+        thrownTimer = 0f;
+
+        homing = false;
+        target = null;
+        explodeOnHit = false;
+        explodeOnlyPlayerHit = false;
+
+        if (rb != null)
+        {
+            rb.useGravity = originalUseGravity;
+        }
+
+        Debug.Log("Missile: 投げられたので、3秒後に自爆する投擲物扱いにしました");
+    }
+
+    public bool CanAffectBoss()
+    {
+        return isThrownByPlayer && !isCaughtByPlayer && !exploded;
+    }
+
+    public void ExplodeByBossHit()
+    {
+        if (exploded)
+        {
+            return;
+        }
+
+        PlayBossHitEffect();
+        ExplodeWithoutPlayerDamage();
+    }
+
+    private void ExplodeWithoutPlayerDamage()
+    {
+        if (exploded)
+        {
+            return;
+        }
 
         exploded = true;
 
@@ -271,17 +480,142 @@ public class Missile : MonoBehaviour
         }
 
         SpawnExplosionEffect();
-        DamagePlayerInRadius();
 
         Destroy(gameObject, destroyDelayAfterExplosion);
     }
 
-    void SpawnExplosionEffect()
+    public void Explode()
     {
-        EffectManager.Instance.Play(EffectType.Explosion_Missile, transform.position);   
+        if (exploded)
+        {
+            return;
+        }
+
+        exploded = true;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+
+        SpawnExplosionEffect();
+
+        if (!isCaughtByPlayer && !isThrownByPlayer)
+        {
+            DamagePlayerInRadius();
+        }
+
+        Destroy(gameObject, destroyDelayAfterExplosion);
     }
 
-    void DamagePlayerInRadius()
+    private bool IsTailCatchCollider(Collider other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        if (IsTailCatchObject(other.gameObject))
+        {
+            return true;
+        }
+
+        TailCollisionDetector tailCollisionDetector = other.GetComponent<TailCollisionDetector>();
+
+        if (tailCollisionDetector == null)
+        {
+            tailCollisionDetector = other.GetComponentInParent<TailCollisionDetector>();
+        }
+
+        if (tailCollisionDetector == null)
+        {
+            tailCollisionDetector = other.GetComponentInChildren<TailCollisionDetector>();
+        }
+
+        return tailCollisionDetector != null;
+    }
+
+    private bool IsTailCatchObject(GameObject hitObject)
+    {
+        if (hitObject == null)
+        {
+            return false;
+        }
+
+        int tailLayer = LayerMask.NameToLayer(tailLayerName);
+
+        if (tailLayer >= 0 && hitObject.layer == tailLayer)
+        {
+            return true;
+        }
+
+        TailCollisionDetector tailCollisionDetector = hitObject.GetComponent<TailCollisionDetector>();
+
+        if (tailCollisionDetector == null)
+        {
+            tailCollisionDetector = hitObject.GetComponentInParent<TailCollisionDetector>();
+        }
+
+        if (tailCollisionDetector == null)
+        {
+            tailCollisionDetector = hitObject.GetComponentInChildren<TailCollisionDetector>();
+        }
+
+        return tailCollisionDetector != null;
+    }
+
+    private bool IsPlayerObject(GameObject hitObject)
+    {
+        if (hitObject == null)
+        {
+            return false;
+        }
+
+        if (IsTailCatchObject(hitObject))
+        {
+            return false;
+        }
+
+        Transform current = hitObject.transform;
+
+        while (current != null)
+        {
+            if (current.CompareTag(playerTag))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private void PlayBossHitEffect()
+    {
+        if (EffectManager.Instance == null)
+        {
+            Debug.LogWarning("EffectManager.Instanceが見つからないため、ミサイル命中Hit2を再生できません");
+            return;
+        }
+
+        EffectManager.Instance.Play(EffectType.Hit2, transform.position);
+    }
+
+    private void SpawnExplosionEffect()
+    {
+        if (EffectManager.Instance == null)
+        {
+            Debug.LogWarning("EffectManager.Instanceが見つからないため、ミサイル爆発エフェクトを再生できません");
+            return;
+        }
+
+        EffectManager.Instance.Play(EffectType.Explosion_Missile, transform.position);
+    }
+
+    private void DamagePlayerInRadius()
     {
         Collider[] hits = Physics.OverlapSphere(
             transform.position,
@@ -292,13 +626,26 @@ public class Missile : MonoBehaviour
         {
             Collider hit = hits[i];
 
-            if (!hit.CompareTag(playerTag)) continue;
+            if (hit == null)
+            {
+                continue;
+            }
+
+            if (IsTailCatchCollider(hit))
+            {
+                continue;
+            }
+
+            if (!IsPlayerObject(hit.gameObject))
+            {
+                continue;
+            }
 
             SendDamage(hit.gameObject);
         }
     }
 
-    void SendDamage(GameObject targetObject)
+    private void SendDamage(GameObject targetObject)
     {
         targetObject.SendMessage(
             "TakeDamage",
@@ -335,6 +682,11 @@ public class Missile : MonoBehaviour
         bool newUseGravity
     )
     {
+        if (isCaughtByPlayer || isThrownByPlayer)
+        {
+            return;
+        }
+
         target = newTarget;
         missileScale = newScale;
         speed = newSpeed;
@@ -344,19 +696,6 @@ public class Missile : MonoBehaviour
         explodeOnlyPlayerHit = newExplodeOnlyPlayerHit;
         explosionRadius = newExplosionRadius;
         damage = newDamage;
-
-        //エフェクトの設定がいるなら後で追加
-        ///*
-        // * ここが重要。
-        // * BossBombShooter側からエフェクトPrefabが渡された場合だけ上書きする。
-        // * 空の場合は、ミサイルPrefab側に設定してあるエフェクトを残す。
-        // */
-        //if (newExplosionEffectPrefab != null)
-        //{
-        //    explosionEffectPrefab = newExplosionEffectPrefab;
-        //}
-
-
 
         explosionEffectScaleMultiplier = newExplosionEffectScaleMultiplier;
         homing = newHoming;
@@ -368,6 +707,12 @@ public class Missile : MonoBehaviour
         {
             rb.useGravity = useGravity;
         }
+
+        originalHoming = homing;
+        originalExplodeOnHit = explodeOnHit;
+        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
+        originalUseGravity = useGravity;
+        originalTarget = target;
 
         if (target != null)
         {
@@ -381,9 +726,12 @@ public class Missile : MonoBehaviour
         }
     }
 
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
-        if (!showExplosionRadius) return;
+        if (!showExplosionRadius)
+        {
+            return;
+        }
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, explosionRadius);
