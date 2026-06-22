@@ -6,6 +6,7 @@ public class EffectManager : MonoBehaviour
 {
     /// シングルトンインスタンス
     private static EffectManager instance;
+    
     /// シングルトンインスタンスへのアクセスプロパティ
     public static EffectManager Instance
     {
@@ -19,6 +20,8 @@ public class EffectManager : MonoBehaviour
             return instance;
         }
     }
+    /// エフェクトマネージャーが初期化済みかどうかを示すプロパティ
+    public static bool IsInitialized => isInitialized;
 
     /// エフェクトデータベースへの参照
     [SerializeField]
