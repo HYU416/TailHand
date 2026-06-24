@@ -1,12 +1,19 @@
+using System.Collections;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
 public class TItleScene : MonoBehaviour
 {
     [SerializeField] private GameObject stageSelectPanel;
-    [SerializeField] private GameObject startButtonPanel;
+    [SerializeField] private GameObject TitlePanel;
     [SerializeField] private GameObject NavigationPanel;
     [SerializeField] private SceneLoader sceneLoader;
+    [SerializeField] private Animator animator;
+
+    [Header("タイトルのPanel")]
+    [SerializeField] private Image[] titlePanels;
     [Header("1行に並べるステージの数")]
     [SerializeField] private int columnCount = 3;
     [Header("コントローラー入力のクールダウン")]
@@ -19,73 +26,286 @@ public class TItleScene : MonoBehaviour
     private int currentIndex = 0;
     private float nextMoveTime = 0f;
 
+    [Header("カメラワークの設定")]
+    [SerializeField] private Transform player;
+    [SerializeField] private Camera titleCamera;
+    [SerializeField] private float cameraMoveDuration = 2.0f;
+    [SerializeField] private float endAngleOffset = 180f;
+    [SerializeField] private float lookRightOffset = 5f;
+    [SerializeField] private float lookHeight = 3f;
+    private bool isCameraMoving = false;
+    private Vector3 titleStartOffset;
+    private float cameraAngle = 0f;
+
+    [Header("UIアニメーションの設定")]
+    [SerializeField] private Transform[] titleAnimationTargets;
+    [SerializeField] private Transform[] stageSelectAnimationTargets;
+    [SerializeField] private float uiAnimationDuration;
+    [SerializeField] private float uiAnimationEndPos = 0f;
+    private float defoultShowPos = 0f;
+    private float defaultTitleNamePos = 0f;
+
+    [Header("フェードアウト")]
+    [SerializeField] private Image whiteFadeImage;
+    [SerializeField] private float fadeDuration = 1f;
+
+    [Header("Playerの走るスピード")]
+    [SerializeField] private float runSpeed = 1f;
+    public enum MenuState
+    {
+        Title,
+        StageSelect,
+    }
+    private MenuState currentState = MenuState.Title;
+    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        stageSelectPanel.SetActive(false);
         NavigationPanel.SetActive(false);
+        stageSelectPanel.transform.position = new Vector3(uiAnimationEndPos, stageSelectPanel.transform.position.y, transform.position.z);
+        animator.Play("Run");
+        // カメラのポジション
+        Vector3 center = player.position + Vector3.up * 1.5f;
+        titleStartOffset = titleCamera.transform.position - center;
+        // UIのデフォルトポジション
+        defoultShowPos = TitlePanel.transform.position.x;
+        defaultTitleNamePos = titleAnimationTargets[0].transform.position.x;
+        // フェード
+        Color c = whiteFadeImage.color;
+        c.a = 0f;
+        whiteFadeImage.color = c;
     }
 
     // Update is called once per frame
     void Update()
     {
-        // ステージ一覧が表示されたら
-        if (stageSelectPanel.activeSelf)
+        if (isCameraMoving) return;
+
+        if (Time.time > nextMoveTime)
         {
-            startButtonPanel.SetActive(false);
+            float h = Input.GetAxisRaw("Horizontal");
+            float v = Input.GetAxisRaw("Vertical");
 
-            if (Time.time > nextMoveTime)
+            if (Input.GetKeyDown(KeyCode.RightArrow) || h > 0.5f)
             {
-                float h = Input.GetAxisRaw("Horizontal");
-                float v = Input.GetAxisRaw("Vertical");
-
-                if (Input.GetKeyDown(KeyCode.RightArrow) || h > 0.5f)
-                {
-                    currentIndex += 1;
-                    nextMoveTime = Time.time + moveCooldown;
-                }
-                if (Input.GetKeyDown(KeyCode.LeftArrow) || h < -0.5f)
-                { 
-                    currentIndex -= 1;
-                    nextMoveTime = Time.time + moveCooldown;
-                }
-                if (Input.GetKeyDown(KeyCode.UpArrow) || v > 0.5f)
-                { 
-                    currentIndex -= columnCount;
-                    nextMoveTime = Time.time + moveCooldown;
-                }
-                if (Input.GetKeyDown(KeyCode.DownArrow) || v < -0.5f)
-                {
-                    currentIndex += columnCount;
-                    nextMoveTime = Time.time + moveCooldown;
-                }
-
-                currentIndex = Mathf.Clamp(currentIndex, 0, stagePanels.Length - 1);
+                currentIndex += 1;
+                nextMoveTime = Time.time + moveCooldown;
             }
+            if (Input.GetKeyDown(KeyCode.LeftArrow) || h < -0.5f)
+            {
+                currentIndex -= 1;
+                nextMoveTime = Time.time + moveCooldown;
+            }
+            if (Input.GetKeyDown(KeyCode.UpArrow) || v > 0.5f)
+            {
+                currentIndex -= columnCount;
+                nextMoveTime = Time.time + moveCooldown;
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow) || v < -0.5f)
+            {
+                currentIndex += columnCount;
+                nextMoveTime = Time.time + moveCooldown;
+            }
+        }
+
+        // ステージ一覧が表示されたら
+        if (currentState == MenuState.Title)
+        {
+            currentIndex = Mathf.Clamp(currentIndex, 0, titlePanels.Length - 1);
+
+            for (int i = 0; i < titlePanels.Length; i++)
+            {
+                titlePanels[i].color = i == currentIndex ? Color.orange : Color.white;
+            }
+            // StartButtonでStage一覧表示
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
+            {
+                if (currentIndex == 0 && !isCameraMoving)
+                {
+                    StartCoroutine(UIAnimation(titleAnimationTargets, false)); 
+ 
+                    StartCoroutine(UIAnimation(stageSelectAnimationTargets, true));
+                    
+                    StartCoroutine(CameraTurn(true));
+                }
+                else
+                {
+                    OnGameExitButton();
+                }
+            }
+        }
+
+        // Titleへ遷移
+        if(currentState == MenuState.StageSelect)
+        {
+            currentIndex = Mathf.Clamp(currentIndex, 0, stagePanels.Length - 1);
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
             {
-                sceneLoader.LoadScene(stageSceneNames[currentIndex]);
+                // 最後尾のみExitの処理
+                if (currentIndex == stagePanels.Count() - 1 && !isCameraMoving)
+                {
+                    currentState = MenuState.Title;
+                    StartCoroutine(UIAnimation(titleAnimationTargets, true));
+
+                    StartCoroutine(UIAnimation(stageSelectAnimationTargets, false));
+
+                    StartCoroutine(CameraTurn(false));
+
+                    NavigationPanel.SetActive(false);
+                }
+                else
+                {
+                    StartCoroutine(LoadStageWithWhiteOut());
+                }
             }
 
             for (int i = 0; i < stagePanels.Length; i++)
             {
                 stagePanels[i].color = i == currentIndex ? Color.orange : Color.white;
             }
-        }
-        else
-        {
-            // StartButtonでStage一覧表示
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
-            {
-                OnClickStart();
-            }
-        }
+        } 
     }
 
     public void OnClickStart()
     {
-        stageSelectPanel.SetActive(true);
+        currentIndex = 0;
         NavigationPanel.SetActive(true);
+        currentState = MenuState.StageSelect;
+    }
+
+    public void OnGameExitButton()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+    Application.Quit();
+#endif
+    }
+
+    // カメラワーク
+    IEnumerator CameraTurn(bool openStage)
+    {
+        isCameraMoving = true;
+
+        Vector3 center = player.position + Vector3.up * 1.5f;
+
+        float startAngle = cameraAngle;
+        float targetAngle = openStage ? endAngleOffset : 0f;
+
+        float timer = 0f;
+
+        while (timer < cameraMoveDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.SmoothStep(0f, 1f, timer / cameraMoveDuration);
+            float angle = Mathf.Lerp(startAngle, targetAngle, t);
+
+            Vector3 rotatedOffset = Quaternion.Euler(0f, angle, 0f) * titleStartOffset;
+            titleCamera.transform.position = center + rotatedOffset;
+
+            Vector3 lookTarget =
+            player.position
+            + Vector3.up * lookHeight
+            + titleCamera.transform.right * lookRightOffset;
+
+            titleCamera.transform.LookAt(lookTarget);
+            yield return null;
+        }
+
+        cameraAngle = targetAngle;
+
+        if (openStage)
+        {
+            OnClickStart();
+        }
+        else
+        {
+            currentIndex = 0;
+        }
+
+        isCameraMoving = false;
+    }
+
+    // UIアニメーション
+    IEnumerator UIAnimation(Transform[] parent,bool isShow,float delay = 0.1f)
+    {
+        for(int i = 0;i < parent.Length;i++)
+        {
+            StartCoroutine(MoveUI(parent[i], isShow));
+
+            yield return new WaitForSeconds(delay);
+        }
+
+        yield return new WaitForSeconds(uiAnimationDuration);
+    }
+
+    IEnumerator MoveUI(Transform target,bool isShow) 
+    {
+        float timer = 0f;
+        Vector3 startPos = target.position;
+        Vector3 endPos = startPos;
+
+        if(isShow)
+        {
+            endPos.x = defoultShowPos;
+            if (target == titleAnimationTargets[0])
+            {
+                endPos.x = defaultTitleNamePos;
+            }
+        }
+        else
+        {
+            endPos.x = uiAnimationEndPos;
+        }
+
+        while(timer < uiAnimationDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t  =Mathf.SmoothStep(0,1,timer / uiAnimationDuration);
+            target.position = Vector3.Lerp(startPos,endPos,t);
+
+            yield return null;
+        }
+
+        target.position = endPos;
+    }
+
+    IEnumerator WhiteOut()
+    {
+        float timer = 0f;
+        while(timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            float t= timer / fadeDuration;
+
+            Color c = whiteFadeImage.color;
+            c.a = Mathf.Lerp(0f, 1f, t);
+            whiteFadeImage.color = c;
+
+            yield return null;
+        }
+        Color end = whiteFadeImage.color;
+        end.a = 1f;
+        whiteFadeImage.color = end;
+    }
+
+    IEnumerator LoadStageWithWhiteOut()
+    {
+        StartCoroutine(WhiteOut());
+        StartCoroutine(UIAnimation(stageSelectAnimationTargets, false));
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+
+            player.transform.position += player.forward * runSpeed * Time.deltaTime;
+
+            yield return null;
+        }
+        sceneLoader.LoadScene(stageSceneNames[currentIndex]);
     }
 }
