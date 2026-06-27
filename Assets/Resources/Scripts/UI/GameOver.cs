@@ -60,6 +60,7 @@ public class GameOver : MonoBehaviour
         timer = 0f;
         isStart = true;
 
-        Time.timeScale = 0f;
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("LoseScene");
     }
 }
