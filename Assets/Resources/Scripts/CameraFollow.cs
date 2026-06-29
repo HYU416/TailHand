@@ -9,6 +9,7 @@ public class CameraFollow : MonoBehaviour
 
     [SerializeField] GameObject player;
     [SerializeField] GameObject Boss;
+    [SerializeField] GameOver gameOver;
 
     [SerializeField] float CameraDistance = 5.0f;
     [SerializeField] float CameraHeight = 3.0f;
@@ -32,7 +33,7 @@ public class CameraFollow : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (player == null || Boss == null) return;
+        if (player == null || Boss == null || gameOver.IsStart()) return;
 
         Vector3 bossPos = Boss.transform.position;
         bossPos.y = bossHeight;
