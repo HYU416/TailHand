@@ -19,11 +19,14 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float lookSmooth = 10.0f;
 
     [SerializeField] float bossHeight = 10.0f;
-
+ 
     private void Start()
     {
-        MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-
+        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+        //intro.time += 70.0f;
+        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+        loop.Stop();
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
         //player = GameObject.FindGameObjectWithTag("Player");
         //Boss = GameObject.FindGameObjectWithTag("Boss");
 
@@ -33,6 +36,7 @@ public class CameraFollow : MonoBehaviour
 
     private void LateUpdate()
     {
+        
         if (player == null || Boss == null || gameOver.IsStart()) return;
 
         Vector3 bossPos = Boss.transform.position;
