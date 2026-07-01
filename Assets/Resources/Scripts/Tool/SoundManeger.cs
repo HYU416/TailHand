@@ -14,6 +14,9 @@ public enum SEList
 {
    SE_CATCH,
    SE_CRUSH,
+   SE_Missile,
+   SE_GameChange1,
+   SE_GameChange2,
    MAX,
 }
 
@@ -21,6 +24,9 @@ public enum SEList
 public enum BGMList
 {
     BGM_GAME,
+    BGM_GAME_LOOP,
+    BGM_TITLE,
+    BGM_TITLE_LOOP,
     MAX,
 }
 
