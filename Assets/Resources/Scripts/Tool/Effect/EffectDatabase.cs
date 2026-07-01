@@ -16,6 +16,7 @@ public enum EffectType
     Dash,                    //ダッシュ
     Chatch, //キャッチ
     Hit2 ,         //ヒット２       
+    Storm
 }
 
 [Serializable]
