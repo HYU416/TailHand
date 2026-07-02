@@ -17,11 +17,12 @@ public class WaveEdgeCollision : MonoBehaviour
     [SerializeField] private float waveThickness;       // 波の縁の太さ(外縁からどの範囲を線上にするか)
     [SerializeField] private LayerMask targetLayer;     // 当てたい対象のレイヤー
 
-    [SerializeField] private FWaveAngle[] waveAngle;    // ウェーブの判定を取る角度範囲
+    [SerializeField] private FWaveAngle[] waveAngle;    // ウェーブの判定を取る角度範囲(配列の最後尾に衝撃波を自動で追加)
     [SerializeField] private float waveAngleSpeed;      // ウェーブ角度の範囲を進める速度
 
     private float currentRadius = 0f;
-    private int shockWaveArrayNum = 0;                  // 衝撃はの配列番号
+    private int shockWaveArrayNum = 0;                  // 衝撃波の配列番号
+    [SerializeField] private bool bHitShockWave;        // 衝撃波に当たり判定を持たせるか
 
     private LineRenderer[] lineRenderers;
     private int vertexCount = 60;
@@ -114,11 +115,17 @@ public class WaveEdgeCollision : MonoBehaviour
 
     private bool IsHitWave(float targetAngle)
     {
-        // 衝撃波または波動へのヒット判定
-        foreach (var angle in waveAngle)
+        // 波動と衝撃波へのヒット判定
+        for (int i = 0; i < waveAngle.Length; ++i)
         {
-            if (angle.startAngle <= targetAngle && targetAngle <= angle.endAngle)
-                return true;
+            // 衝撃波の判定
+            if (i == waveAngle.Length - 1)
+                if (bHitShockWave)
+                    if (waveAngle[i].startAngle <= targetAngle && targetAngle <= waveAngle[i].endAngle)
+                        return true;
+            // 波動の判定
+                    else if (waveAngle[i].startAngle <= targetAngle && targetAngle <= waveAngle[i].endAngle)
+                        return true;
         }
         return false;
     }

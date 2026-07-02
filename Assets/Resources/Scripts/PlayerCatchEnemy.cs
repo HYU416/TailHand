@@ -29,6 +29,8 @@ public class PlayerCatchEnemy : MonoBehaviour
     private DudBomb caughtDudBomb;
     private Missile caughtMissile;
 
+    private bool bCatch = false;
+
     private void Start()
     {
         if (tailEnd != null)
@@ -161,7 +163,7 @@ public class PlayerCatchEnemy : MonoBehaviour
 
         caughtTarget = touchingTarget;
         touchingTarget = null;
-
+        bCatch = true;
         Debug.Log("キャッチ！");
 
         if (EffectManager.Instance != null)
@@ -272,6 +274,7 @@ public class PlayerCatchEnemy : MonoBehaviour
 
         Debug.Log("投げた！");
 
+        bCatch = false;
         caughtTarget = null;
         caughtTargetIsDudBomb = false;
         caughtDudBomb = null;
@@ -353,5 +356,10 @@ public class PlayerCatchEnemy : MonoBehaviour
         {
             rb.mass = mass;
         }
+    }
+
+    public bool IsCaught()
+    {
+        return bCatch;
     }
 }
