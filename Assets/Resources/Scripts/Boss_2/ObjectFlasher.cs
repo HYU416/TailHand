@@ -15,9 +15,11 @@ public class ObjectFlasher : MonoBehaviour
     public struct FFlashing
     {
         [HideInInspector] public float deltaTime;
-        public float flashDuration;                  // 1点滅の時間
-        public float maxBrightness;               // 点滅の明るさ最大値
-        public float minBrightness;               // 点滅の明るさ最低値
+        public float flashDuration;                                 // 点滅間隔
+        public int flashCount;                                      // 点滅させる回数
+        [HideInInspector] public int flashCounter;                  // 点滅したか回数
+        [Range(0.0f, 1.0f)] public float maxBrightness;             // 点滅の明るさ最大値
+        [HideInInspector] public float minBrightness;               // 点滅の明るさ最低値
         [HideInInspector] public bool bReverse;
     }
 
@@ -55,16 +57,32 @@ public class ObjectFlasher : MonoBehaviour
 
 
         }
+        flashing.minBrightness = 0.0f;
+        ResetFlashingData();
+    }
+
+    public void ResetFlashingData()
+    {
+        flashing.deltaTime = 0.0f;
+        flashing.bReverse = false;
+        flashing.flashCounter = 0;
     }
 
     // 点滅処理
     public void UpdateFlashing()
     {
+        // 規定回数に達したらリターン
+        if (HasFinishedFlashing())
+            return;
+
         if (flashing.bReverse)
         {
             flashing.deltaTime -= Time.deltaTime;
             if (flashing.deltaTime < 0.0f)
             {
+                // カウント増加
+                flashing.flashCounter++;
+
                 flashing.deltaTime = 0.0f;
                 flashing.bReverse = false;
             }
@@ -89,7 +107,7 @@ public class ObjectFlasher : MonoBehaviour
                 continue;
 
             // 明るさの倍率をman〜mixの間で補間
-            float currentBrightness = Mathf.Lerp(flashing.maxBrightness, flashing.minBrightness, alpha);
+            float currentBrightness = Mathf.Lerp(flashing.minBrightness, flashing.maxBrightness, alpha);
             // マテリアルの明るさを補正
             Color calculatedColor = obj.originalEmissionColor * currentBrightness;
             // マテリアルの変更
@@ -108,7 +126,14 @@ public class ObjectFlasher : MonoBehaviour
             // エミッションを真っ黒（発光ゼロ）にする
             obj.material.SetColor("_EmissionColor", Color.clear);
         }
-        flashing.deltaTime = 0.0f;
-        flashing.bReverse = false;
+
+    }
+
+    // フラッシュ回数が規定回数に達したか
+    public bool HasFinishedFlashing()
+    {
+        if (flashing.flashCounter >= flashing.flashCount)
+            return true;
+        return false;
     }
 }

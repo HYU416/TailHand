@@ -21,7 +21,11 @@ TagManager:
   - PlayerTail
   - Ground
   - IgnorePlayerTail
+
+  - Projectile
+
   - Storm_Effect
+
   layers:
   - Default
   - TransparentFX
@@ -33,10 +37,17 @@ TagManager:
   - Enemy
   - Player
   - Catch
+
+  - EnemyProjectile
+  - PlayerProjectile
+  - EnemyBarrier
+  - EnemyCore
+
   - FieldBack
   - 
   - 
   - 
+
   - 
   - 
   - 

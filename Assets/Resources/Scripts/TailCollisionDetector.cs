@@ -38,12 +38,14 @@ public class TailCollisionDetector : MonoBehaviour
             return;
         }
 
-        Debug.Log("’Í‚ß‚é‘ÎÛ‚É“–‚½‚Á‚Ä‚¢‚Ü‚·F" + target.name);
+        //Debug.Log("’Í‚ß‚é‘ÎÛ‚É“–‚½‚Á‚Ä‚¢‚Ü‚·F" + target.name);
         playerCatch.touchingTarget = target;
     }
 
     private bool IsCatchableTarget(GameObject targetObject)
     {
+        //Debug.Log(gameObject.name);
+
         if (targetObject == null)
         {
             return false;
@@ -91,7 +93,9 @@ public class TailCollisionDetector : MonoBehaviour
             objName == "Flint" ||
             objName == "Rubble" ||
             objName == "Missile" ||
-            objName == "Obsidian";
+            objName == "Obsidian" ||
+            objName == "DupletNote" ||
+            objName == "EighthNote";
 
         return isCatchable;
     }
