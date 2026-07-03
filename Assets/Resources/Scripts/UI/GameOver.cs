@@ -76,7 +76,7 @@ public class GameOver : MonoBehaviour
                 nextMoveTime = Time.time + moveCooldown;
             }
 
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetButtonDown("Submit"))
             {
                 if (currentIndex == 0)
                 {
