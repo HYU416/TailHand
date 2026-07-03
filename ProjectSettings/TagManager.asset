@@ -21,7 +21,9 @@ TagManager:
   - PlayerTail
   - Ground
   - IgnorePlayerTail
-  - Storm_Effect
+  - Projectile
+  - FieldBack
+  - StormEffect
   layers:
   - Default
   - TransparentFX
@@ -29,11 +31,11 @@ TagManager:
   - 
   - Water
   - UI
-  - Tail
-  - Enemy
-  - Player
-  - Catch
-  - FieldBack
+  - 
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
@@ -61,10 +63,3 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
-  - Light Layer 1
-  - Light Layer 2
-  - Light Layer 3
-  - Light Layer 4
-  - Light Layer 5
-  - Light Layer 6
-  - Light Layer 7

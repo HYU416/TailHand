@@ -55,5 +55,5 @@ MonoBehaviour:
     playSpeed: 1
   - type: 10
     prefab: {fileID: 5217289225310019110, guid: f258416c01464ac47a3da089aa007b77, type: 3}
-    targetTag: Storm_Effect
+    targetTag: StormEffect
     playSpeed: 1
