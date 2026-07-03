@@ -392,7 +392,6 @@ public class Big_GController : MonoBehaviour
                 // 目標地点に到達してるか
                 if (JumpToTargetPos(centerOfStage.transform.position))
                 {
-                    attackStatus.activeTimeDuration -= Time.deltaTime;
                     drumming.bTargetReached = true;
                 }
             }
