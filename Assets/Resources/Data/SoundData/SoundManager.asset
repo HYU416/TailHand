@@ -311,7 +311,7 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  bgmList: 0
+  bgmList: 3
   bgmListData:
   - audioClip: {fileID: 8300000, guid: b9a15fc9cb3db2d409390c1f8dbc9a1e, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
