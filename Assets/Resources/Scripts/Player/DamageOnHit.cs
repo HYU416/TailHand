@@ -18,10 +18,6 @@ public class DamageOnHit : MonoBehaviour
     [Tooltip("例：PlayerTail。しっぽの掴み判定Collider側に付けるタグです")]
     [SerializeField] private string ignoreTargetTag = "PlayerTail";
 
-    [Header("上のタグを無視できる攻撃側タグ")]
-    [Tooltip("例：IgnorePlayerTail。このタグが付いた攻撃だけ、PlayerTailに当たってもダメージを与えません")]
-    [SerializeField] private string attackTagThatCanIgnoreTarget = "IgnorePlayerTail";
-
     private PlayerHPBar lastHitPlayer;
     private float lastHitTime = -999f;
 
@@ -42,7 +38,10 @@ public class DamageOnHit : MonoBehaviour
 
     private void TryDamage(Collider other)
     {
-        if (other == null) return;
+        if (other == null)
+        {
+            return;
+        }
 
         if (ShouldIgnoreThisHit(other))
         {
@@ -84,17 +83,12 @@ public class DamageOnHit : MonoBehaviour
 
     private bool ShouldIgnoreThisHit(Collider other)
     {
+        if (other == null)
+        {
+            return true;
+        }
+
         if (string.IsNullOrEmpty(ignoreTargetTag))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrEmpty(attackTagThatCanIgnoreTarget))
-        {
-            return false;
-        }
-
-        if (!ThisAttackHasIgnoreTag())
         {
             return false;
         }
@@ -107,25 +101,13 @@ public class DamageOnHit : MonoBehaviour
         return false;
     }
 
-    private bool ThisAttackHasIgnoreTag()
-    {
-        Transform current = transform;
-
-        while (current != null)
-        {
-            if (current.CompareTag(attackTagThatCanIgnoreTarget))
-            {
-                return true;
-            }
-
-            current = current.parent;
-        }
-
-        return false;
-    }
-
     private bool ColliderOrParentHasTag(Collider other, string targetTag)
     {
+        if (other == null)
+        {
+            return false;
+        }
+
         Transform current = other.transform;
 
         while (current != null)
