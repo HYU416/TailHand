@@ -27,6 +27,8 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float stageDistance = 25f;
     [SerializeField] float stageHeight = 12f;
 
+    [SerializeField ] GameObject StartSequenceUIObject;
+
     [SerializeField] BossPhaseAttackController bossAttack;
 
     private float introTime = 0f;
@@ -60,6 +62,8 @@ public class CameraFollow : MonoBehaviour
             r.enabled = false;
         }
 
+        StartSequenceUIObject.SetActive(false);
+
         var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
         //intro.time += 70.0f;
         var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
@@ -86,14 +90,18 @@ public class CameraFollow : MonoBehaviour
             // Phase1
             if (introTime < 2.0f)
             {
+                //プレイヤーの目の前に移動（0f）
                 Vector3 pos = center + forward * introDistance;
-
-                transform.position = Vector3.Lerp(
-                    transform.position,
-                    pos,
-                    Time.deltaTime * 5f);
-
+                transform.position = pos;
                 transform.LookAt(center);
+                //Vector3 pos = center + forward * introDistance;
+
+                //transform.position = Vector3.Lerp(
+                //    transform.position,
+                //    pos,
+                //    Time.deltaTime * 5f);
+
+                //transform.LookAt(center);
             }
             // Phase2
             else if (introTime < 5.0f)
@@ -175,11 +183,10 @@ public class CameraFollow : MonoBehaviour
                 basePos.z -= 2.0f;
 
                 Vector3 startPos = basePos + Vector3.up * 1.5f;
-                Vector3 endPos = basePos + Vector3.up * 12f;
+                Vector3 endPos = basePos + Vector3.up * 14f;
 
                 // 位置だけ移動
                 transform.position = Vector3.Lerp(startPos, endPos, t);
-
                 // LookAtはしない
             }
             // Phase6 Boss名表示
@@ -187,10 +194,12 @@ public class CameraFollow : MonoBehaviour
             {
 
                 // Boss名表示
+                StartSequenceUIObject.SetActive(true);
                 //bossNameUI.SetActive(true);
             }
             else
             {
+                StartSequenceUIObject.SetActive(false);
                 //bossNameUI.SetActive(false);
 
                 bossAttack.StartBattle();
