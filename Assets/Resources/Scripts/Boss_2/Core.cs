@@ -80,21 +80,10 @@ public class Core : MonoBehaviour
             {
                 if (col.gameObject.CompareTag("Projectile"))
                 {
-                    TakeDamage();
-
-                    EighthNoteController eighth = col.GetComponent<EighthNoteController>();
-                    if (eighth != null)
+                    var comp = col.gameObject.GetComponent<Big_GArmController>();
+                    if (comp != null)
                     {
-                        barrierManager.TakeDamage();
-                        eighth.Hit();
-                        return;
-                    }
-                    DupletNoteController duplet = col.GetComponent<DupletNoteController>();
-                    if (duplet != null)
-                    {
-                        barrierManager.TakeDamage();
-                        duplet.Hit();
-                        return;
+                        TakeDamage();
                     }
                 }
             }

@@ -113,6 +113,7 @@ public class Big_GController : MonoBehaviour
     [SerializeField] private Vector2 attackTriggerRandomTim;            // 移動から攻撃に移行する時間のランダム値
     private float attackTriggerDuration = 0.0f;                         // 移動から攻撃に移行する時間
     private bool bJump = false;                                         // ジャンプ判定
+    private Vector3 targetPos = Vector3.zero;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -188,6 +189,7 @@ public class Big_GController : MonoBehaviour
 
     private void ResetAttackStatus()
     {
+        targetPos = Vector3.zero;
 
         bJump = false;
         attackStatus.bAttack = false;
@@ -314,6 +316,8 @@ public class Big_GController : MonoBehaviour
             { 
                 SetupAttack(shockWave.startupTime, shockWave.activeTime);
                 attackState = EAttackState.ShockWave;
+                if (player != null)
+                    targetPos = player.transform.position;
             }
             else if (SelectWeightAttack(randomWeight, noiseCannon.weight, ref addWeight))
             {

@@ -48,10 +48,9 @@ public class Big_GArmController : MonoBehaviour
                 Quaternion.Angle(this.transform.localRotation, savedLocalRotation) < 0.1f)
             {
                 bReturned = true;
-                Debug.Log("–ß‚èŠ®—¹");
             }
         }
-        if (playerCatchEnemy.IsCaught())
+        if (playerCatchEnemy.IsCatching())
         {
             this.gameObject.tag = "Projectile";
         }
@@ -82,8 +81,9 @@ public class Big_GArmController : MonoBehaviour
         this.transform.SetParent(null, true);
         rb.isKinematic = false;
         rb.useGravity = true;
-        this.gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
         BlowOff();
+        Debug.Log(this.gameObject.layer);
+
     }
 
     public void ReattachArm()
@@ -93,7 +93,7 @@ public class Big_GArmController : MonoBehaviour
         moveSpeed = Vector3.Distance(this.transform.localPosition, savedLocalPosition) / returnDuration;
         rotateSpeed = Quaternion.Angle(this.transform.localRotation, savedLocalRotation) / returnDuration;
         rb.isKinematic = true;
-        this.gameObject.tag = "UnTagged";
+        this.gameObject.tag = "Boss";
         this.gameObject.layer = LayerMask.NameToLayer("Enemy"); ;
     }
 }

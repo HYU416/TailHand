@@ -38,7 +38,7 @@ public class TailCollisionDetector : MonoBehaviour
             return;
         }
 
-        Debug.Log("’Í‚ß‚é‘ÎÛ‚É“–‚½‚Á‚Ä‚¢‚Ü‚·F" + target.name);
+        //Debug.Log("’Í‚ß‚é‘ÎÛ‚É“–‚½‚Á‚Ä‚¢‚Ü‚·F" + target.name);
         playerCatch.touchingTarget = target;
     }
 
