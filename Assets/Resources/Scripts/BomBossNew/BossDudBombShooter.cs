@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class BossDudBombShooter : MonoBehaviour
 {
+    [SerializeField] private CameraFollow cameraFollow;
+
     [Header("発射する不発弾Prefab")]
     [SerializeField] private GameObject dudBombPrefab;
 
@@ -38,16 +40,36 @@ public class BossDudBombShooter : MonoBehaviour
     private float timer;
     private int firePointIndex;
     private bool canShoot;
+    private bool firstshoot;
 
     private void Start()
     {
+
         timer = 0f;
         canShoot = false;
-        Invoke(nameof(EnableShoot), startDelay);
+        //Invoke(nameof(EnableShoot), startDelay);
+        firstshoot = false;
     }
 
     private void Update()
     {
+        //さいしょにたまがでなくなっちゃったーーーーー(ここせいらがいじりましたよーー
+        if (!cameraFollow.Gamestart)
+        {
+            return;
+        }
+        else
+        {
+            if(!firstshoot)
+            {
+                Invoke(nameof(EnableShoot), startDelay);
+                firstshoot = true;
+            }
+        }
+        //ここまで
+
+
+
         if (enableDebugKey && Input.GetKeyDown(KeyCode.Space))
         {
             Shoot();

@@ -18,6 +18,8 @@ public class Player : MonoBehaviour
     public float currentSpeed = 0f;
     public float deceleration = 3.0f;// 1秒あたりの減速量
 
+    [SerializeField] private CameraFollow cameraFollow;
+
     [Header("Camera")]
     public Transform cameraTransform;
 
@@ -92,6 +94,13 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!cameraFollow.Gamestart)
+        {
+            rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
+            rb.angularVelocity = Vector3.zero;
+            return;
+        }
+
         rb.angularVelocity = Vector3.zero;
 
         Vector3 camForward = cameraTransform.forward;

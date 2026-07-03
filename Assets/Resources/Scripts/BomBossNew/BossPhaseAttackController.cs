@@ -324,6 +324,14 @@ public partial class BossPhaseAttackController : MonoBehaviour
         SetAllLaserDeviceUsageEnabled();
     }
 
+    public void StartBattle()
+    {
+        if (isMainAttackRunning)
+            return;
+
+        StartCoroutine(MainAttackLoop());
+    }
+
     private void Start()
     {
         InitializeLaserDevices();
@@ -333,10 +341,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
             SetAllLaserDevicesImmediate(false);
         }
 
-        if (playOnStart)
-        {
-            StartCoroutine(MainAttackLoop());
-        }
+        //if (playOnStart)
+        //{
+        //    StartCoroutine(MainAttackLoop());
+        //}
     }
 
     private void Update()
