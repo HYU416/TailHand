@@ -8,7 +8,7 @@ public class TItleScene : MonoBehaviour
 {
     [SerializeField] private GameObject stageSelectPanel;
     [SerializeField] private GameObject TitlePanel;
-    //[SerializeField] private GameObject NavigationPanel;
+    [SerializeField] private GameObject NavigationPanel;
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private Animator animator;
     [SerializeField] private Sprite[] stageSelcetNormalSprite;
@@ -58,9 +58,9 @@ public class TItleScene : MonoBehaviour
 
     [Header("Stageの回転スピード")]
     [SerializeField] private GameObject stage;
-   // [SerializeField] private GameObject item;
+    [SerializeField] private GameObject item;
     [SerializeField] private float stageRotateSpeed = 10.0f;
-   // [SerializeField] private float itemRotateSpeed = 10.0f;
+    [SerializeField] private float itemRotateSpeed = 10.0f;
 
     public enum MenuState
     {
@@ -97,7 +97,7 @@ public class TItleScene : MonoBehaviour
     {
         // ステージの回転
         stage.transform.Rotate(0,stageRotateSpeed * Time.deltaTime, 0);
-        //item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
+        item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
 
         if (isCameraMoving) return;
 
