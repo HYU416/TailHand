@@ -353,10 +353,6 @@ public class CameraFollow : MonoBehaviour
         Boss = bossObject;
     }
 
-    private void Start()
-    {
-        MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-    }
 
     private void LateUpdate()
     {
