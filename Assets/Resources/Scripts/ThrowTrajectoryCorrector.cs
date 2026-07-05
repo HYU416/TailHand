@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// 投擲物に付与し、投擲方向がターゲット方向に近いときだけ
@@ -55,6 +56,8 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
 
     [Header("デバッグ")]
     [SerializeField] private bool drawPathGizmo = true;
+
+    [SerializeField] private List<Component> deleteScripts = new List<Component>();
 
     enum FlightState
     {
@@ -158,7 +161,6 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
         {
             return;
         }
-
         BeginThrowCapture();
     }
 
@@ -176,7 +178,7 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
 
         if (rb != null && disableGravityOnFlight)
         {
-            gameObject.layer = LayerMask.NameToLayer("Tail");
+            gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
             rb.useGravity = false;
         }
     }
@@ -590,5 +592,10 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawSphere(goalPosition, 0.15f);
         }
+    }
+
+    public void SetSpeed(float speed)
+    {
+        moveSpeed = speed;
     }
 }

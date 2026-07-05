@@ -18,6 +18,11 @@ TagManager:
   - HitEffetct
   - DashEffect
   - ChatchEffect
+  - PlayerTail
+  - Ground
+  - IgnorePlayerTail
+  - Projectile
+  - FieldBack
   layers:
   - Default
   - TransparentFX
@@ -29,11 +34,11 @@ TagManager:
   - Enemy
   - Player
   - Catch
-  - 
-  - 
-  - 
-  - 
-  - 
+  - EnemyProjectile
+  - PlayerProjectile
+  - EnemyBarrier
+  - EnemyCore
+  - FallingEnemy
   - 
   - 
   - 
@@ -57,10 +62,3 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
-  - Light Layer 1
-  - Light Layer 2
-  - Light Layer 3
-  - Light Layer 4
-  - Light Layer 5
-  - Light Layer 6
-  - Light Layer 7

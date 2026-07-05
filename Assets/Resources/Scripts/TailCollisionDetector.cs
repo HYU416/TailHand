@@ -38,12 +38,14 @@ public class TailCollisionDetector : MonoBehaviour
             return;
         }
 
-        Debug.Log("íÕÇﬂÇÈëŒè€Ç…ìñÇΩÇ¡ÇƒÇ¢Ç‹Ç∑ÅF" + target.name);
+        //Debug.Log("íÕÇﬂÇÈëŒè€Ç…ìñÇΩÇ¡ÇƒÇ¢Ç‹Ç∑ÅF" + target.name);
         playerCatch.touchingTarget = target;
     }
 
     private bool IsCatchableTarget(GameObject targetObject)
     {
+        //Debug.Log(gameObject.name);
+
         if (targetObject == null)
         {
             return false;
@@ -66,6 +68,23 @@ public class TailCollisionDetector : MonoBehaviour
             return bossHeadCatchable.CanCatch;
         }
 
+        Missile missile = targetObject.GetComponent<Missile>();
+
+        if (missile == null)
+        {
+            missile = targetObject.GetComponentInParent<Missile>();
+        }
+
+        if (missile == null)
+        {
+            missile = targetObject.GetComponentInChildren<Missile>();
+        }
+
+        if (missile != null)
+        {
+            return true;
+        }
+
         string objName = targetObject.name.Replace("(Clone)", "").Trim();
 
         bool isCatchable =
@@ -74,7 +93,11 @@ public class TailCollisionDetector : MonoBehaviour
             objName == "Flint" ||
             objName == "Rubble" ||
             objName == "Missile" ||
-            objName == "Obsidian";
+            objName == "Obsidian" ||
+            objName == "DupletNote" ||
+            objName == "EighthNote" ||
+            objName == "fbx_Boss_2_L_Hand" ||
+            objName == "fbx_Boss_2_R_Hand";
 
         return isCatchable;
     }
@@ -84,6 +107,23 @@ public class TailCollisionDetector : MonoBehaviour
         if (other == null)
         {
             return null;
+        }
+
+        Missile missile = other.GetComponent<Missile>();
+
+        if (missile == null)
+        {
+            missile = other.GetComponentInParent<Missile>();
+        }
+
+        if (missile == null)
+        {
+            missile = other.GetComponentInChildren<Missile>();
+        }
+
+        if (missile != null)
+        {
+            return missile.transform;
         }
 
         if (other.attachedRigidbody != null)

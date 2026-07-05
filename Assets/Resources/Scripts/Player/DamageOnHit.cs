@@ -14,6 +14,10 @@ public class DamageOnHit : MonoBehaviour
     [Header("連続ヒット間隔")]
     [SerializeField] private float hitInterval = 0.5f;
 
+    [Header("このタグを持つ部位へのダメージを無効化する")]
+    [Tooltip("例：PlayerTail。しっぽの掴み判定Collider側に付けるタグです")]
+    [SerializeField] private string ignoreTargetTag = "PlayerTail";
+
     private PlayerHPBar lastHitPlayer;
     private float lastHitTime = -999f;
 
@@ -34,7 +38,15 @@ public class DamageOnHit : MonoBehaviour
 
     private void TryDamage(Collider other)
     {
-        if (other == null) return;
+        if (other == null)
+        {
+            return;
+        }
+
+        if (ShouldIgnoreThisHit(other))
+        {
+            return;
+        }
 
         PlayerHPBar playerHP = other.GetComponentInParent<PlayerHPBar>();
 
@@ -67,5 +79,47 @@ public class DamageOnHit : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private bool ShouldIgnoreThisHit(Collider other)
+    {
+        if (other == null)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrEmpty(ignoreTargetTag))
+        {
+            return false;
+        }
+
+        if (ColliderOrParentHasTag(other, ignoreTargetTag))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool ColliderOrParentHasTag(Collider other, string targetTag)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        Transform current = other.transform;
+
+        while (current != null)
+        {
+            if (current.CompareTag(targetTag))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
     }
 }

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using UnityEngine.UIElements;
 
 public enum AnimeState
 {
@@ -16,6 +17,8 @@ public class Player : MonoBehaviour
     public float rotateSpeed = 10.0f; //Playerの回転の速さ
     public float currentSpeed = 0f;
     public float deceleration = 3.0f;// 1秒あたりの減速量
+
+    [SerializeField] private CameraFollow cameraFollow;
 
     [Header("Camera")]
     public Transform cameraTransform;
@@ -37,6 +40,11 @@ public class Player : MonoBehaviour
     [Header("Runアニメーションへ移行する値")]
     [SerializeField]
     private float runMotionSpeed = 1e-4f;
+
+    [Header("スピードメーターの角度")]
+    [SerializeField] private GameObject speedMeterAllow;
+    [SerializeField] private float minAngle = 120.0f;
+    [SerializeField] private float maxAngle = -120.0f;
 
     Rigidbody rb;
     Vector2 moveInput;
@@ -60,6 +68,9 @@ public class Player : MonoBehaviour
     [SerializeField] private AnimationCurve EffectSpawnCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
     //エフェクトのスポーンカウント
     private int EffectSpawnCounter = 0;
+    [SerializeField] private PlayerHPBar hpBar;
+    [SerializeField] private float invincibilityTime = 0.0f;
+    private float invincibilityDuration = 0.0f;
 
     void Start()
     {
@@ -69,6 +80,7 @@ public class Player : MonoBehaviour
         if (cameraTransform == null){
             cameraTransform = Camera.main.transform;
         }
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle);
     }
 
     // Input System の Move イベント
@@ -85,6 +97,13 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
+        //if (!cameraFollow.Gamestart)
+        //{
+        //    rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
+        //    rb.angularVelocity = Vector3.zero;
+        //    return;
+        //}
+
         rb.angularVelocity = Vector3.zero;
 
         Vector3 camForward = cameraTransform.forward;
@@ -141,6 +160,14 @@ public class Player : MonoBehaviour
             currentSpeed = Mathf.Max(currentSpeed, 0);
         }
 
+        // スピードメーターの動作
+        float speedRate = currentSpeed / gearSpeeds[gearSpeeds.Count - 1];
+        speedRate = Mathf.Clamp01(speedRate);
+
+        float angle = Mathf.Lerp(minAngle, maxAngle, speedRate);
+
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
         //移動
         Vector3 move = transform.forward * currentSpeed * Time.fixedDeltaTime;
 
@@ -160,7 +187,7 @@ public class Player : MonoBehaviour
         }
         if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime, ~0, QueryTriggerInteraction.Ignore))
         {
-            Debug.Log("Hit: " + hit.collider.name);
+            //Debug.Log("Hit: " + hit.collider.name);
             //貫通対策
             //反射する
             if (hit.collider.gameObject.CompareTag("Boss") || hit.collider.gameObject.CompareTag("ItemBox"))
@@ -187,6 +214,8 @@ public class Player : MonoBehaviour
         SwitchAnimation(move);
         if (playerMotion)
             playerMotion.SwitchMotion(animeState);
+
+        invincibilityDuration -= Time.deltaTime;
     }
 
     private void StartGearUp()
@@ -286,5 +315,15 @@ public class Player : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(stageCenter.position, stageRadius);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (hpBar != null)
+            if (invincibilityDuration <= 0.0f)
+            {
+                hpBar.TakeDamage(damage);
+                invincibilityDuration = invincibilityTime;
+            }
     }
 }

@@ -6,6 +6,7 @@ public class CameraFollow : MonoBehaviour
 
     [SerializeField] GameObject player;
     [SerializeField] GameObject Boss;
+    [SerializeField] GameOver gameOver;
 
     [SerializeField] float CameraDistance = 5.0f;
     [SerializeField] float CameraHeight = 3.0f;
@@ -16,6 +17,24 @@ public class CameraFollow : MonoBehaviour
 
     [SerializeField] float bossHeight = 10.0f;
     [SerializeField] Transform lookFocusOverride;
+
+    [SerializeField] float introDistance = 4f;
+    [SerializeField] float introHeight = 2f;
+    [SerializeField] float stageDistance = 25f;
+    [SerializeField] float stageHeight = 12f;
+
+    [SerializeField ] GameObject StartSequenceUIObject;
+
+    [SerializeField] BossPhaseAttackController bossAttack;
+
+    private float introTime = 0f;
+
+    private Vector3 bossLandPos;
+    private Vector3 bossStartPos;
+    private bool bossIntroInit = false;
+    private Renderer[] bossRenderers;
+
+    public bool Gamestart;
 
     bool followEnabled = true;
     bool bossHeadWatchEnabled;
@@ -45,7 +64,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// ボス頭部注視の演出用モードを開始します（位置は外部から設定）。
+    /// 繝懊せ鬆ｭ驛ｨ豕ｨ隕悶�貍泌�逕ｨ繝｢繝ｼ繝峨ｒ髢句ｧ九＠縺ｾ縺呻ｼ井ｽ咲ｽｮ縺ｯ螟夜Κ縺九ｉ險ｭ螳夲ｼ峨
     /// </summary>
     public void BeginBossCinematic(Transform headLookTarget)
     {
@@ -61,7 +80,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// 演出中のカメラ位置を設定します。
+    /// 貍泌�荳ｭ縺ｮ繧ｫ繝｡繝ｩ菴咲ｽｮ繧定ｨｭ螳壹＠縺ｾ縺吶
     /// </summary>
     public void SetBossWatchCameraPosition(Vector3 worldPosition)
     {
@@ -70,7 +89,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// 注視点へ向きを即座に合わせます。
+    /// 豕ｨ隕也せ縺ｸ蜷代″繧貞叉蠎ｧ縺ｫ蜷医ｏ縺帙∪縺吶
     /// </summary>
     public void SnapBossWatchLookAt()
     {
@@ -121,7 +140,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// カメラ位置は固定し、キャラとボス頭の 2 点の中間だけを注視する投げ演出カメラを開始します。
+    /// 繧ｫ繝｡繝ｩ菴咲ｽｮ縺ｯ蝗ｺ螳壹＠縲√く繝｣繝ｩ縺ｨ繝懊せ鬆ｭ縺ｮ 2 轤ｹ縺ｮ荳ｭ髢薙□縺代ｒ豕ｨ隕悶☆繧区兜縺呈ｼ泌�繧ｫ繝｡繝ｩ繧帝幕蟋九＠縺ｾ縺吶
     /// </summary>
     public void BeginQTEThrowFraming(
         Transform targetA,
@@ -158,7 +177,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// 現在の位置・向きのままカメラを完全に固定します（追従を止める）。
+    /// 迴ｾ蝨ｨ縺ｮ菴咲ｽｮ繝ｻ蜷代″縺ｮ縺ｾ縺ｾ繧ｫ繝｡繝ｩ繧貞ｮ悟�縺ｫ蝗ｺ螳壹＠縺ｾ縺呻ｼ郁ｿｽ蠕薙ｒ豁｢繧√ｋ�峨
     /// </summary>
     public void FreezeQTEFraming()
     {
@@ -178,7 +197,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// カメラ位置を固定し、Boss_Head などの注視点だけ追います。
+    /// 繧ｫ繝｡繝ｩ菴咲ｽｮ繧貞崋螳壹＠縲。oss_Head 縺ｪ縺ｩ縺ｮ豕ｨ隕也せ縺縺題ｿｽ縺�∪縺吶
     /// </summary>
     public void BeginBossHeadWatch(
         Transform headLookTarget,
@@ -201,7 +220,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// 注視方向を現在の向きで固定します（打ち上げ中など）。
+    /// 豕ｨ隕匁婿蜷代ｒ迴ｾ蝨ｨ縺ｮ蜷代″縺ｧ蝗ｺ螳壹＠縺ｾ縺呻ｼ域遠縺｡荳翫￡荳ｭ縺ｪ縺ｩ�峨
     /// </summary>
     public void LockBossHeadLookDirection()
     {
@@ -215,7 +234,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// 注視方向の固定を解除し、頭部追従に戻します。
+    /// 豕ｨ隕匁婿蜷代�蝗ｺ螳壹ｒ隗｣髯､縺励�ｭ驛ｨ霑ｽ蠕薙↓謌ｻ縺励∪縺吶
     /// </summary>
     public void UnlockBossHeadLookDirection()
     {
@@ -223,7 +242,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// ボス頭部注視カメラモードを終了し、通常追従に戻します。
+    /// 繝懊せ鬆ｭ驛ｨ豕ｨ隕悶き繝｡繝ｩ繝｢繝ｼ繝峨ｒ邨ゆｺ�＠縲�壼ｸｸ霑ｽ蠕薙↓謌ｻ縺励∪縺吶
     /// </summary>
     public void EndHeadFollow()
     {
@@ -292,6 +311,42 @@ public class CameraFollow : MonoBehaviour
         qteExtraBackDistance = 0f;
     }
 
+
+   
+
+    public bool IsGameStart()
+    {
+        return Gamestart;
+    }
+
+    private void Start()
+    {
+        Gamestart = false;
+
+        bossIntroInit = false;
+
+        bossLandPos = Boss.transform.position;
+        bossStartPos = bossLandPos + Vector3.up * 35f;
+        bossRenderers = Boss.GetComponentsInChildren<Renderer>();
+        // Bossを非表示
+        bossRenderers = Boss.GetComponentsInChildren<Renderer>();
+
+        foreach (Renderer r in bossRenderers)
+        {
+            r.enabled = false;
+        }
+
+        StartSequenceUIObject.SetActive(false);
+
+        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+        //intro.time += 70.0f;
+        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+        loop.Stop();
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        //player = GameObject.FindGameObjectWithTag("Player");
+        //Boss = GameObject.FindGameObjectWithTag("Boss");
+    }
+
     public void SetPlayerBossReferences(GameObject playerObject, GameObject bossObject)
     {
         player = playerObject;
@@ -329,6 +384,138 @@ public class CameraFollow : MonoBehaviour
         }
 
         if (player == null || Boss == null) return;
+        if (!Gamestart)
+        {
+            if (player == null) return;
+
+            introTime += Time.deltaTime;
+
+            Vector3 center = player.transform.position + Vector3.up * introHeight;
+            Vector3 forward = player.transform.forward;
+
+            // Phase1
+            if (introTime < 2.0f)
+            {
+                //プレイヤーの目の前に移動（0f）
+                Vector3 pos = center + forward * introDistance;
+                transform.position = pos;
+                transform.LookAt(center);
+                //Vector3 pos = center + forward * introDistance;
+
+                //transform.position = Vector3.Lerp(
+                //    transform.position,
+                //    pos,
+                //    Time.deltaTime * 5f);
+
+                //transform.LookAt(center);
+            }
+            // Phase2
+            else if (introTime < 5.0f)
+            {
+                float t = (introTime - 2.0f) / 3.0f;
+
+                float angle2 = Mathf.Lerp(0f, 180f, t);
+
+                Vector3 dir = Quaternion.Euler(0, angle2, 0) * forward;
+
+                Vector3 pos = center + dir * introDistance;
+
+                transform.position = pos;
+                transform.LookAt(center);
+            }
+            // Phase3
+            // Phase3
+            else if (introTime < 9.0f)
+            {
+                float t = (introTime - 5.0f) / 4.0f;
+
+                float dist = Mathf.Lerp(introDistance, stageDistance, t);
+                float height = Mathf.Lerp(introHeight, stageHeight, t);
+
+                Vector3 pos =
+                    player.transform.position
+                    - forward * dist
+                    + Vector3.up * height;
+
+                transform.position = pos;
+                transform.LookAt(player.transform.position + Vector3.up * 2f);
+            }
+            // Phase4 Boss登場
+            else if (introTime < 13.0f)
+            {
+                if (!bossIntroInit)
+                {
+                    bossIntroInit = true;
+
+                    // Bossを表示
+                    foreach (Renderer r in bossRenderers)
+                    {
+                        r.enabled = true;
+                    }
+
+                    Boss.transform.position = bossStartPos;
+                }
+
+                float t = (introTime - 9.0f) / 4.0f;
+                t = Mathf.SmoothStep(0f, 1f, t);
+
+                // Boss降下
+                Boss.transform.position =
+                    Vector3.Lerp(bossStartPos, bossLandPos, t);
+
+                // プレイヤー斜め後ろ
+                Vector3 offset =
+                    -forward * 6f +
+                    Vector3.left * 3f +
+                    Vector3.up * 2.5f;
+
+                transform.position =
+                    player.transform.position + offset;
+
+                // Bossを見る
+                transform.LookAt(Boss.transform.position + Vector3.up * 2f);
+            }
+            // Phase5 Boss名表示
+            // Phase5 Bossを見上げる
+            // Phase5 Bossを下から上へ舐める
+            // Phase5
+            else if (introTime < 17.0f)
+            {
+                float t = (introTime - 13.0f) / 4.0f;
+                t = Mathf.SmoothStep(0f, 1f, t);
+
+                Vector3 basePos = Boss.transform.position - player.transform.forward * 10f;
+                basePos.x -= 4.2f;
+                basePos.z -= 2.0f;
+
+                Vector3 startPos = basePos + Vector3.up * 1.5f;
+                Vector3 endPos = basePos + Vector3.up * 14f;
+
+                // 位置だけ移動
+                transform.position = Vector3.Lerp(startPos, endPos, t);
+                // LookAtはしない
+            }
+            // Phase6 Boss名表示
+            else if (introTime < 19.0f)
+            {
+
+                // Boss名表示
+                StartSequenceUIObject.SetActive(true);
+                //bossNameUI.SetActive(true);
+            }
+            else
+            {
+                StartSequenceUIObject.SetActive(false);
+                //bossNameUI.SetActive(false);
+
+                //bossAttack.StartBattle();
+                Gamestart = true;
+            }
+            return;
+        }
+
+
+        if (player == null || Boss == null || gameOver.IsStart()) return;
 
         Vector3 bossPos = Boss.transform.position;
         bossPos.y = bossHeight;
@@ -417,7 +604,7 @@ public class CameraFollow : MonoBehaviour
         Vector3 midpoint = (pointA + pointB) * 0.5f;
         Vector3 lookPoint = midpoint + Vector3.up * frameHeightOffset;
 
-        // カメラ位置は固定。向きだけ 2 点の中間へ向ける。
+        // 繧ｫ繝｡繝ｩ菴咲ｽｮ縺ｯ蝗ｺ螳壹ょ髄縺阪□縺 2 轤ｹ縺ｮ荳ｭ髢薙∈蜷代￠繧九
         transform.position = frameFixedCameraPosition + shakeOffset;
 
         Vector3 lookDir = lookPoint - transform.position;

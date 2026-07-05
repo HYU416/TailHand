@@ -70,13 +70,7 @@ public class BombExplosion : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (EffectManager.Instance != null)
-        {
-            if (damageZoneEffect != null)
-            {
-                EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
-            }
-        }
+        
     }
 
     private void Update()
@@ -335,6 +329,13 @@ public class BombExplosion : MonoBehaviour
     private void OnDisable()
     {
         ResetBlinkColor();
+        if (EffectManager.IsInitialized)
+        {
+            if (damageZoneEffect != null)
+            {
+                EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+            }
+        }
     }
 
     private void OnDrawGizmosSelected()
