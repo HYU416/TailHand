@@ -26,15 +26,15 @@ public class CoreBarrier : MonoBehaviour
             EighthNoteController eighth = col.GetComponent<EighthNoteController>();
             if (eighth != null)
             {
-                if (barrierManager.TakeDamage())
+                barrierManager.TakeDamage();
                     eighth.Hit();
                 return;
             }
             DupletNoteController duplet = col.GetComponent<DupletNoteController>();
             if (duplet != null)
             {
-                if (barrierManager.TakeDamage())
-                    duplet.Hit();
+                barrierManager.TakeDamage();
+                duplet.Hit();
                 return;
             }
         }

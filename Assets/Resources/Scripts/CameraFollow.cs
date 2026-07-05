@@ -202,7 +202,7 @@ public class CameraFollow : MonoBehaviour
                 StartSequenceUIObject.SetActive(false);
                 //bossNameUI.SetActive(false);
 
-                bossAttack.StartBattle();
+                //bossAttack.StartBattle();
                 Gamestart = true;
             }
             return;

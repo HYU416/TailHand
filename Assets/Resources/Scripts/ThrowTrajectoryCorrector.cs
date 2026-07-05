@@ -593,4 +593,9 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
             Gizmos.DrawSphere(goalPosition, 0.15f);
         }
     }
+
+    public void SetSpeed(float speed)
+    {
+        moveSpeed = speed;
+    }
 }

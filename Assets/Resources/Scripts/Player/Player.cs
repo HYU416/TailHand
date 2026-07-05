@@ -68,6 +68,9 @@ public class Player : MonoBehaviour
     [SerializeField] private AnimationCurve EffectSpawnCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
     //エフェクトのスポーンカウント
     private int EffectSpawnCounter = 0;
+    [SerializeField] private PlayerHPBar hpBar;
+    [SerializeField] private float invincibilityTime = 0.0f;
+    private float invincibilityDuration = 0.0f;
 
     void Start()
     {
@@ -77,7 +80,7 @@ public class Player : MonoBehaviour
         if (cameraTransform == null){
             cameraTransform = Camera.main.transform;
         }
-        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle); ;
+        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle);
     }
 
     // Input System の Move イベント
@@ -94,12 +97,12 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!cameraFollow.Gamestart)
-        {
-            rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
-            rb.angularVelocity = Vector3.zero;
-            return;
-        }
+        //if (!cameraFollow.Gamestart)
+        //{
+        //    rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
+        //    rb.angularVelocity = Vector3.zero;
+        //    return;
+        //}
 
         rb.angularVelocity = Vector3.zero;
 
@@ -184,7 +187,7 @@ public class Player : MonoBehaviour
         }
         if (Physics.CapsuleCast(point1, point2, radius, transform.forward, out hit, currentSpeed * Time.deltaTime, ~0, QueryTriggerInteraction.Ignore))
         {
-            Debug.Log("Hit: " + hit.collider.name);
+            //Debug.Log("Hit: " + hit.collider.name);
             //貫通対策
             //反射する
             if (hit.collider.gameObject.CompareTag("Boss") || hit.collider.gameObject.CompareTag("ItemBox"))
@@ -211,6 +214,8 @@ public class Player : MonoBehaviour
         SwitchAnimation(move);
         if (playerMotion)
             playerMotion.SwitchMotion(animeState);
+
+        invincibilityDuration -= Time.deltaTime;
     }
 
     private void StartGearUp()
@@ -310,5 +315,15 @@ public class Player : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(stageCenter.position, stageRadius);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (hpBar != null)
+            if (invincibilityDuration <= 0.0f)
+            {
+                hpBar.TakeDamage(damage);
+                invincibilityDuration = invincibilityTime;
+            }
     }
 }

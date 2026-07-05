@@ -23,7 +23,7 @@ public class DupletNoteController : MonoBehaviour
     [SerializeField] private GameObject drummingShockWave;      // 衝撃波の出るプレファブを設定
     [SerializeField] private ThrowTrajectoryCorrector trajectory;
     [SerializeField] private string throwTargetName;
-    private bool bCaught = false;
+    private bool bCatching = false;
     private float absoluteLifeDuration = 10.0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -40,7 +40,7 @@ public class DupletNoteController : MonoBehaviour
         if (playerCatchEnemy == null)
             Destroy(this.gameObject);
         if (trajectory == null)
-            return;
+            Destroy(this.gameObject);
         trajectory.SetThrowTarget(GameObject.Find(throwTargetName));
     }
 
@@ -54,15 +54,18 @@ public class DupletNoteController : MonoBehaviour
 
         if (rb == null)
             return;
+        if (playerCatchEnemy == null)
+            return;
 
-        if (!bCaught)
+        if (!bCatching)
         {
-            bCaught = playerCatchEnemy.IsCaught();
-            if (bCaught)
+            var obj = playerCatchEnemy.CatchingObjectPtr();
+            if (obj == this.gameObject)
             {
-                Debug.Log("Catch");
+                bCatching = true;
                 gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
                 rb.linearVelocity = Vector3.zero;
+                this.transform.localScale = status.defaultLocalScale / 5;
                 return;
             }
 
@@ -79,6 +82,8 @@ public class DupletNoteController : MonoBehaviour
                 ScalingDown();
             }
         }
+        if (bCatching && playerCatchEnemy.CatchingObjectPtr() == null)
+            gameObject.tag = "Projectile";
         if (!status.bAlive)
             Destroy(this.gameObject);
     }

@@ -7,12 +7,16 @@ public class Big_GArmController : MonoBehaviour
     [SerializeField] private float returnDuration;                  // ˜r‚ªŒ³‚ÌˆÊ’u‚É–ß‚é‚Ü‚Å‚ÌŽžŠÔ
     [SerializeField] private PlayerCatchEnemy playerCatchEnemy;
     [SerializeField] private float launchForce;                     // ˜r‚ª‚«”ò‚Ô‹­‚³
+    [SerializeField] private GameObject body;
+    [SerializeField] private GameObject centerOnStage;
+    [SerializeField] private ThrowTrajectoryCorrector trajectory;
 
     private Vector3 savedLocalPosition;
     private Quaternion savedLocalRotation;
     private bool bReturned;
     private float moveSpeed = 0.0f;
     private float rotateSpeed = 0.0f;
+    private bool bCaught = false;
     
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -51,9 +55,36 @@ public class Big_GArmController : MonoBehaviour
                 Debug.Log("–ß‚èŠ®—¹");
             }
         }
-        if (playerCatchEnemy.IsCaught())
+
+        if (bCaught)
         {
-            this.gameObject.tag = "Projectile";
+            if (playerCatchEnemy.CatchingObjectPtr() == null)
+            {
+                bCaught = false;
+                this.gameObject.tag = "Projectile";
+            }
+        }
+        else
+        {
+            if (playerCatchEnemy.CatchingObjectPtr() == this.gameObject)
+                bCaught = true;
+        }
+        if (body != null)
+        {
+            if (centerOnStage == null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                this.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            }
+            float distance = Vector3.Distance(body.transform.position, this.transform.position);
+            if (distance >= 100.0f)
+            {
+                trajectory.SetSpeed(0.0f);
+                var returnPos = centerOnStage.transform.position;
+                //returnPos.y = 30.0f;
+                this.transform.position = returnPos;
+            }
+
         }
     }
 
@@ -93,7 +124,7 @@ public class Big_GArmController : MonoBehaviour
         moveSpeed = Vector3.Distance(this.transform.localPosition, savedLocalPosition) / returnDuration;
         rotateSpeed = Quaternion.Angle(this.transform.localRotation, savedLocalRotation) / returnDuration;
         rb.isKinematic = true;
-        this.gameObject.tag = "UnTagged";
-        this.gameObject.layer = LayerMask.NameToLayer("Enemy"); ;
+        this.gameObject.tag = "Untagged";
+        this.gameObject.layer = LayerMask.NameToLayer("Enemy");
     }
 }

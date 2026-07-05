@@ -64,15 +64,15 @@ public class CoreBarrierManager : MonoBehaviour
         big_g.RegenerateBarrier();
     }
 
-    public bool TakeDamage()
+    public void TakeDamage()
     {
         if (big_g == null)
-            return false;
+            return;
 
         if (big_g.GetCurrentState() == EBig_GState.Normal)
         {
             status.hp--;
-            Debug.Log("Bar" + status.hp);
+            Debug.Log(status.hp);
             if (status.hp <= 0)
             {
                 if (big_g.GetCurrentPhase() == EPhase.Phase3)
@@ -81,11 +81,8 @@ public class CoreBarrierManager : MonoBehaviour
                 status.bDestroy = true;
                 big_g.SwitchState(EBig_GState.Core);
                 big_g.DestroyedBarrier();
-
-                return true;
             }
         }
-        return false;
     }
 
     public void Regenerate()

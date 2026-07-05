@@ -11,7 +11,7 @@ public class WaveEdgeCollision : MonoBehaviour
         public float endAngle;
     }
 
-
+    [SerializeField] private float atk;                 // 攻撃力
     [SerializeField] private float speed;               // 波の広がる速度
     [SerializeField] private float lifeTime;            // 消滅するまでの時間
     [SerializeField] private float waveThickness;       // 波の縁の太さ(外縁からどの範囲を線上にするか)
@@ -107,7 +107,14 @@ public class WaveEdgeCollision : MonoBehaviour
                 if (IsHitWave(angle))
                 {
                     // ヒット処理
-                    Debug.Log("WaveHit");
+                    {
+                        if (hit.gameObject.TryGetComponent<Player>(out Player player))
+                        {
+                            Debug.Log("WaveHitPlayer");
+                            player.TakeDamage(atk);
+                        }
+
+                    }
                 }
             }
         }
@@ -121,11 +128,13 @@ public class WaveEdgeCollision : MonoBehaviour
             // 衝撃波の判定
             if (i == waveAngle.Length - 1)
                 if (bHitShockWave)
+                {
                     if (waveAngle[i].startAngle <= targetAngle && targetAngle <= waveAngle[i].endAngle)
                         return true;
-            // 波動の判定
-                    else if (waveAngle[i].startAngle <= targetAngle && targetAngle <= waveAngle[i].endAngle)
-                        return true;
+                }
+                // 波動の判定
+                if (waveAngle[i].startAngle <= targetAngle && targetAngle <= waveAngle[i].endAngle)
+                    return true;
         }
         return false;
     }

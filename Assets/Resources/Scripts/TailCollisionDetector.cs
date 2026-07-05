@@ -95,7 +95,9 @@ public class TailCollisionDetector : MonoBehaviour
             objName == "Missile" ||
             objName == "Obsidian" ||
             objName == "DupletNote" ||
-            objName == "EighthNote";
+            objName == "EighthNote" ||
+            objName == "fbx_Boss_2_L_Hand" ||
+            objName == "fbx_Boss_2_R_Hand";
 
         return isCatchable;
     }
