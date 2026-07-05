@@ -11,6 +11,10 @@ public class TItleScene : MonoBehaviour
     [SerializeField] private GameObject NavigationPanel;
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private Animator animator;
+    [SerializeField] private Sprite[] stageSelcetNormalSprite;
+    [SerializeField] private Sprite[] stageSelectFrontSprite;
+     [SerializeField] private Sprite[] titleNormalSprite;
+    [SerializeField] private Sprite[] titleFrontSprite;
 
     [Header("タイトルのPanel")]
     [SerializeField] private Image[] titlePanels;
@@ -51,6 +55,13 @@ public class TItleScene : MonoBehaviour
 
     [Header("Playerの走るスピード")]
     [SerializeField] private float runSpeed = 1f;
+
+    [Header("Stageの回転スピード")]
+    [SerializeField] private GameObject stage;
+    [SerializeField] private GameObject item;
+    [SerializeField] private float stageRotateSpeed = 10.0f;
+    [SerializeField] private float itemRotateSpeed = 10.0f;
+
     public enum MenuState
     {
         Title,
@@ -61,7 +72,7 @@ public class TItleScene : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        NavigationPanel.SetActive(false);
+        //NavigationPanel.SetActive(false);
         stageSelectPanel.transform.position = new Vector3(uiAnimationEndPos, stageSelectPanel.transform.position.y, transform.position.z);
         animator.Play("Run");
         // カメラのポジション
@@ -74,11 +85,20 @@ public class TItleScene : MonoBehaviour
         Color c = whiteFadeImage.color;
         c.a = 0f;
         whiteFadeImage.color = c;
+
+        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_TITLE);
+        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_TITLE_LOOP);
+        loop.Stop();
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
     }
 
     // Update is called once per frame
     void Update()
     {
+        // ステージの回転
+        stage.transform.Rotate(0,stageRotateSpeed * Time.deltaTime, 0);
+        //item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
+
         if (isCameraMoving) return;
 
         if (Time.time > nextMoveTime)
@@ -115,7 +135,7 @@ public class TItleScene : MonoBehaviour
 
             for (int i = 0; i < titlePanels.Length; i++)
             {
-                titlePanels[i].color = i == currentIndex ? Color.orange : Color.white;
+                titlePanels[i].sprite = i == currentIndex ? titleFrontSprite[i] : titleNormalSprite[i];
             }
             // StartButtonでStage一覧表示
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
@@ -138,7 +158,7 @@ public class TItleScene : MonoBehaviour
         // Titleへ遷移
         if(currentState == MenuState.StageSelect)
         {
-            currentIndex = Mathf.Clamp(currentIndex, 0, stagePanels.Length - 1);
+            currentIndex = Mathf.Clamp(currentIndex, 1, stagePanels.Length - 1);
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
             {
@@ -152,7 +172,7 @@ public class TItleScene : MonoBehaviour
 
                     StartCoroutine(CameraTurn(false));
 
-                    NavigationPanel.SetActive(false);
+                    //NavigationPanel.SetActive(false);
                 }
                 else
                 {
@@ -162,7 +182,7 @@ public class TItleScene : MonoBehaviour
 
             for (int i = 0; i < stagePanels.Length; i++)
             {
-                stagePanels[i].color = i == currentIndex ? Color.orange : Color.white;
+                stagePanels[i].sprite = i == currentIndex ? stageSelectFrontSprite[i] : stageSelcetNormalSprite[i];
             }
         } 
     }
@@ -170,7 +190,7 @@ public class TItleScene : MonoBehaviour
     public void OnClickStart()
     {
         currentIndex = 0;
-        NavigationPanel.SetActive(true);
+        //NavigationPanel.SetActive(true);
         currentState = MenuState.StageSelect;
     }
 
