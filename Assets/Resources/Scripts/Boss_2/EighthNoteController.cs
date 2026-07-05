@@ -23,7 +23,7 @@ public class EighthNoteController : MonoBehaviour
     [SerializeField] private GameObject drummingShockWave;      // 衝撃波の出るプレファブを設定
     [SerializeField] private ThrowTrajectoryCorrector trajectory;
     [SerializeField] private string throwTargetName;
-    private bool bCaught = false;
+    private bool bCatching = false;
     private float absoluteLifeDuration = 10.0f;
 
 
@@ -41,7 +41,7 @@ public class EighthNoteController : MonoBehaviour
         if (playerCatchEnemy == null)
             Destroy(this.gameObject);
         if (trajectory == null)
-            return;
+            Destroy(this.gameObject);
         trajectory.SetThrowTarget(GameObject.Find(throwTargetName));
     }
 
@@ -52,18 +52,20 @@ public class EighthNoteController : MonoBehaviour
         absoluteLifeDuration -= delta;
         if (absoluteLifeDuration <= 0.0f)
             Destroy(this.gameObject);
-
         if (rb == null)
             return;
+        if (playerCatchEnemy == null)
+            return;
 
-        if (!bCaught)
+        if (!bCatching)
         {
-            bCaught = playerCatchEnemy.IsCaught();
-            if (bCaught)
+            var obj = playerCatchEnemy.CatchingObjectPtr();
+            if (obj == this.gameObject)
             {
-                Debug.Log("Catch");
+                bCatching = true;
                 gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
                 rb.linearVelocity = Vector3.zero;
+                this.transform.localScale = status.defaultLocalScale / 5;
                 return;
             }
 
@@ -81,6 +83,8 @@ public class EighthNoteController : MonoBehaviour
                 ScalingDown();
             }
         }
+        if (bCatching && playerCatchEnemy.CatchingObjectPtr() == null)
+            gameObject.tag = "Projectile";
         if (!status.bAlive)
             Destroy(this.gameObject);
     }

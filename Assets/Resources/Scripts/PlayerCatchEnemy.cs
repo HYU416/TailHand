@@ -29,7 +29,8 @@ public class PlayerCatchEnemy : MonoBehaviour
     private DudBomb caughtDudBomb;
     private Missile caughtMissile;
 
-    private bool bCatch = false;
+    private bool bCaught = false;
+    private GameObject catchingObject = null;
 
     private void Start()
     {
@@ -111,12 +112,12 @@ public class PlayerCatchEnemy : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        Collider[] cols = touchingTarget.GetComponentsInChildren<Collider>();
+        //Collider[] cols = touchingTarget.GetComponentsInChildren<Collider>();
 
-        foreach (Collider col in cols)
-        {
-            col.enabled = false;
-        }
+        //foreach (Collider col in cols)
+        //{
+        //    col.enabled = false;
+        //}
 
         Vector3 originalScale = touchingTarget.localScale;
 
@@ -162,8 +163,9 @@ public class PlayerCatchEnemy : MonoBehaviour
         );
 
         caughtTarget = touchingTarget;
+        catchingObject = caughtTarget.gameObject;
         touchingTarget = null;
-        bCatch = true;
+        bCaught = true;
         Debug.Log("キャッチ！");
 
         if (EffectManager.Instance != null)
@@ -274,12 +276,12 @@ public class PlayerCatchEnemy : MonoBehaviour
 
         Debug.Log("投げた！");
 
-        bCatch = false;
         caughtTarget = null;
         caughtTargetIsDudBomb = false;
         caughtDudBomb = null;
         caughtMissile = null;
         massChangedRb = null;
+        catchingObject = null;
     }
 
     private Rigidbody FindRigidbody(Transform target)
@@ -358,8 +360,8 @@ public class PlayerCatchEnemy : MonoBehaviour
         }
     }
 
-    public bool IsCaught()
+    public GameObject CatchingObjectPtr()
     {
-        return bCatch;
+        return catchingObject;
     }
 }

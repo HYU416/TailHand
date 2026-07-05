@@ -5,6 +5,7 @@ public class NoiseCannonProjectile : MonoBehaviour
     [System.Serializable]
     public struct FStatus
     {
+        public int atk;
         public int speed;
         public float lifeTime;
         public float maxScaleMagnification;
@@ -40,5 +41,14 @@ public class NoiseCannonProjectile : MonoBehaviour
         if (status.lifeTime <= 0.0f)
             Destroy(this.gameObject);
         status.lifeTime -= deltaTime;
+    }
+
+    void OnTriggerEnter(Collider col)
+    {
+        var player = col.gameObject.GetComponent<Player>();
+        if (player != null)
+        {
+            player.TakeDamage(status.atk);
+        }
     }
 }

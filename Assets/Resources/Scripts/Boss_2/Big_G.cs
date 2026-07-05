@@ -14,6 +14,16 @@ public enum EBig_GState
     Core
 }
 
+public enum EBig_GAnimeState
+{
+    Idle = 0,
+    Drumming_L = 1,
+    Drumming_R = 2,
+    ShockWave = 3,
+    NoiseCannon = 4,
+    Down = 5,
+}
+
 public class Big_G : MonoBehaviour
 {
 
@@ -22,6 +32,8 @@ public class Big_G : MonoBehaviour
     private EBig_GState state = EBig_GState.Normal;
     [SerializeField] private Core core;
     [SerializeField] private Big_GArmController[] armController;
+    [SerializeField] private Big_GMotion big_gMotion;
+    [SerializeField] private EBig_GAnimeState animeState;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -66,6 +78,7 @@ public class Big_G : MonoBehaviour
         {
             armController[i].DetachArm();
         }
+        big_gMotion.SwitchMotion(EBig_GAnimeState.Down);
     }
 
     public void RegenerateBarrier()
@@ -74,5 +87,18 @@ public class Big_G : MonoBehaviour
         {
             armController[i].ReattachArm();
         }
+        big_gMotion.SwitchMotion(EBig_GAnimeState.Idle);
+    }
+
+    public void SwitchAnimation(EBig_GAnimeState state, bool bBody = true, bool bL_Hand = true, bool bR_Hand = true)
+    {
+        animeState = state;
+        if (big_gMotion)
+            big_gMotion.SwitchMotion(animeState, bBody, bL_Hand, bR_Hand);
+    }
+
+    public int GetCurrentAnimation()
+    {
+        return (int)animeState;
     }
 }

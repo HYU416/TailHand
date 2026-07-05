@@ -53,6 +53,8 @@ public class Big_GController : MonoBehaviour
         public float recoveryTime;                          // 硬直時間
         public int weight;                                // 攻撃が選択される重み付け
         [HideInInspector] public bool bTargetReached;
+        [HideInInspector] public Vector3 targetPosition;
+        [HideInInspector] public bool bTargetDecide;
     }
 
     [System.Serializable]
@@ -81,18 +83,21 @@ public class Big_GController : MonoBehaviour
         NoiseCannon
     }
 
+    // 参照
     [SerializeField] private Big_G big_g;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Player player;
     [SerializeField] private GameObject target;
-    // 各プレファブ
+    [SerializeField] private ObjectFlasher objectFlasher;
+    [SerializeField] private GameObject centerOfStage;                  // ステージ中央を設定
+
+    // プレファブ
     [SerializeField] private GameObject shockWavePrefab;
     [SerializeField] private GameObject dupletNotePrefab;
     [SerializeField] private GameObject eighthNotePrefab;
     [SerializeField] private GameObject noiseCannonProjectilePrefab;
 
-    [SerializeField] private ObjectFlasher objectFlasher;
-
+    // タイプ
     [SerializeField] private FStatus status;
     [SerializeField] private FAttackStatus attackStatus;
     [SerializeField] private FDrumming drumming;
@@ -101,18 +106,18 @@ public class Big_GController : MonoBehaviour
     [SerializeField] private EState state;
     [SerializeField] private EAttackState attackState;
 
-    [SerializeField] private GameObject centerOfStage;                  // ステージ中央を設定
     [SerializeField] private Vector3[] footPoses;                       // レイの出る位置
     [SerializeField] private float footRayLength = 0.0f;                 // レイの長さ
-
     [SerializeField] private Vector3 eighthNotePosOffset;               // 8分音符の出現位置オフセット
     [SerializeField] private Vector3 dupletNotePosOffset;               // 2連符の出現位置オフセット
     [SerializeField] private Vector3 noiseCannonPosOffset;              // ノイズキャノンの出現位置オフセット
     [SerializeField] private float distanceTarget;                      // ターゲットとの距離間
-
     [SerializeField] private Vector2 attackTriggerRandomTim;            // 移動から攻撃に移行する時間のランダム値
     private float attackTriggerDuration = 0.0f;                         // 移動から攻撃に移行する時間
     private bool bJump = false;                                         // ジャンプ判定
+
+    private const float returnLayerTime = 0.1f;
+    private float returnLayerTimeDuration = 0.0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -134,6 +139,10 @@ public class Big_GController : MonoBehaviour
     void Update()
     {
         if (big_g != null)
+        {
+            if (IsTimerZero(ref returnLayerTimeDuration))
+            this.gameObject.layer = LayerMask.NameToLayer("Enemy");
+
             if (big_g.GetCurrentState() == EBig_GState.Normal)
             {
                 SelectAttack();
@@ -141,6 +150,7 @@ public class Big_GController : MonoBehaviour
             }
             else if (big_g.GetCurrentState() == EBig_GState.Core)
             {
+                // ダウン時に一度だけ処理
                 if (attackStatus.bAttack)
                 {
                     ResetDrummingStatus();
@@ -148,12 +158,13 @@ public class Big_GController : MonoBehaviour
                     ResetShockWaveStatus();
                     ResetAttackStatus();
                     objectFlasher.ResetFlashing();
+                    objectFlasher.ResetFlashingData();
 
                     rb.linearVelocity = Vector3.zero;
                     rb.useGravity = true;
                 }
-                //Move();
             }
+        }
     }
 
     private void LateUpdate()
@@ -209,6 +220,8 @@ public class Big_GController : MonoBehaviour
     {
         attackStatus.recoveryTimeDuration = shockWave.recoveryTime;
         shockWave.bTargetReached = false;
+        shockWave.bTargetDecide = false;
+        shockWave.targetPosition = Vector3.zero;
     }
 
     private void ResetNoiseCannonStatus()
@@ -271,10 +284,16 @@ public class Big_GController : MonoBehaviour
             // ターゲットの方を向くようにする
             RotateTowardsTarget(targetPos);
         }
+        if (big_g != null)
+        {
+            if (big_g.GetCurrentState() == EBig_GState.Normal)
+            {
+                big_g.SwitchAnimation(EBig_GAnimeState.Idle);
 
-        if (big_g.GetCurrentState() == EBig_GState.Normal)
-            if (IsTimerZero(ref attackTriggerDuration))
-                state = EState.Attack;
+                if (IsTimerZero(ref attackTriggerDuration))
+                    state = EState.Attack;
+            }
+        }
     }
 
     private void Attack()
@@ -364,6 +383,15 @@ public class Big_GController : MonoBehaviour
                     {
                         if (IsTimerZero(ref attackStatus.activeTimeDuration))
                         {
+                            if (big_g != null)
+                            {
+                                if (big_g.GetCurrentAnimation() != (int)EBig_GAnimeState.Drumming_L)
+                                    big_g.SwitchAnimation(EBig_GAnimeState.Drumming_L);
+                                else if (big_g.GetCurrentAnimation() == (int)EBig_GAnimeState.Drumming_L)
+                                    big_g.SwitchAnimation(EBig_GAnimeState.Drumming_R);
+
+                            }
+
                             for (int i = 0; i < 3; ++i)
                             {
                                 // 飛ばす方向を指定
@@ -382,13 +410,14 @@ public class Big_GController : MonoBehaviour
                         }
                     }
                 }
+                else
+                    returnLayerTimeDuration = returnLayerTime;
             }
         }
         else if (centerOfStage != null)
         {
             if (IsTimerZero(ref attackStatus.startupTimeDuration))
             {
-
                 // 目標地点に到達してるか
                 if (JumpToTargetPos(centerOfStage.transform.position))
                 {
@@ -477,7 +506,11 @@ public class Big_GController : MonoBehaviour
             if (shockWave.bTargetReached)
             {
                 if (!IsTimerZero(ref attackStatus.airTimeDuration))
+                {
                     AntiAircraft();
+                    if (big_g != null)
+                        big_g.SwitchAnimation(EBig_GAnimeState.ShockWave);
+                }
                 else
                 {
                     Drop();
@@ -491,18 +524,28 @@ public class Big_GController : MonoBehaviour
                         attackStatus.attackCounter++;
                         attackStatus.recoveryTimeDuration = shockWave.recoveryTime;
                     }
+                    else
+                        returnLayerTimeDuration = returnLayerTime;
                 }
             }
             else if (centerOfStage != null)
             {
                 if (IsTimerZero(ref attackStatus.startupTimeDuration))
                 {
+                    if (!shockWave.bTargetDecide)
+                    {
+                        shockWave.bTargetDecide = true;
+                        shockWave.targetPosition =player.transform.position;
+                    }
+
                     // 目標地点に到達してるか
-                    if (JumpToTargetPos(player.transform.position))
+                    if (JumpToTargetPos(shockWave.targetPosition))
                     {
                         shockWave.bTargetReached = true;
                     }
                 }
+                else
+                    RotateTowardsTarget(target.transform.position);
             }
         }
     }
@@ -516,11 +559,14 @@ public class Big_GController : MonoBehaviour
             objectFlasher.ResetFlashingData();
             return;
         }
-
         // 腕組するアニメーション
+        if (big_g != null)
+            big_g.SwitchAnimation(EBig_GAnimeState.NoiseCannon);
+
         if (!IsTimerZero(ref attackStatus.startupTimeDuration))
         {
-
+            // プレイヤーに体の向きを合わせる
+            RotateTowardsTarget(target.transform.position);
         }
         else
         {
@@ -528,11 +574,6 @@ public class Big_GController : MonoBehaviour
             {
                 // 点滅動作終了後の処理
                 objectFlasher.ResetFlashing();
-
-                // 腕のクロスを解くアニメーション挿入
-                {
-
-                }
                 if (IsTimerZero(ref attackStatus.activeTimeDuration))
                 {
                     // 攻撃処理
@@ -641,6 +682,8 @@ public class Big_GController : MonoBehaviour
         if (rb == null)
             return;
 
+        // プレイヤーとの引っかかりを無くす
+        this.gameObject.layer = LayerMask.NameToLayer("FallingEnemy");
         var vel = rb.linearVelocity;
         if (vel.y > -attackStatus.dropForce)
         {
