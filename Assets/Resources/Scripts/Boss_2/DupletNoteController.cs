@@ -14,15 +14,20 @@ public class DupletNoteController : MonoBehaviour
         [HideInInspector] public Vector3 defaultLocalScale;
         [HideInInspector] public bool bAlive;
     }
+
     [SerializeField] private string hasPlayerCatchEnemyName;
     private PlayerCatchEnemy playerCatchEnemy;
+
     [SerializeField] private FStatus status;
-    [SerializeField] private Vector3[] rayPoses;           // レイの出る位置
-    [SerializeField] private float rayLength;              // レイの長さ
+    [SerializeField] private Vector3[] rayPoses;                 // レイの出る位置
+    [SerializeField] private float rayLength;                    // レイの長さ
     [SerializeField] private Rigidbody rb;
-    [SerializeField] private GameObject drummingShockWave;      // 衝撃波の出るプレファブを設定
-    [SerializeField] private ThrowTrajectoryCorrector trajectory;
+    [SerializeField] private GameObject drummingShockWave;        // 衝撃波の出るプレファブを設定
+
+    [SerializeField] private ThrowTrajectoryCorrectorBoss2 trajectory;
+
     [SerializeField] private string throwTargetName;
+
     private bool bCatching = false;
     private float absoluteLifeDuration = 10.0f;
 
@@ -34,14 +39,74 @@ public class DupletNoteController : MonoBehaviour
         status.defaultLocalScale = this.transform.localScale;
         status.bAlive = true;
 
-        var tailEnd = GameObject.Find(hasPlayerCatchEnemyName);
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+
+            if (rb == null)
+            {
+                rb = GetComponentInChildren<Rigidbody>();
+            }
+        }
+
+        if (trajectory == null)
+        {
+            trajectory = GetComponent<ThrowTrajectoryCorrectorBoss2>();
+
+            if (trajectory == null)
+            {
+                trajectory = GetComponentInChildren<ThrowTrajectoryCorrectorBoss2>();
+            }
+        }
+
+        GameObject tailEnd = null;
+
+        if (!string.IsNullOrEmpty(hasPlayerCatchEnemyName))
+        {
+            tailEnd = GameObject.Find(hasPlayerCatchEnemyName);
+        }
+
+        if (tailEnd == null)
+        {
+            Debug.LogError($"{name} : hasPlayerCatchEnemyName の名前で PlayerCatchEnemy 持ちオブジェクトが見つからない。設定名 = {hasPlayerCatchEnemyName}", this);
+            Destroy(this.gameObject);
+            return;
+        }
+
         playerCatchEnemy = tailEnd.GetComponent<PlayerCatchEnemy>();
 
         if (playerCatchEnemy == null)
+        {
+            playerCatchEnemy = tailEnd.GetComponentInChildren<PlayerCatchEnemy>();
+        }
+
+        if (playerCatchEnemy == null)
+        {
+            Debug.LogError($"{name} : {tailEnd.name} に PlayerCatchEnemy が付いてない", this);
             Destroy(this.gameObject);
+            return;
+        }
+
         if (trajectory == null)
+        {
+            Debug.LogError($"{name} : ThrowTrajectoryCorrectorBoss2 が設定されてない。Trajectory欄に入れるか、同じオブジェクトに付けて", this);
             Destroy(this.gameObject);
-        trajectory.SetThrowTarget(GameObject.Find(throwTargetName));
+            return;
+        }
+
+        GameObject targetObject = null;
+
+        if (!string.IsNullOrEmpty(throwTargetName))
+        {
+            targetObject = GameObject.Find(throwTargetName);
+        }
+
+        if (targetObject == null)
+        {
+            Debug.LogWarning($"{name} : throwTargetName の対象が見つからない。設定名 = {throwTargetName}。ThrowTrajectoryCorrectorBoss2側の自動検索に任せる", this);
+        }
+
+        trajectory.SetThrowTarget(targetObject);
     }
 
     // Update is called once per frame
@@ -49,28 +114,52 @@ public class DupletNoteController : MonoBehaviour
     {
         var delta = Time.deltaTime;
         absoluteLifeDuration -= delta;
+
         if (absoluteLifeDuration <= 0.0f)
+        {
             Destroy(this.gameObject);
+            return;
+        }
 
         if (rb == null)
+        {
             return;
+        }
+
         if (playerCatchEnemy == null)
+        {
             return;
+        }
 
         if (!bCatching)
         {
             var obj = playerCatchEnemy.CatchingObjectPtr();
+
             if (obj == this.gameObject)
             {
                 bCatching = true;
-                gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
+
+                int playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
+
+                if (playerProjectileLayer >= 0)
+                {
+                    gameObject.layer = playerProjectileLayer;
+                }
+
                 rb.linearVelocity = Vector3.zero;
                 this.transform.localScale = status.defaultLocalScale / 5;
                 return;
             }
 
             Move(delta);
-            gameObject.layer = LayerMask.NameToLayer("EnemyProjectile");
+
+            int enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
+
+            if (enemyProjectileLayer >= 0)
+            {
+                gameObject.layer = enemyProjectileLayer;
+            }
+
             if (status.boundCount <= 0)
             {
                 if (status.lifeTimeDuration <= 0.0f)
@@ -78,14 +167,21 @@ public class DupletNoteController : MonoBehaviour
                     Destroy(this.gameObject);
                     return;
                 }
+
                 status.lifeTimeDuration -= delta;
                 ScalingDown();
             }
         }
+
         if (bCatching && playerCatchEnemy.CatchingObjectPtr() == null)
+        {
             gameObject.tag = "Projectile";
+        }
+
         if (!status.bAlive)
+        {
             Destroy(this.gameObject);
+        }
     }
 
     private void Move(float delta)
@@ -95,13 +191,14 @@ public class DupletNoteController : MonoBehaviour
         pos.z += transform.forward.z * status.speed * delta;
 
         this.transform.position = pos;
+
         if (CheckGround())
         {
             if (rb != null)
             {
                 if (status.boundCount > 0)
                 {
-                    if (rayPoses.Length > 0)
+                    if (rayPoses != null && rayPoses.Length > 0 && drummingShockWave != null)
                     {
                         var rayPos = rayPoses[0];
                         var instancePos = this.transform.position;
@@ -120,15 +217,35 @@ public class DupletNoteController : MonoBehaviour
 
     private void ScalingDown()
     {
+        if (status.lifeTime <= 0.0001f)
+        {
+            this.transform.localScale = Vector3.zero;
+            return;
+        }
+
         var alpha = status.lifeTimeDuration / status.lifeTime;
+
         if (alpha < 0.0f)
+        {
             alpha = 0.0f;
+        }
+
         var newScale = Vector3.Lerp(Vector3.zero, status.defaultLocalScale, alpha);
         this.transform.localScale = newScale;
     }
 
     private bool CheckGround()
     {
+        if (rb == null)
+        {
+            return false;
+        }
+
+        if (rayPoses == null)
+        {
+            return false;
+        }
+
         // 地面に足を付けていると認識する値
         const float toleranceGround = 1e-5f;
 
@@ -154,16 +271,22 @@ public class DupletNoteController : MonoBehaviour
                         return true;
                     }
                 }
-
             }
         }
+
         return false;
     }
 
     private void OnDrawGizmos()
     {
+        if (rayPoses == null)
+        {
+            return;
+        }
+
         // Vector3を可視化
         Vector3[] wPos = new Vector3[rayPoses.Length];
+
         for (int i = 0; i < rayPoses.Length; ++i)
         {
             wPos[i] = this.transform.position + rayPoses[i];
