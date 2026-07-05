@@ -13,7 +13,7 @@ public class RespawnTrigger : MonoBehaviour
         if (other.CompareTag("BossHead"))
         {
             Debug.Log("BossHead‚ªRespownBox‚É“–‚½‚è‚Ü‚µ‚½");
-            gameClear.StartWin();
+            //gameClear.StartWin();
         }
         // Playerƒ^ƒO‚É”½‰ž
         if (!other.CompareTag("Player"))

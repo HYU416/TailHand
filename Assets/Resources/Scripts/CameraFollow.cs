@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    private Vector3 pos;
-    private Vector3 target;
-
     public Vector3 shakeOffset;
 
     [SerializeField] GameObject player;
@@ -19,8 +16,7 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float lookSmooth = 10.0f;
 
     [SerializeField] float bossHeight = 10.0f;
-
-
+    [SerializeField] Transform lookFocusOverride;
 
     [SerializeField] float introDistance = 4f;
     [SerializeField] float introHeight = 2f;
@@ -40,6 +36,284 @@ public class CameraFollow : MonoBehaviour
 
     public bool Gamestart;
 
+    bool followEnabled = true;
+    bool bossHeadWatchEnabled;
+    bool bossWatchLockLook;
+    bool qteCameraEnabled;
+    Transform bossWatchHead;
+    Transform qteLookTarget;
+    Vector3 bossWatchFixedCameraPosition;
+    Quaternion bossWatchFixedRotation;
+    float bossWatchLookSmooth = 10f;
+    float qteBaseBackDistance = 6f;
+    float qteExtraBackDistance;
+    float qteLookHeightOffset = 1.5f;
+    Vector3 qteCameraBackDirection = Vector3.back;
+
+    bool qteFramingEnabled;
+    Transform frameTargetA;
+    Transform frameTargetB;
+    Vector3 frameFixedCameraPosition;
+    float frameHeightOffset = 1.5f;
+    bool frameSmooth = true;
+
+    public bool FollowEnabled
+    {
+        get { return followEnabled; }
+        set { followEnabled = value; }
+    }
+
+    /// <summary>
+    /// 繝懊せ鬆ｭ驛ｨ豕ｨ隕悶�貍泌�逕ｨ繝｢繝ｼ繝峨ｒ髢句ｧ九＠縺ｾ縺呻ｼ井ｽ咲ｽｮ縺ｯ螟夜Κ縺九ｉ險ｭ螳夲ｼ峨
+    /// </summary>
+    public void BeginBossCinematic(Transform headLookTarget)
+    {
+        if (headLookTarget == null)
+        {
+            return;
+        }
+
+        bossWatchHead = headLookTarget;
+        bossWatchLockLook = false;
+        bossHeadWatchEnabled = true;
+        followEnabled = true;
+    }
+
+    /// <summary>
+    /// 貍泌�荳ｭ縺ｮ繧ｫ繝｡繝ｩ菴咲ｽｮ繧定ｨｭ螳壹＠縺ｾ縺吶
+    /// </summary>
+    public void SetBossWatchCameraPosition(Vector3 worldPosition)
+    {
+        bossWatchFixedCameraPosition = worldPosition;
+        transform.position = worldPosition + shakeOffset;
+    }
+
+    /// <summary>
+    /// 豕ｨ隕也せ縺ｸ蜷代″繧貞叉蠎ｧ縺ｫ蜷医ｏ縺帙∪縺吶
+    /// </summary>
+    public void SnapBossWatchLookAt()
+    {
+        if (bossWatchHead == null)
+        {
+            return;
+        }
+
+        Vector3 lookDirection = bossWatchHead.position - transform.position;
+
+        if (lookDirection.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
+    }
+
+    public void SnapCameraRotation(Quaternion rotation)
+    {
+        transform.rotation = rotation;
+    }
+
+    public void LockCameraTransform(Vector3 position, Quaternion rotation)
+    {
+        EndHeadFollow();
+        EndQTECamera();
+        EndQTEFraming();
+        followEnabled = false;
+        transform.position = position + shakeOffset;
+        transform.rotation = rotation;
+    }
+
+    public void LockCameraLookAt(Vector3 position, Vector3 lookTarget)
+    {
+        EndHeadFollow();
+        EndQTECamera();
+        EndQTEFraming();
+        followEnabled = false;
+        transform.position = position + shakeOffset;
+
+        Vector3 lookDirection = lookTarget - transform.position;
+
+        if (lookDirection.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
+        }
+    }
+
+    /// <summary>
+    /// 繧ｫ繝｡繝ｩ菴咲ｽｮ縺ｯ蝗ｺ螳壹＠縲√く繝｣繝ｩ縺ｨ繝懊せ鬆ｭ縺ｮ 2 轤ｹ縺ｮ荳ｭ髢薙□縺代ｒ豕ｨ隕悶☆繧区兜縺呈ｼ泌�繧ｫ繝｡繝ｩ繧帝幕蟋九＠縺ｾ縺吶
+    /// </summary>
+    public void BeginQTEThrowFraming(
+        Transform targetA,
+        Transform targetB,
+        Vector3 fixedCameraPosition,
+        float heightOffset,
+        bool smooth = true)
+    {
+        if (targetA == null && targetB == null)
+        {
+            return;
+        }
+
+        EndHeadFollow();
+        EndQTECamera();
+
+        frameTargetA = targetA;
+        frameTargetB = targetB;
+        frameFixedCameraPosition = fixedCameraPosition;
+        frameHeightOffset = heightOffset;
+        frameSmooth = smooth;
+
+        qteFramingEnabled = true;
+        followEnabled = true;
+
+        UpdateQTEFraming(true);
+    }
+
+    public void EndQTEFraming()
+    {
+        qteFramingEnabled = false;
+        frameTargetA = null;
+        frameTargetB = null;
+    }
+
+    /// <summary>
+    /// 迴ｾ蝨ｨ縺ｮ菴咲ｽｮ繝ｻ蜷代″縺ｮ縺ｾ縺ｾ繧ｫ繝｡繝ｩ繧貞ｮ悟�縺ｫ蝗ｺ螳壹＠縺ｾ縺呻ｼ郁ｿｽ蠕薙ｒ豁｢繧√ｋ�峨
+    /// </summary>
+    public void FreezeQTEFraming()
+    {
+        qteFramingEnabled = false;
+        frameTargetA = null;
+        frameTargetB = null;
+        followEnabled = false;
+    }
+
+    public void SnapCameraTransform(Vector3 position, Quaternion rotation)
+    {
+        EndHeadFollow();
+        EndQTECamera();
+        EndQTEFraming();
+        transform.position = position + shakeOffset;
+        transform.rotation = rotation;
+    }
+
+    /// <summary>
+    /// 繧ｫ繝｡繝ｩ菴咲ｽｮ繧貞崋螳壹＠縲。oss_Head 縺ｪ縺ｩ縺ｮ豕ｨ隕也せ縺縺題ｿｽ縺�∪縺吶
+    /// </summary>
+    public void BeginBossHeadWatch(
+        Transform headLookTarget,
+        Vector3 fixedCameraPosition,
+        float lookSmooth = 10f)
+    {
+        if (headLookTarget == null)
+        {
+            return;
+        }
+
+        bossWatchHead = headLookTarget;
+        bossWatchLookSmooth = lookSmooth;
+        bossWatchFixedCameraPosition = fixedCameraPosition;
+        bossWatchLockLook = false;
+        bossHeadWatchEnabled = true;
+        followEnabled = true;
+
+        transform.position = bossWatchFixedCameraPosition + shakeOffset;
+    }
+
+    /// <summary>
+    /// 豕ｨ隕匁婿蜷代ｒ迴ｾ蝨ｨ縺ｮ蜷代″縺ｧ蝗ｺ螳壹＠縺ｾ縺呻ｼ域遠縺｡荳翫￡荳ｭ縺ｪ縺ｩ�峨
+    /// </summary>
+    public void LockBossHeadLookDirection()
+    {
+        if (!bossHeadWatchEnabled)
+        {
+            return;
+        }
+
+        bossWatchLockLook = true;
+        bossWatchFixedRotation = transform.rotation;
+    }
+
+    /// <summary>
+    /// 豕ｨ隕匁婿蜷代�蝗ｺ螳壹ｒ隗｣髯､縺励�ｭ驛ｨ霑ｽ蠕薙↓謌ｻ縺励∪縺吶
+    /// </summary>
+    public void UnlockBossHeadLookDirection()
+    {
+        bossWatchLockLook = false;
+    }
+
+    /// <summary>
+    /// 繝懊せ鬆ｭ驛ｨ豕ｨ隕悶き繝｡繝ｩ繝｢繝ｼ繝峨ｒ邨ゆｺ�＠縲�壼ｸｸ霑ｽ蠕薙↓謌ｻ縺励∪縺吶
+    /// </summary>
+    public void EndHeadFollow()
+    {
+        bossHeadWatchEnabled = false;
+        bossWatchLockLook = false;
+        bossWatchHead = null;
+    }
+
+    public void SetLookFocusOverride(Transform focus)
+    {
+        lookFocusOverride = focus;
+    }
+
+    public void BeginQTECamera(
+        Transform lookTarget,
+        float baseBackDistance,
+        float lookHeightOffset = 1.5f)
+    {
+        if (lookTarget == null)
+        {
+            return;
+        }
+
+        EndHeadFollow();
+        qteLookTarget = lookTarget;
+        qteBaseBackDistance = baseBackDistance;
+        qteLookHeightOffset = lookHeightOffset;
+        qteExtraBackDistance = 0f;
+        qteCameraBackDirection = ResolveQTECameraBackDirection(lookTarget);
+        qteCameraEnabled = true;
+        followEnabled = true;
+        UpdateQTECamera(true);
+    }
+
+    Vector3 ResolveQTECameraBackDirection(Transform lookTarget)
+    {
+        Vector3 lookPoint = lookTarget.position + Vector3.up * qteLookHeightOffset;
+        Vector3 cameraOffset = transform.position - lookPoint;
+        cameraOffset.y = 0f;
+
+        if (cameraOffset.sqrMagnitude > 0.0001f)
+        {
+            return cameraOffset.normalized;
+        }
+
+        Vector3 fallback = -lookTarget.forward;
+        fallback.y = 0f;
+
+        if (fallback.sqrMagnitude < 0.0001f)
+        {
+            return Vector3.back;
+        }
+
+        return fallback.normalized;
+    }
+
+    public void SetQTECameraBackExtra(float extraBackDistance)
+    {
+        qteExtraBackDistance = Mathf.Max(0f, extraBackDistance);
+    }
+
+    public void EndQTECamera()
+    {
+        qteCameraEnabled = false;
+        qteLookTarget = null;
+        qteExtraBackDistance = 0f;
+    }
+
+
+   
+
     public bool IsGameStart()
     {
         return Gamestart;
@@ -54,7 +328,7 @@ public class CameraFollow : MonoBehaviour
         bossLandPos = Boss.transform.position;
         bossStartPos = bossLandPos + Vector3.up * 35f;
         bossRenderers = Boss.GetComponentsInChildren<Renderer>();
-        // Boss���\��
+        // Bossを非表示
         bossRenderers = Boss.GetComponentsInChildren<Renderer>();
 
         foreach (Renderer r in bossRenderers)
@@ -71,13 +345,45 @@ public class CameraFollow : MonoBehaviour
         loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
         //player = GameObject.FindGameObjectWithTag("Player");
         //Boss = GameObject.FindGameObjectWithTag("Boss");
+    }
 
-        //if (player == null) Debug.LogError("Player�^�O��������܂���B");
-        //if (Boss == null) Debug.LogError("Boss�^�O��������܂���B");
+    public void SetPlayerBossReferences(GameObject playerObject, GameObject bossObject)
+    {
+        player = playerObject;
+        Boss = bossObject;
+    }
+
+    private void Start()
+    {
+        MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
     }
 
     private void LateUpdate()
     {
+        if (!followEnabled)
+        {
+            return;
+        }
+
+        if (qteFramingEnabled && (frameTargetA != null || frameTargetB != null))
+        {
+            UpdateQTEFraming(false);
+            return;
+        }
+
+        if (bossHeadWatchEnabled && bossWatchHead != null)
+        {
+            UpdateBossHeadWatch();
+            return;
+        }
+
+        if (qteCameraEnabled && qteLookTarget != null)
+        {
+            UpdateQTECamera(false);
+            return;
+        }
+
+        if (player == null || Boss == null) return;
         if (!Gamestart)
         {
             if (player == null) return;
@@ -90,7 +396,7 @@ public class CameraFollow : MonoBehaviour
             // Phase1
             if (introTime < 2.0f)
             {
-                //�v���C���[�̖ڂ̑O�Ɉړ��i0f�j
+                //プレイヤーの目の前に移動（0f）
                 Vector3 pos = center + forward * introDistance;
                 transform.position = pos;
                 transform.LookAt(center);
@@ -134,14 +440,14 @@ public class CameraFollow : MonoBehaviour
                 transform.position = pos;
                 transform.LookAt(player.transform.position + Vector3.up * 2f);
             }
-            // Phase4 Boss�o��
+            // Phase4 Boss登場
             else if (introTime < 13.0f)
             {
                 if (!bossIntroInit)
                 {
                     bossIntroInit = true;
 
-                    // Boss��\��
+                    // Bossを表示
                     foreach (Renderer r in bossRenderers)
                     {
                         r.enabled = true;
@@ -153,11 +459,11 @@ public class CameraFollow : MonoBehaviour
                 float t = (introTime - 9.0f) / 4.0f;
                 t = Mathf.SmoothStep(0f, 1f, t);
 
-                // Boss�~��
+                // Boss降下
                 Boss.transform.position =
                     Vector3.Lerp(bossStartPos, bossLandPos, t);
 
-                // �v���C���[�΂ߌ��
+                // プレイヤー斜め後ろ
                 Vector3 offset =
                     -forward * 6f +
                     Vector3.left * 3f +
@@ -166,12 +472,12 @@ public class CameraFollow : MonoBehaviour
                 transform.position =
                     player.transform.position + offset;
 
-                // Boss������
+                // Bossを見る
                 transform.LookAt(Boss.transform.position + Vector3.up * 2f);
             }
-            // Phase5 Boss���\��
-            // Phase5 Boss�����グ��
-            // Phase5 Boss�����������r�߂�
+            // Phase5 Boss名表示
+            // Phase5 Bossを見上げる
+            // Phase5 Bossを下から上へ舐める
             // Phase5
             else if (introTime < 17.0f)
             {
@@ -185,15 +491,15 @@ public class CameraFollow : MonoBehaviour
                 Vector3 startPos = basePos + Vector3.up * 1.5f;
                 Vector3 endPos = basePos + Vector3.up * 14f;
 
-                // �ʒu�����ړ�
+                // 位置だけ移動
                 transform.position = Vector3.Lerp(startPos, endPos, t);
-                // LookAt�͂��Ȃ�
+                // LookAtはしない
             }
-            // Phase6 Boss���\��
+            // Phase6 Boss名表示
             else if (introTime < 19.0f)
             {
 
-                // Boss���\��
+                // Boss名表示
                 StartSequenceUIObject.SetActive(true);
                 //bossNameUI.SetActive(true);
             }
@@ -215,27 +521,22 @@ public class CameraFollow : MonoBehaviour
         bossPos.y = bossHeight;
         Vector3 playerPos = player.transform.position;
 
-        // �{�X���v���C���[����
         Vector3 bossToPlayer = playerPos - bossPos;
         bossToPlayer.y = 0f;
         bossToPlayer.Normalize();
 
-        // �{�X���J��������
         Vector3 bossToCamera = transform.position - bossPos;
         bossToCamera.y = 0f;
         bossToCamera.Normalize();
 
-        // �p�x��
         float angle = Vector3.SignedAngle(bossToPlayer, bossToCamera, Vector3.up);
 
         Vector3 targetDir = bossToCamera;
 
-        // 30�x���E�ɃY���Ă�����A30�x�̈ʒu�܂Ŗ߂�
         if (angle > angleLimit)
         {
             targetDir = Quaternion.Euler(0f, angleLimit, 0f) * bossToPlayer;
         }
-        // 30�x��荶�ɃY���Ă�����A-30�x�̈ʒu�܂Ŗ߂�
         else if (angle < -angleLimit)
         {
             targetDir = Quaternion.Euler(0f, -angleLimit, 0f) * bossToPlayer;
@@ -246,18 +547,115 @@ public class CameraFollow : MonoBehaviour
         Vector3 targetPos = bossPos + targetDir * distance;
         targetPos.y = bossPos.y + CameraHeight;
 
-        target = (playerPos + bossPos) / 2.0f;
+        Vector3 target = lookFocusOverride != null
+            ? lookFocusOverride.position
+            : (playerPos + bossPos) / 2.0f;
 
-        // �ʒu�����炩�Ɉړ�
         transform.position = Vector3.Lerp(
             transform.position,
             targetPos + shakeOffset,
             moveSmooth * Time.deltaTime
         );
 
-        // ���������炩�ɕύX
         Quaternion targetRot = Quaternion.LookRotation(target - transform.position);
 
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            lookSmooth * Time.deltaTime
+        );
+    }
+
+    private void UpdateBossHeadWatch()
+    {
+        transform.position = bossWatchFixedCameraPosition + shakeOffset;
+
+        if (bossWatchLockLook)
+        {
+            transform.rotation = bossWatchFixedRotation;
+            return;
+        }
+
+        Vector3 lookDirection = bossWatchHead.position - transform.position;
+
+        if (lookDirection.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion targetRot = Quaternion.LookRotation(lookDirection, Vector3.up);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            bossWatchLookSmooth * Time.deltaTime
+        );
+    }
+
+    void UpdateQTEFraming(bool snap)
+    {
+        Vector3 pointA = frameTargetA != null
+            ? frameTargetA.position
+            : frameTargetB.position;
+        Vector3 pointB = frameTargetB != null
+            ? frameTargetB.position
+            : frameTargetA.position;
+
+        Vector3 midpoint = (pointA + pointB) * 0.5f;
+        Vector3 lookPoint = midpoint + Vector3.up * frameHeightOffset;
+
+        // 繧ｫ繝｡繝ｩ菴咲ｽｮ縺ｯ蝗ｺ螳壹ょ髄縺阪□縺 2 轤ｹ縺ｮ荳ｭ髢薙∈蜷代￠繧九
+        transform.position = frameFixedCameraPosition + shakeOffset;
+
+        Vector3 lookDir = lookPoint - transform.position;
+
+        if (lookDir.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion targetRot = Quaternion.LookRotation(lookDir, Vector3.up);
+
+        if (snap || !frameSmooth)
+        {
+            transform.rotation = targetRot;
+            return;
+        }
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            lookSmooth * Time.deltaTime
+        );
+    }
+
+    void UpdateQTECamera(bool snap)
+    {
+        Vector3 lookPoint = qteLookTarget.position + Vector3.up * qteLookHeightOffset;
+        float totalBack = qteBaseBackDistance + qteExtraBackDistance;
+        Vector3 desiredPos = lookPoint + qteCameraBackDirection * totalBack;
+
+        if (snap)
+        {
+            transform.position = desiredPos + shakeOffset;
+            transform.rotation = Quaternion.LookRotation(lookPoint - transform.position, Vector3.up);
+            return;
+        }
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            desiredPos + shakeOffset,
+            moveSmooth * Time.deltaTime
+        );
+
+        Vector3 lookDirection = lookPoint - transform.position;
+
+        if (lookDirection.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion targetRot = Quaternion.LookRotation(lookDirection, Vector3.up);
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRot,
