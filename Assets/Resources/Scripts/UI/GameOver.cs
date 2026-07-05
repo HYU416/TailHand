@@ -19,6 +19,8 @@ public class GameOver : MonoBehaviour
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject losePlayer;
+    [SerializeField] private Sprite[] loseNormalSprite;
+    [SerializeField] private Sprite[] loseFrontSprite;
 
     [SerializeField] private float loseFadeStartTime = 1.0f;
     [SerializeField] private float loseFadeDuration = 1.0f;
@@ -93,7 +95,7 @@ public class GameOver : MonoBehaviour
 
         for (int i = 0; i < buttonPanels.Length; i++)
         {
-            buttonPanels[i].color = i == currentIndex ? Color.orange : Color.white;
+            buttonPanels[i].sprite = i == currentIndex ? loseFrontSprite[i] : loseNormalSprite[i];
         }
 
         // アニメーション

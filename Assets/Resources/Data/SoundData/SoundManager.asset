@@ -311,9 +311,9 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  bgmList: 3
+  bgmList: 0
   bgmListData:
-  - audioClip: {fileID: 8300000, guid: b9a15fc9cb3db2d409390c1f8dbc9a1e, type: 3}
+  - audioClip: {fileID: 8300000, guid: d2a19b18be1f5d74f84aecc4ab38a7a2, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
@@ -358,7 +358,7 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 800
       lowPassResonanceQ: 1.2
-  - audioClip: {fileID: 8300000, guid: 94c573478e0076c4885a7ff2cf0e9a77, type: 3}
+  - audioClip: {fileID: 8300000, guid: 7660eccfba7fbee439bff89b30d03b22, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
@@ -421,7 +421,7 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  - audioClip: {fileID: 8300000, guid: dc2ff19cf66146841b96ba644c2509b5, type: 3}
+  - audioClip: {fileID: 8300000, guid: 411f66b535024c5489930eb55f3270df, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
@@ -484,7 +484,7 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  - audioClip: {fileID: 8300000, guid: a2d8c1f34b2c06d4c9fda70056bf28fb, type: 3}
+  - audioClip: {fileID: 8300000, guid: 41f407573c5e062418b0d58d016d0057, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
