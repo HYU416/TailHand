@@ -97,7 +97,7 @@ public class TItleScene : MonoBehaviour
     {
         // ステージの回転
         stage.transform.Rotate(0,stageRotateSpeed * Time.deltaTime, 0);
-        item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
+        //item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
 
         if (isCameraMoving) return;
 
