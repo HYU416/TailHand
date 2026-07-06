@@ -2,6 +2,8 @@
 
 public class Big_GController : MonoBehaviour
 {
+    [SerializeField] private CameraFollow cameraFollow;
+
     // ステータス
     [System.Serializable]
     public struct FStatus
@@ -138,6 +140,11 @@ public class Big_GController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!cameraFollow.Gamestart)
+        {
+            return;//カメラ演出時は動かない
+        }
+
         if (big_g != null)
         {
             if (IsTimerZero(ref returnLayerTimeDuration))

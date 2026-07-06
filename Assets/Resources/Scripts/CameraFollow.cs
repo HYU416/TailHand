@@ -3,6 +3,7 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour
 {
     public Vector3 shakeOffset;
+    [SerializeField] int StageNumber = 1;
 
     [SerializeField] GameObject player;
     [SerializeField] GameObject Boss;
@@ -321,6 +322,17 @@ public class CameraFollow : MonoBehaviour
 
     private void Start()
     {
+
+        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+        //intro.time += 70.0f;
+        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+        loop.Stop();
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+
+        if (StageNumber == 0)
+        {
+            return;
+        }
         Gamestart = false;
 
         bossIntroInit = false;
@@ -338,11 +350,7 @@ public class CameraFollow : MonoBehaviour
 
         StartSequenceUIObject.SetActive(false);
 
-        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-        //intro.time += 70.0f;
-        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
-        loop.Stop();
-        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        
         //player = GameObject.FindGameObjectWithTag("Player");
         //Boss = GameObject.FindGameObjectWithTag("Boss");
     }
@@ -481,11 +489,23 @@ public class CameraFollow : MonoBehaviour
                 t = Mathf.SmoothStep(0f, 1f, t);
 
                 Vector3 basePos = Boss.transform.position - player.transform.forward * 10f;
-                basePos.x -= 4.2f;
-                basePos.z -= 2.0f;
+                Vector3 startPos = new Vector3();
+                Vector3 endPos = new Vector3();
+                if (StageNumber == 1)
+                {
+                    basePos.x -= 4.2f;
+                    basePos.z -= 2.0f;
+                    startPos = basePos + Vector3.up * 1.5f;
+                    endPos = basePos + Vector3.up * 14f;
+                }
+                if(StageNumber == 2)
+                {
+                    basePos.x -= 3.0f;
+                    basePos.z += 6.0f;
+                    startPos = basePos + Vector3.up * 1.5f;
+                    endPos = basePos + Vector3.up * 10f;
+                }
 
-                Vector3 startPos = basePos + Vector3.up * 1.5f;
-                Vector3 endPos = basePos + Vector3.up * 14f;
 
                 // 位置だけ移動
                 transform.position = Vector3.Lerp(startPos, endPos, t);
@@ -504,7 +524,7 @@ public class CameraFollow : MonoBehaviour
                 StartSequenceUIObject.SetActive(false);
                 //bossNameUI.SetActive(false);
 
-                bossAttack.StartBattle();
+                if(StageNumber == 1)bossAttack.StartBattle();
                 Gamestart = true;
             }
             return;
