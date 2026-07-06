@@ -247,7 +247,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
     [Header("攻撃開始までの待ち時間")]
     [SerializeField]
-    private float startDelay = 2.0f;
+    private float startDelay = 10.0f;
 
     [Header("スピン攻撃")]
     [SerializeField]
@@ -341,10 +341,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
             SetAllLaserDevicesImmediate(false);
         }
 
-        //if (playOnStart)
-        //{
-        //    StartCoroutine(MainAttackLoop());
-        //}
+        if (playOnStart)
+        {
+            StartBattle();
+        }
     }
 
     private void Update()

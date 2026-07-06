@@ -4,58 +4,58 @@ using UnityEngine;
 
 public class BossPhaseController : MonoBehaviour
 {
-    [Header("迴ｾ蝨ｨ縺ｮ谿ｵ髫")]
+    [Header("現在の段階")]
     [SerializeField] private int currentPhase = 1;
 
-    [Header("1谿ｵ髫守岼")]
+    [Header("1段階目")]
     [SerializeField] private GameObject bossStep1;
     [SerializeField] private BossArmorPart[] phase1Armors;
     [SerializeField] private BossCorePart phase1Core;
     [SerializeField] private int phase1ArmorHp = 30;
 
-    [Header("2谿ｵ髫守岼")]
+    [Header("2段階目")]
     [SerializeField] private GameObject bossStep2;
     [SerializeField] private BossArmorPart[] phase2Armors;
     [SerializeField] private BossCorePart phase2Core;
     [SerializeField] private int phase2ArmorHp = 40;
 
-    [Header("3谿ｵ髫守岼")]
+    [Header("3段階目")]
     [SerializeField] private GameObject bossStep3;
     [SerializeField] private BossArmorPart[] phase3Armors;
     [SerializeField] private BossCorePart phase3Core;
     [SerializeField] private int phase3ArmorHp = 50;
 
-    [Header("鬆ｭ")]
+    [Header("頭")]
     [SerializeField] private GameObject bossHead;
 
-    [Header("謾ｻ謦�ｮ｡逅")]
+    [Header("攻撃管理")]
     [SerializeField] private BossPhaseAttackController attackController;
 
-    [Header("繧ｳ繧｢繧剃ｽ募屓謾ｻ謦�＠縺溘ｉ谿ｵ髫守ｴ螢翫☆繧九°")]
+    [Header("コアを何回攻撃したら段階を破壊するか")]
     [SerializeField] private int coreHitCountToBreakPhase = 3;
 
-    [Header("螢√′螢翫ｌ縺ｦ縺�↑縺上※繧ゅさ繧｢繝偵ャ繝医ｒ險ｱ蜿ｯ縺吶ｋ")]
+    [Header("壁が壊れていなくてもコアヒットを許可する")]
     [SerializeField] private bool allowCoreHitBeforeAllArmorsBroken = true;
 
-    [Header("螢√′蜈ｨ驛ｨ螢翫ｌ縺溘ｉ縺昴�谿ｵ髫弱ｒ閾ｪ蜍慕ｴ螢翫☆繧")]
+    [Header("壁が全部壊れたらその段階を自動破壊する")]
     [SerializeField] private bool breakPhaseWhenAllArmorsBroken = true;
 
-    [Header("螢∝�遐ｴ螢頑凾縺ｫ繧ｳ繧｢縺ｸ蜈･繧後ｋ遐ｴ螢翫ム繝｡繝ｼ繧ｸ")]
+    [Header("壁全破壊時にコアへ入れる破壊ダメージ")]
     [SerializeField] private int allArmorBrokenCoreDamage = 999;
 
-    [Header("螢∝�遐ｴ螢頑凾縺ｫ謾ｻ謦�ヱ繧ｿ繝ｼ繝ｳ繧貞�繧頑崛縺医ｋ")]
+    [Header("壁全破壊時に攻撃パターンを切り替える")]
     [SerializeField] private bool notifyAttackControllerWhenAllArmorsBroken = false;
 
-    [Header("谿ｵ遘ｻ蜍戊ｨｭ螳")]
+    [Header("段移動設定")]
     [SerializeField] private bool autoCalculateStepDownDistance = true;
 
-    [Header("閾ｪ蜍戊ｨ育ｮ励ｒ菴ｿ繧上↑縺�ｴ蜷医�荳九￡繧玖ｷ晞屬")]
+    [Header("自動計算を使わない場合の下げる距離")]
     [SerializeField] private float manualStepDownDistance = 3.0f;
 
-    [Header("荳九′繧区凾髢")]
+    [Header("下がる時間")]
     [SerializeField] private float stepDownDuration = 1.0f;
 
-    [Header("繝�ヰ繝�げ")]
+    [Header("デバッグ")]
     [SerializeField] private int currentCoreHitCount;
     [SerializeField] private bool coreOpened;
     [SerializeField] private bool allCurrentArmorsBroken;
@@ -160,7 +160,7 @@ public class BossPhaseController : MonoBehaviour
             calculatedStepDownDistance = distance;
         }
 
-        Debug.Log("谿ｵ縺御ｸ九′繧玖ｷ晞屬: " + calculatedStepDownDistance);
+        Debug.Log("段が下がる距離: " + calculatedStepDownDistance);
     }
 
     private void InitializeBoss()
@@ -227,19 +227,19 @@ public class BossPhaseController : MonoBehaviour
         {
             SetupArmors(phase1Armors, phase1ArmorHp);
             SetupCore(phase1Core);
-            Debug.Log("1谿ｵ髫守岼髢句ｧ");
+            Debug.Log("1段階目開始");
         }
         else if (phase == 2)
         {
             SetupArmors(phase2Armors, phase2ArmorHp);
             SetupCore(phase2Core);
-            Debug.Log("2谿ｵ髫守岼髢句ｧ");
+            Debug.Log("2段階目開始");
         }
         else if (phase == 3)
         {
             SetupArmors(phase3Armors, phase3ArmorHp);
             SetupCore(phase3Core);
-            Debug.Log("3谿ｵ髫守岼髢句ｧ");
+            Debug.Log("3段階目開始");
         }
     }
 
@@ -330,7 +330,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (!AreAllCurrentArmorsBroken())
         {
-            Debug.Log("螢√′荳驛ｨ螢翫ｌ縺ｾ縺励◆縲よｮ九ｊ縺ｮ螢√′縺ゅｊ縺ｾ縺吶");
+            Debug.Log("壁が一部壊れました。残りの壁があります。");
             return;
         }
 
@@ -360,7 +360,7 @@ public class BossPhaseController : MonoBehaviour
             attackController.NotifyAllWallsBroken();
         }
 
-        Debug.Log("迴ｾ蝨ｨ縺ｮ谿ｵ髫弱�螢√′縺吶∋縺ｦ遐ｴ螢翫＆繧後∪縺励◆縲ゅさ繧｢繧定�蜍慕ｴ螢頑桶縺�↓縺励∪縺吶");
+        Debug.Log("現在の段階の壁がすべて破壊されました。コアを自動破壊扱いにします。");
 
         if (breakPhaseWhenAllArmorsBroken)
         {
@@ -440,7 +440,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (!coreOpened && !allowCoreHitBeforeAllArmorsBroken)
         {
-            Debug.Log("繧ｳ繧｢縺ｫ蠖薙◆繧翫∪縺励◆縺後√∪縺謾ｻ謦�ｸ榊庄縺ｧ縺");
+            Debug.Log("コアに当たりましたが、まだ攻撃不可です。");
             return;
         }
 
@@ -451,7 +451,7 @@ public class BossPhaseController : MonoBehaviour
 
         currentCoreHitCount += damage;
 
-        Debug.Log("繧ｳ繧｢縺ｫ蜻ｽ荳ｭ: " + currentCoreHitCount + " / " + coreHitCountToBreakPhase);
+        Debug.Log("コアに命中: " + currentCoreHitCount + " / " + coreHitCountToBreakPhase);
 
         if (currentCoreHitCount >= coreHitCountToBreakPhase)
         {
@@ -468,7 +468,7 @@ public class BossPhaseController : MonoBehaviour
 
         isChangingPhase = true;
 
-        Debug.Log(currentPhase + "谿ｵ髫守岼遐ｴ螢");
+        Debug.Log(currentPhase + "段階目破壊");
 
         if (currentPhase == 1)
         {
@@ -511,7 +511,7 @@ public class BossPhaseController : MonoBehaviour
 
         if (currentPhase == 3)
         {
-            // 繝輔ぉ繝ｼ繧ｺ4髢句ｧ区凾縺ｮ繧ｨ繝輔ぉ繧ｯ繝医� BossFinalAttackSequence��X�峨↓莉ｻ縺帙ｋ縲
+            // フェーズ4開始時のエフェクトは BossFinalAttackSequence 側に任せる。
             if (bossStep3 != null)
             {
                 bossStep3.SetActive(false);
@@ -600,14 +600,14 @@ public class BossPhaseController : MonoBehaviour
 
     private void DropHead()
     {
-        Debug.Log("譛邨よｮｵ髫守ｴ螢翫るｭ繧定誠縺ｨ縺励※謗ｴ繧√ｋ繧医≧縺ｫ縺励∪縺吶");
+        Debug.Log("最終段階を破壊。頭を落として掴めるようにします。");
 
         isBossDefeated = true;
         isChangingPhase = false;
 
         if (bossHead == null)
         {
-            Debug.LogWarning("BossHead 縺瑚ｨｭ螳壹＆繧後※縺�∪縺帙ｓ");
+            Debug.LogWarning("BossHead が設定されていません");
             return;
         }
 
@@ -652,7 +652,7 @@ public class BossPhaseController : MonoBehaviour
     {
         if (Application.isPlaying == false)
         {
-            Debug.LogWarning("蜀咲函荳ｭ縺ｮ縺ｿ螳溯｡後〒縺阪∪縺");
+            Debug.LogWarning("再生中のみ実行できます");
             return;
         }
 
