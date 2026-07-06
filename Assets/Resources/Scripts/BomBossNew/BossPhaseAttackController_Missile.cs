@@ -15,8 +15,18 @@ public partial class BossPhaseAttackController
     [SerializeField]
     private string missileIgnoreGroundTag = "Ground";
 
+    [Header("ミサイルをプレイヤー命中時だけ爆発させる")]
+    [Tooltip("ONにすると、各フェーズ設定に関係なく、プレイヤー以外に当たっても爆発しません")]
+    [SerializeField]
+    private bool forceMissileExplodeOnlyPlayerHit = true;
+
     private IEnumerator Attack_HomingMissile(PhaseAttackSetting setting)
     {
+        if (setting == null)
+        {
+            yield break;
+        }
+
         for (int i = 0; i < setting.missileCount; i++)
         {
             GunSetting gun = GetRandomUsableGun();
@@ -43,8 +53,18 @@ public partial class BossPhaseAttackController
             return;
         }
 
+        if (setting == null)
+        {
+            return;
+        }
+
         Vector3 shootDirection =
             GetShootDirection(gunSetting.gun, gunSetting.shootAxis).normalized;
+
+        if (shootDirection.sqrMagnitude <= 0.0001f)
+        {
+            shootDirection = gunSetting.gun.forward;
+        }
 
         Vector3 spawnPosition =
             gunSetting.gun.position + shootDirection * gunSetting.muzzleOffset;
@@ -76,11 +96,15 @@ public partial class BossPhaseAttackController
 
         if (missile == null)
         {
-            Debug.LogWarning("ミサイルPrefabにMissile.csが付いていません");
+            Debug.LogWarning("ミサイルPrefabにMissile.csが付いていません", missileObject);
             return;
         }
 
         Transform target = player;
+
+        bool explodeOnlyPlayerHit =
+            setting.missileExplodeOnlyPlayerHit ||
+            forceMissileExplodeOnlyPlayerHit;
 
         missile.SetMissileSetting(
             target,
@@ -89,7 +113,7 @@ public partial class BossPhaseAttackController
             setting.missileRotateSpeed,
             setting.missileExplosionTime,
             setting.missileExplodeOnHit,
-            setting.missileExplodeOnlyPlayerHit,
+            explodeOnlyPlayerHit,
             setting.missileExplosionRadius,
             setting.missileDamage,
             missileExplosionEffectPrefab,
@@ -153,7 +177,17 @@ public partial class BossPhaseAttackController
             return;
         }
 
-        GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(targetTag);
+        GameObject[] taggedObjects;
+
+        try
+        {
+            taggedObjects = GameObject.FindGameObjectsWithTag(targetTag);
+        }
+        catch
+        {
+            Debug.LogWarning("ミサイルが無視する床タグが存在しません: " + targetTag);
+            return;
+        }
 
         if (taggedObjects == null || taggedObjects.Length == 0)
         {
@@ -249,10 +283,13 @@ public partial class BossPhaseAttackController
             yield break;
         }
 
+        bool[] originalEnabledStates = new bool[colliders.Length];
+
         for (int i = 0; i < colliders.Length; i++)
         {
             if (colliders[i] != null)
             {
+                originalEnabledStates[i] = colliders[i].enabled;
                 colliders[i].enabled = false;
             }
         }
@@ -266,7 +303,7 @@ public partial class BossPhaseAttackController
         {
             if (colliders[i] != null)
             {
-                colliders[i].enabled = true;
+                colliders[i].enabled = originalEnabledStates[i];
             }
         }
     }
