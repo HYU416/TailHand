@@ -44,7 +44,12 @@ public class LastAttackUIManager : MonoBehaviour
 
     [Header("WIN 表示後")]
     [SerializeField, Min(0f)] private float delayBeforeShowSelection = 2f;
-    [SerializeField] private float winMoveUpOffset = 120f;
+    [Tooltip("WIN 表示位置（UImanager 基準）")]
+    [SerializeField] private Vector2 winDisplayPosition = new Vector2(0f, -60f);
+    [Tooltip("WIN の表示倍率（均一スケール）")]
+    [SerializeField, Min(0.1f)] private float winDisplayScale = 1.45f;
+    [Tooltip("選択 UI 表示前に WIN を上へ移動する量")]
+    [SerializeField] private float winMoveUpOffset = 50f;
     [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
     [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
     [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
@@ -177,11 +182,7 @@ public class LastAttackUIManager : MonoBehaviour
         {
             winObject.SetActive(true);
             winRectTransform = winObject.GetComponent<RectTransform>();
-
-            if (winRectTransform != null)
-            {
-                winInitialAnchoredPosition = winRectTransform.anchoredPosition;
-            }
+            ConfigureWinDisplay();
         }
 
         StopWinSequence();
@@ -227,6 +228,36 @@ public class LastAttackUIManager : MonoBehaviour
         }
 
         winRectTransform.anchoredPosition = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
+    }
+
+    void ConfigureWinDisplay()
+    {
+        if (winRectTransform == null)
+        {
+            return;
+        }
+
+        Image winImage = winObject != null ? winObject.GetComponent<Image>() : null;
+
+        if (winImage != null)
+        {
+            winImage.preserveAspect = true;
+            winImage.raycastTarget = false;
+        }
+
+        winRectTransform.localScale = Vector3.one;
+        winRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        winRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        winRectTransform.pivot = new Vector2(0.5f, 0.5f);
+        winRectTransform.anchoredPosition = winDisplayPosition;
+
+        if (winImage != null && winImage.sprite != null)
+        {
+            winImage.SetNativeSize();
+        }
+
+        winRectTransform.localScale = Vector3.one * winDisplayScale;
+        winInitialAnchoredPosition = winDisplayPosition;
     }
 
     void ShowSelectionButtons()
