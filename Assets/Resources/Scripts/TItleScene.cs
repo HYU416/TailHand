@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
@@ -29,6 +30,8 @@ public class TItleScene : MonoBehaviour
 
     private int currentIndex = 0;
     private float nextMoveTime = 0f;
+    private Dictionary<RectTransform, Vector2> defaultPositions =
+    new Dictionary<RectTransform, Vector2>();
 
     [Header("カメラワークの設定")]
     [SerializeField] private Transform player;
@@ -73,7 +76,7 @@ public class TItleScene : MonoBehaviour
     void Start()
     {
         //NavigationPanel.SetActive(false);
-        stageSelectPanel.transform.position = new Vector3(uiAnimationEndPos, stageSelectPanel.transform.position.y, transform.position.z);
+       // stageSelectPanel.transform.position = new Vector3(uiAnimationEndPos, stageSelectPanel.transform.position.y, transform.position.z);
         animator.Play("Run");
         // カメラのポジション
         Vector3 center = player.position + Vector3.up * 1.5f;
@@ -81,6 +84,23 @@ public class TItleScene : MonoBehaviour
         // UIのデフォルトポジション
         defoultShowPos = TitlePanel.transform.position.x;
         defaultTitleNamePos = titleAnimationTargets[0].transform.position.x;
+
+        Canvas.ForceUpdateCanvases();
+        GridLayoutGroup grid = stageSelectPanel.GetComponent<GridLayoutGroup>();
+        if (grid != null) grid.enabled = false;
+        foreach (Transform target in stageSelectAnimationTargets)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect == null) continue;
+
+            Vector2 showPos = rect.anchoredPosition;
+            defaultPositions[rect] = showPos;
+
+            Vector2 hidePos = showPos;
+            hidePos.x += uiHideOffsetX;
+
+            rect.anchoredPosition = hidePos;
+        }
         // フェード
         Color c = whiteFadeImage.color;
         c.a = 0f;
@@ -89,7 +109,7 @@ public class TItleScene : MonoBehaviour
         var intro = MySoundManeger.Play(gameObject, BGMList.BGM_TITLE);
         var loop = MySoundManeger.Play(gameObject, BGMList.BGM_TITLE_LOOP);
         loop.Stop();
-        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);     
     }
 
     // Update is called once per frame
@@ -249,50 +269,66 @@ public class TItleScene : MonoBehaviour
     }
 
     // UIアニメーション
-    IEnumerator UIAnimation(Transform[] parent,bool isShow,float delay = 0.1f)
+    IEnumerator UIAnimation(Transform[] parent, bool isShow, float delay = 0.1f)
     {
-        for(int i = 0;i < parent.Length;i++)
+        GridLayoutGroup grid = stageSelectPanel.GetComponent<GridLayoutGroup>();
+
+        if (grid != null)
+        {
+           // grid.enabled = false;
+        }
+
+        for (int i = 0; i < parent.Length; i++)
         {
             StartCoroutine(MoveUI(parent[i], isShow));
-
             yield return new WaitForSeconds(delay);
         }
 
         yield return new WaitForSeconds(uiAnimationDuration);
+
+        if (grid != null && isShow)
+        {
+           // grid.enabled = true;
+        }
     }
 
-    IEnumerator MoveUI(Transform target,bool isShow) 
+    [SerializeField] private float uiHideOffsetX = -1200f;
+
+    IEnumerator MoveUI(Transform target, bool isShow)
     {
+        RectTransform rect = target as RectTransform;
+        if (rect == null) yield break;
+
         float timer = 0f;
-        Vector3 startPos = target.position;
-        Vector3 endPos = startPos;
 
-        if(isShow)
+        Vector2 showPos = rect.anchoredPosition;
+
+        // 初回だけ元の位置を保存したい場合は本当はDictionary推奨
+        if (!defaultPositions.ContainsKey(rect))
         {
-            endPos.x = defoultShowPos;
-            if (target == titleAnimationTargets[0])
-            {
-                endPos.x = defaultTitleNamePos;
-            }
-        }
-        else
-        {
-            endPos.x = uiAnimationEndPos;
+            defaultPositions[rect] = rect.anchoredPosition;
         }
 
-        while(timer < uiAnimationDuration)
+        showPos = defaultPositions[rect];
+
+        Vector2 hidePos = showPos;
+        hidePos.x += uiHideOffsetX;
+
+        Vector2 startPos = rect.anchoredPosition;
+        Vector2 endPos = isShow ? showPos : hidePos;
+
+        while (timer < uiAnimationDuration)
         {
             timer += Time.deltaTime;
 
-            float t  =Mathf.SmoothStep(0,1,timer / uiAnimationDuration);
-            target.position = Vector3.Lerp(startPos,endPos,t);
+            float t = Mathf.SmoothStep(0f, 1f, timer / uiAnimationDuration);
+            rect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
 
             yield return null;
         }
 
-        target.position = endPos;
+        rect.anchoredPosition = endPos;
     }
-
     IEnumerator WhiteOut()
     {
         float timer = 0f;
