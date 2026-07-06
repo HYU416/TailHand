@@ -4,10 +4,35 @@ using UnityEngine.InputSystem;
 
 public class PlayerCatchEnemy : MonoBehaviour
 {
+    [Header("掴む基準位置")]
     public Transform tailEnd;
+
+    [Header("掴んだ時の基本位置補正")]
+    [Tooltip("tailEndから見たローカル位置です。手の中に収まる位置に調整してください")]
+    [SerializeField] private Vector3 defaultCatchLocalPositionOffset = new Vector3(0.15f, 0.0f, 0.0f);
+
+    [Header("掴んだ時の基本回転補正")]
+    [Tooltip("tailEndから見たローカル回転です")]
+    [SerializeField] private Vector3 defaultCatchLocalRotationOffset = Vector3.zero;
+
+    [Header("掴んでいる間の当たり判定")]
+    [Tooltip("ON推奨。掴んでいる間、掴んだ物のColliderをOFFにして暴れを防ぎます")]
+    [SerializeField] private bool disableCollidersWhileCaught = true;
+
+    [Header("掴んでいる間に位置を強制固定")]
+    [Tooltip("ON推奨。別スクリプトや物理で動いても毎フレーム手元に戻します")]
+    [SerializeField] private bool forceHoldPositionEveryFrame = true;
 
     [Header("投げる強さ")]
     [SerializeField] private float normalThrowMultiplier = 1.0f;
+
+    [Header("速度が小さすぎる時の最低投げ速度")]
+    [Tooltip("しっぽの速度がほぼ0でも、離した時に少しは前へ飛ばすための最低速度です")]
+    [SerializeField] private float minimumThrowSpeed = 2.0f;
+
+    [Header("最低投げ速度を使う判定")]
+    [Tooltip("tailVelocityがこの値未満ならminimumThrowSpeedを使います")]
+    [SerializeField] private float minimumThrowThreshold = 0.2f;
 
     [Header("不発弾を投げる時の設定")]
     [SerializeField] private float dudBombMassWhileCaught = 0.1f;
@@ -22,15 +47,25 @@ public class PlayerCatchEnemy : MonoBehaviour
     private Vector3 prevTailPos;
     private Vector3 tailVelocity;
 
+    private Rigidbody caughtRigidbody;
     private Rigidbody massChangedRb;
+
     private float originalMass;
+    private bool originalUseGravity;
+
     private bool caughtTargetIsDudBomb;
 
     private DudBomb caughtDudBomb;
     private Missile caughtMissile;
 
-    private bool bCaught = false;
     private GameObject catchingObject = null;
+
+    private Vector3 caughtWorldScale;
+    private Vector3 currentCatchLocalPositionOffset;
+    private Vector3 currentCatchLocalRotationOffset;
+
+    private Collider[] caughtColliders;
+    private bool[] caughtColliderEnabledStates;
 
     private void Start()
     {
@@ -53,6 +88,21 @@ public class PlayerCatchEnemy : MonoBehaviour
         }
 
         prevTailPos = tailEnd.position;
+    }
+
+    private void LateUpdate()
+    {
+        if (!forceHoldPositionEveryFrame)
+        {
+            return;
+        }
+
+        if (caughtTarget == null)
+        {
+            return;
+        }
+
+        ForceCaughtTargetToHoldPosition();
     }
 
     public void OnCatch(InputValue value)
@@ -94,78 +144,46 @@ public class PlayerCatchEnemy : MonoBehaviour
             caughtMissile.OnCaughtByPlayer();
         }
 
-        Rigidbody rb = FindRigidbody(touchingTarget);
+        caughtRigidbody = FindRigidbody(touchingTarget);
 
-        if (rb != null)
+        if (caughtRigidbody != null)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            originalUseGravity = caughtRigidbody.useGravity;
+
+            caughtRigidbody.linearVelocity = Vector3.zero;
+            caughtRigidbody.angularVelocity = Vector3.zero;
 
             if (caughtTargetIsDudBomb)
             {
-                massChangedRb = rb;
-                originalMass = rb.mass;
-                rb.mass = dudBombMassWhileCaught;
+                massChangedRb = caughtRigidbody;
+                originalMass = caughtRigidbody.mass;
+                caughtRigidbody.mass = dudBombMassWhileCaught;
             }
 
-            rb.useGravity = false;
-            rb.isKinematic = true;
+            caughtRigidbody.useGravity = false;
+            caughtRigidbody.isKinematic = true;
         }
 
-        //Collider[] cols = touchingTarget.GetComponentsInChildren<Collider>();
+        caughtWorldScale = touchingTarget.lossyScale;
 
-        //foreach (Collider col in cols)
-        //{
-        //    col.enabled = false;
-        //}
+        currentCatchLocalPositionOffset = defaultCatchLocalPositionOffset;
+        currentCatchLocalRotationOffset = defaultCatchLocalRotationOffset;
 
-        Vector3 originalScale = touchingTarget.localScale;
-
-        touchingTarget.SetParent(tailEnd, false);
-
-        if (caughtMissile != null)
-        {
-            touchingTarget.localPosition = caughtMissile.CatchLocalPositionOffset;
-            touchingTarget.localRotation = Quaternion.Euler(caughtMissile.CatchLocalRotationOffset);
-        }
-        else
-        {
-            BossHeadCatchable bossHeadCatchable = touchingTarget.GetComponent<BossHeadCatchable>();
-
-            if (bossHeadCatchable == null)
-            {
-                bossHeadCatchable = touchingTarget.GetComponentInParent<BossHeadCatchable>();
-            }
-
-            if (bossHeadCatchable == null)
-            {
-                bossHeadCatchable = touchingTarget.GetComponentInChildren<BossHeadCatchable>();
-            }
-
-            if (bossHeadCatchable != null)
-            {
-                touchingTarget.localPosition = bossHeadCatchable.CatchLocalPositionOffset;
-                touchingTarget.localRotation = Quaternion.Euler(bossHeadCatchable.CatchLocalRotationOffset);
-            }
-            else
-            {
-                touchingTarget.localPosition = Vector3.zero;
-                touchingTarget.localRotation = Quaternion.identity;
-            }
-        }
-
-        Vector3 parentScale = tailEnd.lossyScale;
-
-        touchingTarget.localScale = new Vector3(
-            parentScale.x != 0 ? originalScale.x / parentScale.x : originalScale.x,
-            parentScale.y != 0 ? originalScale.y / parentScale.y : originalScale.y,
-            parentScale.z != 0 ? originalScale.z / parentScale.z : originalScale.z
-        );
+        ApplySpecialCatchOffset(touchingTarget);
 
         caughtTarget = touchingTarget;
         catchingObject = caughtTarget.gameObject;
         touchingTarget = null;
-        bCaught = true;
+
+        CacheAndDisableCaughtColliders(caughtTarget);
+
+        caughtTarget.SetParent(tailEnd, false);
+        caughtTarget.localPosition = currentCatchLocalPositionOffset;
+        caughtTarget.localRotation = Quaternion.Euler(currentCatchLocalRotationOffset);
+        SetWorldScale(caughtTarget, caughtWorldScale);
+
+        ForceCaughtTargetToHoldPosition();
+
         Debug.Log("キャッチ！");
 
         if (EffectManager.IsInitialized)
@@ -176,6 +194,69 @@ public class PlayerCatchEnemy : MonoBehaviour
         MySoundManeger.Play(gameObject, SEList.SE_CATCH);
     }
 
+    private void ApplySpecialCatchOffset(Transform target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (caughtMissile != null)
+        {
+            currentCatchLocalPositionOffset = caughtMissile.CatchLocalPositionOffset;
+            currentCatchLocalRotationOffset = caughtMissile.CatchLocalRotationOffset;
+            return;
+        }
+
+        BossHeadCatchable bossHeadCatchable = target.GetComponent<BossHeadCatchable>();
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = target.GetComponentInParent<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable == null)
+        {
+            bossHeadCatchable = target.GetComponentInChildren<BossHeadCatchable>();
+        }
+
+        if (bossHeadCatchable != null)
+        {
+            currentCatchLocalPositionOffset = bossHeadCatchable.CatchLocalPositionOffset;
+            currentCatchLocalRotationOffset = bossHeadCatchable.CatchLocalRotationOffset;
+        }
+    }
+
+    private void ForceCaughtTargetToHoldPosition()
+    {
+        if (caughtTarget == null)
+        {
+            return;
+        }
+
+        if (tailEnd == null)
+        {
+            return;
+        }
+
+        if (caughtTarget.parent != tailEnd)
+        {
+            caughtTarget.SetParent(tailEnd, false);
+        }
+
+        caughtTarget.localPosition = currentCatchLocalPositionOffset;
+        caughtTarget.localRotation = Quaternion.Euler(currentCatchLocalRotationOffset);
+        SetWorldScale(caughtTarget, caughtWorldScale);
+
+        if (caughtRigidbody != null)
+        {
+            caughtRigidbody.linearVelocity = Vector3.zero;
+            caughtRigidbody.angularVelocity = Vector3.zero;
+            caughtRigidbody.useGravity = false;
+            caughtRigidbody.isKinematic = true;
+        }
+    }
+
     private void ReleaseTarget()
     {
         if (caughtTarget == null)
@@ -184,16 +265,11 @@ public class PlayerCatchEnemy : MonoBehaviour
         }
 
         Transform releasedTarget = caughtTarget;
-        Rigidbody rb = FindRigidbody(releasedTarget);
+        Rigidbody rb = caughtRigidbody;
 
-        releasedTarget.SetParent(null);
+        RestoreCaughtColliders();
 
-        Collider[] cols = releasedTarget.GetComponentsInChildren<Collider>();
-
-        foreach (Collider col in cols)
-        {
-            col.enabled = true;
-        }
+        releasedTarget.SetParent(null, true);
 
         if (caughtTargetIsDudBomb)
         {
@@ -249,7 +325,8 @@ public class PlayerCatchEnemy : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = false;
-            rb.useGravity = false;
+            rb.useGravity = originalUseGravity;
+
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
 
@@ -257,31 +334,111 @@ public class PlayerCatchEnemy : MonoBehaviour
                 ? dudBombThrowMultiplier
                 : normalThrowMultiplier;
 
-            float speed = tailVelocity.magnitude;
+            Vector3 throwVelocity = tailVelocity;
 
-            float extraMultiplier = baseMultiplier - 1f;
-
-            float compressedExtra =
-                extraMultiplier / (1f + speed * 0.05f);
-
-            float finalMultiplier = 1f + compressedExtra;
-
-            rb.linearVelocity = tailVelocity * finalMultiplier;
-
-            if (caughtTargetIsDudBomb && massChangedRb == rb)
+            if (throwVelocity.magnitude < minimumThrowThreshold)
             {
-                StartCoroutine(RestoreMassAfterDelay(rb, originalMass, dudBombMassRestoreTime));
+                throwVelocity = GetFallbackThrowDirection() * minimumThrowSpeed;
             }
+
+            float speed = throwVelocity.magnitude;
+            float extraMultiplier = baseMultiplier - 1.0f;
+            float compressedExtra = extraMultiplier / (1.0f + speed * 0.05f);
+            float finalMultiplier = 1.0f + compressedExtra;
+
+            rb.linearVelocity = throwVelocity * finalMultiplier;
+        }
+
+        if (caughtTargetIsDudBomb && massChangedRb != null)
+        {
+            StartCoroutine(RestoreMassAfterDelay(massChangedRb, originalMass, dudBombMassRestoreTime));
         }
 
         Debug.Log("投げた！");
 
         caughtTarget = null;
+        caughtRigidbody = null;
         caughtTargetIsDudBomb = false;
         caughtDudBomb = null;
         caughtMissile = null;
         massChangedRb = null;
         catchingObject = null;
+
+        caughtColliders = null;
+        caughtColliderEnabledStates = null;
+    }
+
+    private Vector3 GetFallbackThrowDirection()
+    {
+        if (tailEnd == null)
+        {
+            return transform.forward;
+        }
+
+        Vector3 direction = tailEnd.forward;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+        {
+            direction = transform.forward;
+        }
+
+        direction.Normalize();
+        return direction;
+    }
+
+    private void CacheAndDisableCaughtColliders(Transform target)
+    {
+        caughtColliders = null;
+        caughtColliderEnabledStates = null;
+
+        if (!disableCollidersWhileCaught)
+        {
+            return;
+        }
+
+        if (target == null)
+        {
+            return;
+        }
+
+        caughtColliders = target.GetComponentsInChildren<Collider>(true);
+        caughtColliderEnabledStates = new bool[caughtColliders.Length];
+
+        for (int i = 0; i < caughtColliders.Length; i++)
+        {
+            if (caughtColliders[i] == null)
+            {
+                continue;
+            }
+
+            caughtColliderEnabledStates[i] = caughtColliders[i].enabled;
+            caughtColliders[i].enabled = false;
+        }
+    }
+
+    private void RestoreCaughtColliders()
+    {
+        if (caughtColliders == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < caughtColliders.Length; i++)
+        {
+            if (caughtColliders[i] == null)
+            {
+                continue;
+            }
+
+            if (caughtColliderEnabledStates != null && i < caughtColliderEnabledStates.Length)
+            {
+                caughtColliders[i].enabled = caughtColliderEnabledStates[i];
+            }
+            else
+            {
+                caughtColliders[i].enabled = true;
+            }
+        }
     }
 
     private Rigidbody FindRigidbody(Transform target)
@@ -348,6 +505,30 @@ public class PlayerCatchEnemy : MonoBehaviour
         }
 
         return missile;
+    }
+
+    private void SetWorldScale(Transform target, Vector3 worldScale)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        Transform parent = target.parent;
+
+        if (parent == null)
+        {
+            target.localScale = worldScale;
+            return;
+        }
+
+        Vector3 parentScale = parent.lossyScale;
+
+        target.localScale = new Vector3(
+            parentScale.x != 0.0f ? worldScale.x / parentScale.x : worldScale.x,
+            parentScale.y != 0.0f ? worldScale.y / parentScale.y : worldScale.y,
+            parentScale.z != 0.0f ? worldScale.z / parentScale.z : worldScale.z
+        );
     }
 
     private IEnumerator RestoreMassAfterDelay(Rigidbody rb, float mass, float delay)

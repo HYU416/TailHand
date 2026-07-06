@@ -66,11 +66,32 @@ public class Missile : MonoBehaviour
     [Tooltip("生成されてから何秒後に爆発するかです")]
     public float explosionTime = 5f;
 
-    [Tooltip("ONにすると、何かにぶつかった時に爆発します")]
+    [Tooltip("ONにすると、時間経過で爆発します")]
+    public bool useTimeExplosion = true;
+
+    [Tooltip("この秒数が経過するまでは、何に当たっても爆発しません")]
+    public float minimumExplosionDelay = 5f;
+
+    [Tooltip("ONにすると、Minimum Explosion Delay 経過時にその場で爆発します")]
+    public bool explodeWhenMinimumDelayPassed = true;
+
+    [Tooltip("ONにすると、何かにぶつかった時に爆発判定を行います")]
     public bool explodeOnHit = true;
 
-    [Tooltip("ONにすると、プレイヤーにぶつかった時だけ爆発します")]
-    public bool explodeOnlyPlayerHit = false;
+    [Tooltip("ONにすると、プレイヤーに当たった時も爆発対象にします")]
+    public bool explodeOnPlayerHit = false;
+
+    [Tooltip("ONにすると、Groundタグに当たった時に爆発対象にします")]
+    public bool explodeOnGroundHit = true;
+
+    [Tooltip("ONにすると、ItemBoxタグに当たった時に爆発対象にします")]
+    public bool explodeOnItemBoxHit = true;
+
+    [Tooltip("床タグです")]
+    public string groundTag = "Ground";
+
+    [Tooltip("アイテムボックス、岩などのタグです")]
+    public string itemBoxTag = "ItemBox";
 
     [Tooltip("爆発の範囲です")]
     public float explosionRadius = 3f;
@@ -95,6 +116,9 @@ public class Missile : MonoBehaviour
     [Tooltip("ONにすると、Sceneビューで爆発範囲を表示します")]
     public bool showExplosionRadius = true;
 
+    [Tooltip("ONにすると、何に当たったかログを出します")]
+    public bool showHitDebugLog = false;
+
     private Rigidbody rb;
     private bool exploded;
     private float timer;
@@ -105,8 +129,12 @@ public class Missile : MonoBehaviour
 
     private bool originalHoming;
     private bool originalExplodeOnHit;
-    private bool originalExplodeOnlyPlayerHit;
+    private bool originalExplodeOnPlayerHit;
+    private bool originalExplodeOnGroundHit;
+    private bool originalExplodeOnItemBoxHit;
     private bool originalUseGravity;
+    private bool originalUseTimeExplosion;
+    private float originalSpeed;
     private Transform originalTarget;
 
     public Vector3 CatchLocalPositionOffset
@@ -170,11 +198,7 @@ public class Missile : MonoBehaviour
             }
         }
 
-        originalHoming = homing;
-        originalExplodeOnHit = explodeOnHit;
-        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
-        originalUseGravity = useGravity;
-        originalTarget = target;
+        StoreOriginalSettings();
     }
 
     private void Update()
@@ -193,7 +217,8 @@ public class Missile : MonoBehaviour
         {
             thrownTimer += Time.deltaTime;
 
-            if (thrownTimer >= explosionTimeAfterPlayerThrow)
+            if (explosionTimeAfterPlayerThrow > 0.0f &&
+                thrownTimer >= explosionTimeAfterPlayerThrow)
             {
                 ExplodeWithoutPlayerDamage();
             }
@@ -203,7 +228,19 @@ public class Missile : MonoBehaviour
 
         timer += Time.deltaTime;
 
-        if (timer >= explosionTime)
+        if (useTimeExplosion &&
+            explodeWhenMinimumDelayPassed &&
+            minimumExplosionDelay > 0.0f &&
+            timer >= minimumExplosionDelay)
+        {
+            Explode();
+            return;
+        }
+
+        if (useTimeExplosion &&
+            !explodeWhenMinimumDelayPassed &&
+            explosionTime > 0.0f &&
+            timer >= explosionTime)
         {
             Explode();
             return;
@@ -305,48 +342,25 @@ public class Missile : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (exploded)
-        {
-            return;
-        }
-
-        if (isCaughtByPlayer)
-        {
-            return;
-        }
-
         if (collision == null || collision.gameObject == null)
         {
             return;
         }
 
-        if (IsTailCatchObject(collision.gameObject))
-        {
-            return;
-        }
-
-        if (isThrownByPlayer)
-        {
-            return;
-        }
-
-        if (!explodeOnHit)
-        {
-            return;
-        }
-
-        if (explodeOnlyPlayerHit)
-        {
-            if (!IsPlayerObject(collision.gameObject))
-            {
-                return;
-            }
-        }
-
-        Explode();
+        HandleHit(collision.gameObject);
     }
 
     private void OnTriggerEnter(Collider other)
+    {
+        if (other == null)
+        {
+            return;
+        }
+
+        HandleHit(other.gameObject);
+    }
+
+    private void HandleHit(GameObject hitObject)
     {
         if (exploded)
         {
@@ -358,13 +372,18 @@ public class Missile : MonoBehaviour
             return;
         }
 
-        if (other == null)
+        if (hitObject == null)
         {
             return;
         }
 
-        if (IsTailCatchCollider(other))
+        if (IsTailCatchObject(hitObject))
         {
+            if (showHitDebugLog)
+            {
+                Debug.Log("Missile: 尻尾判定に当たったので無視します / " + hitObject.name, hitObject);
+            }
+
             return;
         }
 
@@ -378,15 +397,87 @@ public class Missile : MonoBehaviour
             return;
         }
 
-        if (explodeOnlyPlayerHit)
+        if (timer < minimumExplosionDelay)
         {
-            if (!IsPlayerObject(other.gameObject))
+            if (showHitDebugLog)
             {
-                return;
+                Debug.Log(
+                    "Missile: まだ5秒経っていないので爆発しません / Hit = " +
+                    hitObject.name +
+                    " / Timer = " +
+                    timer.ToString("F2"),
+                    hitObject
+                );
             }
+
+            return;
+        }
+
+        bool shouldExplode = IsExplosionTarget(hitObject);
+
+        if (!shouldExplode)
+        {
+            if (showHitDebugLog)
+            {
+                Debug.Log("Missile: 爆発対象ではないので無視します / " + hitObject.name, hitObject);
+            }
+
+            return;
         }
 
         Explode();
+    }
+
+    private bool IsExplosionTarget(GameObject hitObject)
+    {
+        if (hitObject == null)
+        {
+            return false;
+        }
+
+        if (explodeOnPlayerHit && IsPlayerObject(hitObject))
+        {
+            return true;
+        }
+
+        if (explodeOnGroundHit && HasTagInParent(hitObject, groundTag))
+        {
+            return true;
+        }
+
+        if (explodeOnItemBoxHit && HasTagInParent(hitObject, itemBoxTag))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool HasTagInParent(GameObject hitObject, string tagName)
+    {
+        if (hitObject == null)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(tagName))
+        {
+            return false;
+        }
+
+        Transform current = hitObject.transform;
+
+        while (current != null)
+        {
+            if (current.CompareTag(tagName))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
     }
 
     public void OnCaughtByPlayer()
@@ -400,17 +491,13 @@ public class Missile : MonoBehaviour
         isThrownByPlayer = false;
         thrownTimer = 0f;
 
-        originalHoming = homing;
-        originalExplodeOnHit = explodeOnHit;
-        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
-        originalUseGravity = useGravity;
-        originalTarget = target;
+        StoreOriginalSettings();
 
         homing = false;
         target = null;
         speed = 0f;
         explodeOnHit = false;
-        explodeOnlyPlayerHit = false;
+        useTimeExplosion = false;
 
         if (rb != null)
         {
@@ -437,11 +524,12 @@ public class Missile : MonoBehaviour
         homing = false;
         target = null;
         explodeOnHit = false;
-        explodeOnlyPlayerHit = false;
+        useTimeExplosion = false;
 
         if (rb != null)
         {
             rb.useGravity = originalUseGravity;
+            rb.isKinematic = false;
         }
 
         Debug.Log("Missile: 投げられたので、3秒後に自爆する投擲物扱いにしました");
@@ -691,9 +779,15 @@ public class Missile : MonoBehaviour
         missileScale = newScale;
         speed = newSpeed;
         rotateSpeed = newRotateSpeed;
+
         explosionTime = newExplosionTime;
+        minimumExplosionDelay = newExplosionTime;
+
         explodeOnHit = newExplodeOnHit;
-        explodeOnlyPlayerHit = newExplodeOnlyPlayerHit;
+        explodeOnPlayerHit = newExplodeOnlyPlayerHit;
+        explodeOnGroundHit = true;
+        explodeOnItemBoxHit = true;
+
         explosionRadius = newExplosionRadius;
         damage = newDamage;
 
@@ -703,16 +797,18 @@ public class Missile : MonoBehaviour
 
         transform.localScale = Vector3.one * missileScale;
 
+        timer = 0f;
+        exploded = false;
+
         if (rb != null)
         {
             rb.useGravity = useGravity;
+            rb.isKinematic = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
 
-        originalHoming = homing;
-        originalExplodeOnHit = explodeOnHit;
-        originalExplodeOnlyPlayerHit = explodeOnlyPlayerHit;
-        originalUseGravity = useGravity;
-        originalTarget = target;
+        StoreOriginalSettings();
 
         if (target != null)
         {
@@ -724,6 +820,19 @@ public class Missile : MonoBehaviour
                 RotateNoseToDirection(targetDirection, true);
             }
         }
+    }
+
+    private void StoreOriginalSettings()
+    {
+        originalHoming = homing;
+        originalExplodeOnHit = explodeOnHit;
+        originalExplodeOnPlayerHit = explodeOnPlayerHit;
+        originalExplodeOnGroundHit = explodeOnGroundHit;
+        originalExplodeOnItemBoxHit = explodeOnItemBoxHit;
+        originalUseGravity = useGravity;
+        originalUseTimeExplosion = useTimeExplosion;
+        originalSpeed = speed;
+        originalTarget = target;
     }
 
     private void OnDrawGizmosSelected()
