@@ -247,7 +247,7 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
     [Header("攻撃開始までの待ち時間")]
     [SerializeField]
-    private float startDelay = 10.0f;
+    private float startDelay = 0.0f;
 
     [Header("スピン攻撃")]
     [SerializeField]
@@ -323,11 +323,11 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
         SetAllLaserDeviceUsageEnabled();
     }
-
     public void StartBattle()
     {
         if (isMainAttackRunning)
             return;
+        Debug.Log("あかかかかかかかかあかあっかあっかか");
 
         StartCoroutine(MainAttackLoop());
     }
@@ -341,10 +341,10 @@ public partial class BossPhaseAttackController : MonoBehaviour
             SetAllLaserDevicesImmediate(false);
         }
 
-        if (playOnStart)
-        {
-            StartBattle();
-        }
+        //if (playOnStart)
+        //{
+        //    StartCoroutine(MainAttackLoop());
+        //}
     }
 
     private void Update()
@@ -374,6 +374,8 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
     private IEnumerator MainAttackLoop()
     {
+        //競合回避のためむりやりここで秒数変更してます(せいら
+        startDelay = 2.0f;
         yield return new WaitForSeconds(startDelay);
 
         isMainAttackRunning = true;
