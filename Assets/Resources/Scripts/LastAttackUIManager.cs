@@ -45,6 +45,10 @@ public class LastAttackUIManager : MonoBehaviour
     [Header("WIN 表示後")]
     [SerializeField, Min(0f)] private float delayBeforeShowSelection = 2f;
     [SerializeField] private float winMoveUpOffset = 120f;
+    [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
+    [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
+    [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
+    [SerializeField] private Vector2 quitMenuPosition = new Vector2(0f, -164f);
     [SerializeField] private string nextSceneName = "BossStage_Big_G";
     [SerializeField] private string quitSceneName = "TitleScene";
 
@@ -65,6 +69,7 @@ public class LastAttackUIManager : MonoBehaviour
         ResolveChildReferences();
         LoadDefaultSprites();
         ApplyInitialSpriteSettings();
+        PrepareMenuImageLayouts();
         HideSelectionButtons();
         gameObject.SetActive(false);
     }
@@ -221,11 +226,13 @@ public class LastAttackUIManager : MonoBehaviour
         if (nextGameImage != null)
         {
             nextGameImage.gameObject.SetActive(true);
+            ConfigureMenuImageLayout(nextGameImage, nextMenuPosition);
         }
 
         if (quitGameImage != null)
         {
             quitGameImage.gameObject.SetActive(true);
+            ConfigureMenuImageLayout(quitGameImage, quitMenuPosition);
         }
     }
 
@@ -277,8 +284,60 @@ public class LastAttackUIManager : MonoBehaviour
 
     void UpdateSelectionVisuals()
     {
-        SetSprite(nextGameImage, currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite);
-        SetSprite(quitGameImage, currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite);
+        UpdateMenuButtonSprite(
+            nextGameImage,
+            nextMenuPosition,
+            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite
+        );
+        UpdateMenuButtonSprite(
+            quitGameImage,
+            quitMenuPosition,
+            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite
+        );
+    }
+
+    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite)
+    {
+        if (image == null || sprite == null)
+        {
+            return;
+        }
+
+        image.sprite = sprite;
+        ConfigureMenuImageLayout(image, anchoredPosition);
+    }
+
+    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+
+        RectTransform rect = image.rectTransform;
+        rect.localScale = Vector3.one;
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = anchoredPosition;
+
+        if (image.sprite == null)
+        {
+            return;
+        }
+
+        image.SetNativeSize();
+
+        if (rect.sizeDelta.x <= 0.01f || menuButtonTargetWidth <= 0f)
+        {
+            return;
+        }
+
+        float uniformScale = menuButtonTargetWidth / rect.sizeDelta.x;
+        rect.localScale = Vector3.one * uniformScale;
     }
 
     void ConfirmSelection()
@@ -333,11 +392,11 @@ public class LastAttackUIManager : MonoBehaviour
             {
                 winObject = child.gameObject;
             }
-            else if (nextGameImage == null && name.Contains("next"))
+            else if (nextGameImage == null && name == "nextgame")
             {
                 nextGameImage = child.GetComponent<Image>();
             }
-            else if (quitGameImage == null && name.Contains("quit"))
+            else if (quitGameImage == null && name == "quitgame")
             {
                 quitGameImage = child.GetComponent<Image>();
             }
@@ -350,6 +409,19 @@ public class LastAttackUIManager : MonoBehaviour
         ConfigurePromptImage(buttonImage);
         ConfigurePromptImage(nextGameImage);
         ConfigurePromptImage(quitGameImage);
+    }
+
+    void PrepareMenuImageLayouts()
+    {
+        if (nextGameImage != null)
+        {
+            ConfigureMenuImageLayout(nextGameImage, nextMenuPosition);
+        }
+
+        if (quitGameImage != null)
+        {
+            ConfigureMenuImageLayout(quitGameImage, quitMenuPosition);
+        }
     }
 
     static void ConfigurePromptImage(Image image)
