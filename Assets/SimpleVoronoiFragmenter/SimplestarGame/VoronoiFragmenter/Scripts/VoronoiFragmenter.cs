@@ -481,8 +481,9 @@ namespace SimplestarGame
                     mesh.RecalculateBounds();
                     mesh.RecalculateNormals();
                     mesh.RecalculateTangents();
-
+ 
                     var fragment = Instantiate(this.fragmentPrefab);
+                    SetLayerRecursively(fragment.gameObject, LayerMask.NameToLayer("BreakObject_Fragment"));
                     fragment.name = this.name + "_fragment" + zIdx + ((1 == extraIdx) ? "extra" : "");
                     fragment.transform.SetParent(this.transform, false);
                     fragment.transform.localPosition = v3Center;
@@ -552,6 +553,20 @@ namespace SimplestarGame
                     childTransform.SetParent(null, true);
                     
                 }
+            }
+        }
+
+        /// <summary>
+        /// 指定したオブジェクトとその子オブジェクトのレイヤーを再帰的に設定する
+        /// </summary>
+        /// <param name="obj">対象のオブジェクト</param>
+        /// <param name="layer">設定するレイヤー</param>
+        private void SetLayerRecursively(GameObject obj, int layer)
+        {
+            obj.layer = layer;
+            foreach (Transform child in obj.transform)
+            {
+                SetLayerRecursively(child.gameObject, layer);
             }
         }
 

@@ -44,7 +44,16 @@ public class LastAttackUIManager : MonoBehaviour
 
     [Header("WIN 表示後")]
     [SerializeField, Min(0f)] private float delayBeforeShowSelection = 2f;
-    [SerializeField] private float winMoveUpOffset = 120f;
+    [Tooltip("WIN 表示位置（UImanager 基準）")]
+    [SerializeField] private Vector2 winDisplayPosition = new Vector2(0f, -60f);
+    [Tooltip("WIN の表示倍率（均一スケール）")]
+    [SerializeField, Min(0.1f)] private float winDisplayScale = 1.45f;
+    [Tooltip("選択 UI 表示前に WIN を上へ移動する量")]
+    [SerializeField] private float winMoveUpOffset = 50f;
+    [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
+    [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
+    [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
+    [SerializeField] private Vector2 quitMenuPosition = new Vector2(0f, -164f);
     [SerializeField] private string nextSceneName = "BossStage_Big_G";
     [SerializeField] private string quitSceneName = "TitleScene";
 
@@ -59,12 +68,14 @@ public class LastAttackUIManager : MonoBehaviour
     bool hasLoadedScene;
     bool useGamepadPrompt;
     WinMenuChoice currentChoice = WinMenuChoice.Next;
+    float lastSelectionMoveY;
 
     void Awake()
     {
         ResolveChildReferences();
         LoadDefaultSprites();
         ApplyInitialSpriteSettings();
+        PrepareMenuImageLayouts();
         HideSelectionButtons();
         gameObject.SetActive(false);
     }
@@ -153,6 +164,9 @@ public class LastAttackUIManager : MonoBehaviour
     /// <summary>ボスの頭が爆発したとき WIN を表示し、選択 UI へ進みます。</summary>
     public void ShowWin()
     {
+        ResolveChildReferences();
+        ReloadMenuSprites();
+
         isMashPromptVisible = false;
         isSelectionActive = false;
         hasLoadedScene = false;
@@ -160,15 +174,15 @@ public class LastAttackUIManager : MonoBehaviour
         HideMashPrompt();
         HideSelectionButtons();
 
+        ResolvePlayerInput();
+        BindInputActions();
+        lastSelectionMoveY = 0f;
+
         if (winObject != null)
         {
             winObject.SetActive(true);
             winRectTransform = winObject.GetComponent<RectTransform>();
-
-            if (winRectTransform != null)
-            {
-                winInitialAnchoredPosition = winRectTransform.anchoredPosition;
-            }
+            ConfigureWinDisplay();
         }
 
         StopWinSequence();
@@ -216,16 +230,48 @@ public class LastAttackUIManager : MonoBehaviour
         winRectTransform.anchoredPosition = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
     }
 
+    void ConfigureWinDisplay()
+    {
+        if (winRectTransform == null)
+        {
+            return;
+        }
+
+        Image winImage = winObject != null ? winObject.GetComponent<Image>() : null;
+
+        if (winImage != null)
+        {
+            winImage.preserveAspect = true;
+            winImage.raycastTarget = false;
+        }
+
+        winRectTransform.localScale = Vector3.one;
+        winRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        winRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        winRectTransform.pivot = new Vector2(0.5f, 0.5f);
+        winRectTransform.anchoredPosition = winDisplayPosition;
+
+        if (winImage != null && winImage.sprite != null)
+        {
+            winImage.SetNativeSize();
+        }
+
+        winRectTransform.localScale = Vector3.one * winDisplayScale;
+        winInitialAnchoredPosition = winDisplayPosition;
+    }
+
     void ShowSelectionButtons()
     {
         if (nextGameImage != null)
         {
             nextGameImage.gameObject.SetActive(true);
+            ConfigureMenuImageLayout(nextGameImage, nextMenuPosition);
         }
 
         if (quitGameImage != null)
         {
             quitGameImage.gameObject.SetActive(true);
+            ConfigureMenuImageLayout(quitGameImage, quitMenuPosition);
         }
     }
 
@@ -244,24 +290,79 @@ public class LastAttackUIManager : MonoBehaviour
 
     void UpdateSelectionInput()
     {
-        if (moveAction != null)
+        if (!TryMoveSelectionFromKeyboard())
         {
-            Vector2 move = moveAction.ReadValue<Vector2>();
-
-            if (move.y >= selectionStickDeadZone)
-            {
-                SetChoice(WinMenuChoice.Next);
-            }
-            else if (move.y <= -selectionStickDeadZone)
-            {
-                SetChoice(WinMenuChoice.Quit);
-            }
+            TryMoveSelectionFromGamepad();
         }
 
         if (catchAction != null && catchAction.WasPressedThisFrame())
         {
             ConfirmSelection();
         }
+    }
+
+    bool TryMoveSelectionFromKeyboard()
+    {
+        if (Keyboard.current == null)
+        {
+            return false;
+        }
+
+        if (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.upArrowKey.wasPressedThisFrame)
+        {
+            SetChoice(WinMenuChoice.Next);
+            return true;
+        }
+
+        if (Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame)
+        {
+            SetChoice(WinMenuChoice.Quit);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryMoveSelectionFromGamepad()
+    {
+        if (Gamepad.current != null)
+        {
+            if (Gamepad.current.dpad.up.wasPressedThisFrame
+                || Gamepad.current.leftStick.up.wasPressedThisFrame)
+            {
+                SetChoice(WinMenuChoice.Next);
+                return true;
+            }
+
+            if (Gamepad.current.dpad.down.wasPressedThisFrame
+                || Gamepad.current.leftStick.down.wasPressedThisFrame)
+            {
+                SetChoice(WinMenuChoice.Quit);
+                return true;
+            }
+        }
+
+        if (moveAction == null)
+        {
+            return false;
+        }
+
+        float moveY = moveAction.ReadValue<Vector2>().y;
+        bool moved = false;
+
+        if (moveY >= selectionStickDeadZone && lastSelectionMoveY < selectionStickDeadZone)
+        {
+            SetChoice(WinMenuChoice.Next);
+            moved = true;
+        }
+        else if (moveY <= -selectionStickDeadZone && lastSelectionMoveY > -selectionStickDeadZone)
+        {
+            SetChoice(WinMenuChoice.Quit);
+            moved = true;
+        }
+
+        lastSelectionMoveY = moveY;
+        return moved;
     }
 
     void SetChoice(WinMenuChoice choice)
@@ -277,8 +378,60 @@ public class LastAttackUIManager : MonoBehaviour
 
     void UpdateSelectionVisuals()
     {
-        SetSprite(nextGameImage, currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite);
-        SetSprite(quitGameImage, currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite);
+        UpdateMenuButtonSprite(
+            nextGameImage,
+            nextMenuPosition,
+            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite
+        );
+        UpdateMenuButtonSprite(
+            quitGameImage,
+            quitMenuPosition,
+            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite
+        );
+    }
+
+    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite)
+    {
+        if (image == null || sprite == null)
+        {
+            return;
+        }
+
+        image.sprite = sprite;
+        ConfigureMenuImageLayout(image, anchoredPosition);
+    }
+
+    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+
+        RectTransform rect = image.rectTransform;
+        rect.localScale = Vector3.one;
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = anchoredPosition;
+
+        if (image.sprite == null)
+        {
+            return;
+        }
+
+        image.SetNativeSize();
+
+        if (rect.sizeDelta.x <= 0.01f || menuButtonTargetWidth <= 0f)
+        {
+            return;
+        }
+
+        float uniformScale = menuButtonTargetWidth / rect.sizeDelta.x;
+        rect.localScale = Vector3.one * uniformScale;
     }
 
     void ConfirmSelection()
@@ -333,14 +486,24 @@ public class LastAttackUIManager : MonoBehaviour
             {
                 winObject = child.gameObject;
             }
-            else if (nextGameImage == null && name.Contains("next"))
-            {
-                nextGameImage = child.GetComponent<Image>();
-            }
-            else if (quitGameImage == null && name.Contains("quit"))
-            {
-                quitGameImage = child.GetComponent<Image>();
-            }
+        }
+
+        ResolveMenuImages();
+    }
+
+    void ResolveMenuImages()
+    {
+        Transform nextTransform = transform.Find("NEXTGAME");
+        Transform quitTransform = transform.Find("QUITGAME");
+
+        if (nextTransform != null)
+        {
+            nextGameImage = nextTransform.GetComponent<Image>();
+        }
+
+        if (quitTransform != null)
+        {
+            quitGameImage = quitTransform.GetComponent<Image>();
         }
     }
 
@@ -350,6 +513,19 @@ public class LastAttackUIManager : MonoBehaviour
         ConfigurePromptImage(buttonImage);
         ConfigurePromptImage(nextGameImage);
         ConfigurePromptImage(quitGameImage);
+    }
+
+    void PrepareMenuImageLayouts()
+    {
+        if (nextGameImage != null)
+        {
+            ConfigureMenuImageLayout(nextGameImage, nextMenuPosition);
+        }
+
+        if (quitGameImage != null)
+        {
+            ConfigureMenuImageLayout(quitGameImage, quitMenuPosition);
+        }
     }
 
     static void ConfigurePromptImage(Image image)
@@ -474,10 +650,15 @@ public class LastAttackUIManager : MonoBehaviour
         keyPressedSprite ??= LoadSprite("Last_attack_key_2");
         buttonReleasedSprite ??= LoadSprite("Last_attack_bottun_1");
         buttonPressedSprite ??= LoadSprite("Last_attack_bottun_2");
-        nextSelectedSprite ??= LoadSprite("NEXTGAME_選択時");
-        nextUnselectedSprite ??= LoadSprite("NEXTGAME_非選択時");
-        quitSelectedSprite ??= LoadSprite("QUITGAME_選択時");
-        quitUnselectedSprite ??= LoadSprite("QUITGAME_非選択時");
+        ReloadMenuSprites();
+    }
+
+    void ReloadMenuSprites()
+    {
+        nextSelectedSprite = LoadSprite("NEXTGAME_選択時");
+        nextUnselectedSprite = LoadSprite("NEXTGAME_非選択時");
+        quitSelectedSprite = LoadSprite("QUITGAME_選択時");
+        quitUnselectedSprite = LoadSprite("QUITGAME_非選択時");
     }
 
     static Sprite LoadSprite(string assetName)

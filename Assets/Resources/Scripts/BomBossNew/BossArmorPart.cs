@@ -531,6 +531,18 @@ public class BossArmorPart : MonoBehaviour
 
     private void SetVisible(bool visible)
     {
+        if (!visible)
+        {
+            BreakObject[] script = GetComponentsInChildren<BreakObject>(true);
+            foreach (BreakObject cs in script)
+            {
+                if (cs != null)
+                {
+                    cs.OnBreak();
+                }
+            }
+        }
+
         if (renderers == null)
         {
             renderers = GetComponentsInChildren<Renderer>(true);
