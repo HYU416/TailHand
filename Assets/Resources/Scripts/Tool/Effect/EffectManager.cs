@@ -13,6 +13,8 @@ public class EffectManager : MonoBehaviour
         /// インスタンスが存在しない場合は新規作成
         get
         {
+            if (isQuitting)
+                return null;
             if (instance == null)
             {
                 CreateManager();
@@ -22,6 +24,8 @@ public class EffectManager : MonoBehaviour
     }
     /// エフェクトマネージャーが初期化済みかどうかを示すプロパティ
     public static bool IsInitialized => isInitialized;
+
+    private static bool isQuitting;
 
     /// エフェクトデータベースへの参照
     [SerializeField]
@@ -43,6 +47,11 @@ public class EffectManager : MonoBehaviour
         GameObject obj = new GameObject("EffectManager");
         instance = obj.AddComponent<EffectManager>();
         DontDestroyOnLoad(obj);
+    }
+
+    private void OnApplicationQuit()
+    {
+        isQuitting = true;
     }
 
     private void Awake()
@@ -171,16 +180,24 @@ public class EffectManager : MonoBehaviour
     // 指定したエフェクトタイプのエフェクトプレイヤーをプールから取得するか、新規に作成して返す
     private EffectPlayer GetEffect(EffectType type )
     {
+
         //プールに指定したタイプのエフェクトプレイヤーが存在しない場合は、新しいキューを作成
         if (!pool.ContainsKey(type))
         {
             pool.Add( type,new Queue<EffectPlayer>());
         }
         //プールから指定したタイプのエフェクトプレイヤーを取得
-        if (pool[type].Count > 0)
+        while (pool[type].Count > 0)
         {
             EffectPlayer poolPlayer = pool[type].Dequeue();
+
+            if (poolPlayer == null)
+            {
+                continue;
+            }
+
             poolPlayer.SetEffectType(type);
+
             if (dataTable.ContainsKey(type))
             {
                 poolPlayer.SetPlaySpeed(dataTable[type].playSpeed);

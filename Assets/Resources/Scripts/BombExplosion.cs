@@ -289,13 +289,20 @@ public class BombExplosion : MonoBehaviour
 
     private void SpawnExplosionEffect()
     {
-        if (explosionEffectPrefab != null)
+
+        EffectManager manager = EffectManager.Instance;
+
+        if (manager == null)
         {
-            EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
+            Debug.LogWarning("EffectManager Ç™Ç†ÇËÇ‹ÇπÇÒ");
             return;
         }
 
-        Debug.LogWarning("Explosion Effect Prefab Ç™ê›íËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ");
+        GameObject effect = EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
+        if (effect == null)
+        {
+            Debug.LogWarning("Explosion2 ÇÃê∂ê¨Ç…é∏îsÇµÇ‹ÇµÇΩ");
+        }
     }
 
     private void CheckExplosionHit()
@@ -321,11 +328,13 @@ public class BombExplosion : MonoBehaviour
     private void OnDisable()
     {
         ResetBlinkColor();
-        if (EffectManager.IsInitialized)
+        if (damageZoneEffect != null)
         {
-            if (damageZoneEffect != null)
+            EffectManager manager = EffectManager.Instance;
+
+            if (manager != null)
             {
-                EffectManager.Instance.Release(EffectType.DamageZone, damageZoneEffect);
+                manager.Release(EffectType.DamageZone, damageZoneEffect);
             }
         }
     }
