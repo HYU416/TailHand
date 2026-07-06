@@ -40,9 +40,9 @@ TagManager:
   - EnemyCore
   - FallingEnemy
   - FieldBack
-  - 
-  - 
-  - 
+  - Boss
+  - BreakObject_Fragment
+  - Field
   - 
   - 
   - 

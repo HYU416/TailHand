@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.DualShock;
-using UnityEngine.InputSystem.OSX;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.XInput;
 
