@@ -47,7 +47,8 @@ public class GameClear : MonoBehaviour
             //countdownText.text = "0";
 
             Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            SceneManager.LoadScene("TitleScene");
         }
     }
 

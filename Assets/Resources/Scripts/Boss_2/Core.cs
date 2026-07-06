@@ -14,6 +14,8 @@ public class Core : MonoBehaviour
     [SerializeField] private CoreBarrierManager barrierManager;
     [SerializeField] private Big_G big_g;
 
+    [SerializeField] GameClear gameClear;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -60,6 +62,7 @@ public class Core : MonoBehaviour
             {
                 Debug.Log("Phase3_コア破壊");
                 status.bAlive = false;
+                gameClear.StartWin();
                 return;
             }
             // コアが破壊されたのでフェーズを上げる

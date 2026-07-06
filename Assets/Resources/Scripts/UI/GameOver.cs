@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class GameOver : MonoBehaviour
 {
+    [SerializeField] int StageNumber = 1;
     [SerializeField] private Image fadeOutPanel;
     [SerializeField] private GameObject losePanel;
     [SerializeField] private GameObject buttonPanel;
@@ -82,7 +83,8 @@ public class GameOver : MonoBehaviour
             {
                 if (currentIndex == 0)
                 {
-                    sceneLoader.LoadScene("GameScene");
+                    if (StageNumber == 1) sceneLoader.LoadScene("GameScene");
+                    if (StageNumber == 2) sceneLoader.LoadScene("BossStage_Big_G");
                 }
                 if (currentIndex == 1)
                 {
