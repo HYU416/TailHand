@@ -374,6 +374,8 @@ public partial class BossPhaseAttackController : MonoBehaviour
 
     private IEnumerator MainAttackLoop()
     {
+        //‹£‡‰ñ”ğ‚Ì‚½‚ß‚Ş‚è‚â‚è‚±‚±‚Å•b”•ÏX‚µ‚Ä‚Ü‚·(‚¹‚¢‚ç
+        startDelay = 2.0f;
         yield return new WaitForSeconds(startDelay);
 
         isMainAttackRunning = true;
