@@ -595,7 +595,7 @@ public class Missile : MonoBehaviour
 
     private void PlayBossHitEffect()
     {
-        if (EffectManager.Instance == null)
+        if (!EffectManager.IsInitialized)
         {
             Debug.LogWarning("EffectManager.Instanceが見つからないため、ミサイル命中Hit2を再生できません");
             return;
@@ -606,7 +606,7 @@ public class Missile : MonoBehaviour
 
     private void SpawnExplosionEffect()
     {
-        if (EffectManager.Instance == null)
+        if (!EffectManager.IsInitialized)
         {
             Debug.LogWarning("EffectManager.Instanceが見つからないため、ミサイル爆発エフェクトを再生できません");
             return;

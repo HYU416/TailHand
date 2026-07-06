@@ -115,7 +115,7 @@ public class ItemBossHitEffect : MonoBehaviour
 
         hasPlayedHitEffect = true;
 
-        if (EffectManager.Instance == null)
+        if (!EffectManager.IsInitialized)
         {
             Debug.LogWarning(
                 "EffectManager.Instance‚ªŒ©‚Â‚©‚ç‚È‚¢‚½‚ßA" +

@@ -291,15 +291,7 @@ public class BombExplosion : MonoBehaviour
     {
         if (explosionEffectPrefab != null)
         {
-            if (transform.localScale.x == 2.0f)
-            {
-                EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
-            }
-            else
-            {
-                EffectManager.Instance.Play(EffectType.Explosion, transform.position);
-            }
-
+            EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
             return;
         }
 

@@ -339,7 +339,7 @@ public class DudBomb : MonoBehaviour
         Vector3 effectPosition
     )
     {
-        if (EffectManager.Instance == null)
+        if (!EffectManager.IsInitialized)
         {
             Debug.LogWarning(
                 "EffectManager.Instance‚ªŒ©‚Â‚©‚ç‚È‚¢‚½‚ßA" +

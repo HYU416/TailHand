@@ -222,7 +222,7 @@ public class BulletHellBullet : MonoBehaviour
 
     private void PlayHitEffect()
     {
-        if (EffectManager.Instance == null)
+        if (!EffectManager.IsInitialized)
         {
             return;
         }

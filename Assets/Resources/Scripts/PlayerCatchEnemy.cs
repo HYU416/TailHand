@@ -168,7 +168,7 @@ public class PlayerCatchEnemy : MonoBehaviour
         bCaught = true;
         Debug.Log("キャッチ！");
 
-        if (EffectManager.Instance != null)
+        if (EffectManager.IsInitialized)
         {
             EffectManager.Instance.Play(EffectType.Chatch, tailEnd.position);
         }
