@@ -28,6 +28,6 @@ public class StormMove : MonoBehaviour
        // velocity.y += gravity * Time.fixedDeltaTime;
         velocity.z = direction.z * force.z;
         rb.linearVelocity = velocity;
-        Debug.Log("StormMove FixedUpdate: " + rb.linearVelocity);
+        //Debug.Log("StormMove FixedUpdate: " + rb.linearVelocity);
     }
 }

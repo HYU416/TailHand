@@ -97,12 +97,12 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        //if (!cameraFollow.Gamestart)
-        //{
-        //    rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
-        //    rb.angularVelocity = Vector3.zero;
-        //    return;
-        //}
+        if (!cameraFollow.Gamestart)
+        {
+            rb.linearVelocity = Vector3.zero;   // Unity6なら linearVelocity
+            rb.angularVelocity = Vector3.zero;
+            return;
+        }
 
         rb.angularVelocity = Vector3.zero;
 

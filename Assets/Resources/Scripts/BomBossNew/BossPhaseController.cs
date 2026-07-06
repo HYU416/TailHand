@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BossPhaseController : MonoBehaviour
 {
+
     [Header("現在の段階")]
     [SerializeField] private int currentPhase = 1;
 
