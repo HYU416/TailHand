@@ -42,7 +42,7 @@ public class PlayerCatchEnemy : MonoBehaviour
     [HideInInspector]
     public Transform touchingTarget;
 
-    private Transform caughtTarget;
+    public Transform caughtTarget;
 
     private Vector3 prevTailPos;
     private Vector3 tailVelocity;
@@ -544,5 +544,10 @@ public class PlayerCatchEnemy : MonoBehaviour
     public GameObject CatchingObjectPtr()
     {
         return catchingObject;
+    }
+
+    public bool IsHolding
+    {
+        get { return caughtTarget != null; }
     }
 }
