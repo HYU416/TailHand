@@ -45,6 +45,14 @@ public class DudBomb : MonoBehaviour
     [SerializeField]
     private bool useTaggedParentObject = true;
 
+    [Header("Trigger Colliderではボス命中扱いにしない")]
+    [Tooltip(
+        "ONの場合、ExplosionEffect以外のTriggerでは爆発せず、" +
+        "そのまま通過します"
+    )]
+    [SerializeField]
+    private bool ignoreTriggerForBossHit = true;
+
     private bool hasExploded = false;
     private bool wasThrownByPlayer = false;
     private DudBombState dudBombState;
@@ -89,6 +97,15 @@ public class DudBomb : MonoBehaviour
             return;
         }
 
+        if (other == null)
+        {
+            return;
+        }
+
+        /*
+         * 爆発エフェクトのTriggerだけは、
+         * 今までどおり不発弾を誘爆させる。
+         */
         if (enableChainExplosion &&
             IsSameTag(other.gameObject, explosionEffectTag))
         {
@@ -100,7 +117,16 @@ public class DudBomb : MonoBehaviour
             return;
         }
 
-        CheckBossHit(other.gameObject);
+        /*
+         * ボスの砲台先端や演出範囲など、
+         * Trigger Colliderはボス命中として扱わない。
+         */
+        if (ignoreTriggerForBossHit && other.isTrigger)
+        {
+            return;
+        }
+
+        CheckBossHit(other);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -110,7 +136,19 @@ public class DudBomb : MonoBehaviour
             return;
         }
 
-        CheckBossHit(collision.gameObject);
+        if (collision == null)
+        {
+            return;
+        }
+
+        Collider hitCollider = collision.collider;
+
+        if (hitCollider == null)
+        {
+            return;
+        }
+
+        CheckBossHit(hitCollider);
     }
 
     public void ArmByPlayerThrow()
@@ -124,7 +162,8 @@ public class DudBomb : MonoBehaviour
 
         Debug.Log(
             "不発弾がプレイヤー投げ状態になりました: " +
-            gameObject.name
+            gameObject.name,
+            this
         );
     }
 
@@ -139,7 +178,8 @@ public class DudBomb : MonoBehaviour
 
         Debug.Log(
             "不発弾のプレイヤー投げ状態を解除しました: " +
-            gameObject.name
+            gameObject.name,
+            this
         );
     }
 
@@ -155,7 +195,8 @@ public class DudBomb : MonoBehaviour
             Debug.Log(
                 "不発弾はボスに当たりましたが、" +
                 "プレイヤーが投げた物ではないため無視しました: " +
-                gameObject.name
+                gameObject.name,
+                this
             );
 
             return;
@@ -167,15 +208,20 @@ public class DudBomb : MonoBehaviour
         );
     }
 
-    private void CheckBossHit(GameObject hitObject)
+    private void CheckBossHit(Collider hitCollider)
     {
-        if (hitObject == null)
+        if (hitCollider == null)
+        {
+            return;
+        }
+
+        if (ignoreTriggerForBossHit && hitCollider.isTrigger)
         {
             return;
         }
 
         GameObject bossTarget =
-            FindBossTargetObject(hitObject);
+            FindBossTargetObject(hitCollider.gameObject);
 
         if (bossTarget == null)
         {
@@ -189,7 +235,8 @@ public class DudBomb : MonoBehaviour
                 Debug.Log(
                     "未投げの不発弾がボス壁またはコアに当たりましたが、" +
                     "無視しました: " +
-                    gameObject.name
+                    gameObject.name,
+                    this
                 );
 
                 return;
@@ -198,27 +245,21 @@ public class DudBomb : MonoBehaviour
 
         Vector3 hitEffectPosition = transform.position;
 
-        Collider targetCollider =
-            bossTarget.GetComponent<Collider>();
-
-        if (targetCollider == null)
-        {
-            targetCollider =
-                bossTarget.GetComponentInChildren<Collider>();
-        }
-
-        if (targetCollider != null)
-        {
-            hitEffectPosition =
-                targetCollider.ClosestPoint(transform.position);
-        }
+        /*
+         * 実際に接触したColliderを使う。
+         * 親から適当なColliderを探すより、
+         * 命中地点が正確になる。
+         */
+        hitEffectPosition =
+            hitCollider.ClosestPoint(transform.position);
 
         if (destroyBossTargetOnHit)
         {
             Debug.Log(
                 "プレイヤーが投げた不発弾が当たったため、" +
                 "ボス壁またはコアを消します: " +
-                bossTarget.name
+                bossTarget.name,
+                this
             );
 
             Destroy(bossTarget);
@@ -294,7 +335,7 @@ public class DudBomb : MonoBehaviour
             return false;
         }
 
-        return target.tag == tagName;
+        return target.CompareTag(tagName);
     }
 
     private void Explode(
@@ -322,7 +363,10 @@ public class DudBomb : MonoBehaviour
 
         hasExploded = true;
 
-        Debug.Log(logMessage);
+        Debug.Log(
+            logMessage,
+            this
+        );
 
         SpawnEffect(
             effectType,
@@ -343,7 +387,8 @@ public class DudBomb : MonoBehaviour
         {
             Debug.LogWarning(
                 "EffectManager.Instanceが見つからないため、" +
-                "エフェクトを再生できません"
+                "エフェクトを再生できません",
+                this
             );
 
             return;
@@ -364,10 +409,16 @@ public class DudBomb : MonoBehaviour
 
         foreach (Collider hit in hits)
         {
+            if (hit == null)
+            {
+                continue;
+            }
+
             if (hit.CompareTag("Player"))
             {
                 Debug.Log(
-                    "プレイヤーが不発弾の爆発に当たりました"
+                    "プレイヤーが不発弾の爆発に当たりました",
+                    this
                 );
 
                 // PlayerHealth playerHealth =
