@@ -3,6 +3,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -185,6 +186,25 @@ public class GameOver : MonoBehaviour
 
         Time.timeScale = 1f;
         animator.Play("Take 001", 0, 0f);
+
+        string sceneName = SceneManager.GetActiveScene().name;
+        //シーンによってBGMを変える
+        if (sceneName == "GameScene")
+        {
+            GameObject mainCamera  = Camera.main.gameObject;
+            MySoundManeger.Stop(mainCamera, BGMList.BGM_GAME);
+        }
+        else if(sceneName == "BossStage_Big_G")
+        {
+            GameObject mainCamera  = Camera.main.gameObject;
+            MySoundManeger.Stop(mainCamera, BGMList.BGM_GAME);
+        }
+        //ゲームオーバーのジングルとBGMを再生
+        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAMEOVER_JINGLE);
+        //intro.time += 70.0f;
+        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAMEOVER);
+        loop.Stop();
+        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
         //SceneManager.LoadScene("LoseScene");
     }
 

@@ -80,7 +80,7 @@ public class Player : MonoBehaviour
         if (cameraTransform == null){
             cameraTransform = Camera.main.transform;
         }
-        speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle);
+        if(speedMeterAllow != null) speedMeterAllow.transform.localRotation = Quaternion.Euler(0f, 0f, minAngle);
     }
 
     // Input System の Move イベント
@@ -200,6 +200,10 @@ public class Player : MonoBehaviour
                     transform.forward *
                     Mathf.Max(0f, hit.distance - skin)
                 );
+            }
+            else
+            {
+                rb.MovePosition(rb.position + move);
             }
         }
         else
@@ -326,4 +330,6 @@ public class Player : MonoBehaviour
                 invincibilityDuration = invincibilityTime;
             }
     }
+
+    
 }

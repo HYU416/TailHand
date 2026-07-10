@@ -282,6 +282,44 @@ public static class MySoundManeger
         }
     }
 
+    //“Á’è‚ÌBGM‚ğæ“¾
+    public static AudioSource GetBGM(GameObject obj, BGMList soundList)
+    {
+        if (!playingSources.TryGetValue(obj, out var sources))
+            return null;
+        SoundManeger.AudioListData data =
+            SM.bgmListData[(int)soundList];
+        foreach (var audio in sources)
+        {
+            if (audio?.Source != null &&
+                audio.IsBGM &&
+                audio.Source.clip == data.audioClip)
+            {
+                return audio.Source;
+            }
+        }
+        return null;
+    }
+
+    //“Á’è‚ÌSE‚ğæ“¾
+    public static AudioSource GetSE(GameObject obj, SEList soundList)
+    {
+        if (!playingSources.TryGetValue(obj, out var sources))
+            return null;
+        SoundManeger.AudioListData data =
+            SM.seListData[(int)soundList];
+        foreach (var audio in sources)
+        {
+            if (audio?.Source != null &&
+                !audio.IsBGM &&
+                audio.Source.clip == data.audioClip)
+            {
+                return audio.Source;
+            }
+        }
+        return null;
+    }
+
     //AudioSource‚Ìİ’è‚ğSoundManeger.AudioListData‚©‚çƒRƒs[
     private static void CopyAudioSourceSettings(AudioSource source, SoundManeger.AudioListData data)
     {
