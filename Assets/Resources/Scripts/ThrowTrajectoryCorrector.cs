@@ -598,4 +598,10 @@ public class ThrowTrajectoryCorrector : MonoBehaviour
     {
         moveSpeed = speed;
     }
+
+    public void SetupFalse()
+    {
+        findTargetIfUnset = false;
+        findByTag = false;
+    }
 }

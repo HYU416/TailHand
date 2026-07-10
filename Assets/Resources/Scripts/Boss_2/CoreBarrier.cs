@@ -23,17 +23,17 @@ public class CoreBarrier : MonoBehaviour
 
         if (col.gameObject.CompareTag("Projectile"))
         {
+            barrierManager.TakeDamage();
+
             EighthNoteController eighth = col.GetComponent<EighthNoteController>();
             if (eighth != null)
             {
-                barrierManager.TakeDamage();
-                    eighth.Hit();
+                eighth.Hit();
                 return;
             }
             DupletNoteController duplet = col.GetComponent<DupletNoteController>();
             if (duplet != null)
             {
-                barrierManager.TakeDamage();
                 duplet.Hit();
                 return;
             }

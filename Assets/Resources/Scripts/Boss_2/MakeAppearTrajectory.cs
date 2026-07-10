@@ -5,6 +5,7 @@ public class MakeAppearTrajectory : MonoBehaviour
     [SerializeField] GameObject[] trajectoryPrefab;
     [SerializeField] int minCount;
     [SerializeField] int maxCount;
+    [SerializeField] GameObject targetObject;
 
     public void MakeTrajectory(Vector3 pos)
     {
@@ -22,7 +23,11 @@ public class MakeAppearTrajectory : MonoBehaviour
             GameObject obj = Instantiate(trajectoryPrefab[appearKind], pos, new Quaternion(0.0f, 0.0f, 0.0f, 1.0f));
             // êÅÇ´îÚÇŒÇ∑
             obj.GetComponent<Rigidbody>().AddForce(randomDirection * 1.7f, ForceMode.Impulse);
-
+            var trajectory = obj.GetComponent<ThrowTrajectoryCorrector>();
+            if (targetObject == null || trajectory == null)
+                Destroy(obj);
+            trajectory.SetupFalse();
+            trajectory.SetThrowTarget(targetObject);
         }
     }
 }
