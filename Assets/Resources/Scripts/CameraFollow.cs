@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CameraFollow : MonoBehaviour
 {
@@ -57,6 +58,7 @@ public class CameraFollow : MonoBehaviour
     Vector3 frameFixedCameraPosition;
     float frameHeightOffset = 1.5f;
     bool frameSmooth = true;
+
 
     public bool FollowEnabled
     {
@@ -322,13 +324,32 @@ public class CameraFollow : MonoBehaviour
 
     private void Start()
     {
-
-        var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-        //intro.time += 70.0f;
-        var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
-        loop.Stop();
-        loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
-
+        string sceneName = SceneManager.GetActiveScene().name;
+        //シーンによってBGMを変える
+        if (sceneName == "GameScene")
+        {
+            var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+            //intro.time += 70.0f;
+            var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+            loop.Stop();
+            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        }
+        else if(sceneName == "BossStage_Big_G")
+        {
+            var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+            //intro.time += 70.0f;
+            var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+            loop.Stop();
+            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        }
+        else if(sceneName == "QTEScene")
+        {
+            var intro = MySoundManeger.Play(gameObject, BGMList.BGM_FINISHER);
+            //intro.time += 70.0f;
+            var loop = MySoundManeger.Play(gameObject, BGMList.BGM_FINISHER_LOOP);
+            loop.Stop();
+            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+        }
         if (StageNumber == 0)
         {
             return;
