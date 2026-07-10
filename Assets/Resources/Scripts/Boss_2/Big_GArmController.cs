@@ -23,7 +23,7 @@ public class Big_GArmController : MonoBehaviour
     void Start()
     {
         savedLocalPosition = this.transform.localPosition;
-        savedLocalRotation = this.parentTransform.localRotation;
+        savedLocalRotation = this.transform.localRotation;
         bReturned = true;
 
         if (playerCatchEnemy == null)

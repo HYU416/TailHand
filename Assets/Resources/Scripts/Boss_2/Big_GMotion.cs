@@ -6,14 +6,11 @@ public class Big_GMotion : MonoBehaviour
     [SerializeField] private Animator animator_L_Hand;
     [SerializeField] private Animator animator_R_Hand;
 
-    public void SwitchMotion(EBig_GAnimeState state, bool bBody = true, bool bL_Hand = true, bool bR_Hand = true)
+    public void SwitchMotion(EBig_GAnimeState state)
     {
-        if (bBody)
-            SwitchBodyMotion(state);
-        if (bL_Hand)
-            SwitchL_HandMotion(state);
-        if (bR_Hand)
-            SwitchR_HandMotion(state);
+        SwitchBodyMotion(state);
+        SwitchL_HandMotion(state);
+        SwitchR_HandMotion(state);
     }
 
     public void SwitchBodyMotion(EBig_GAnimeState state)

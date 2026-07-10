@@ -92,6 +92,7 @@ public class Big_GController : MonoBehaviour
     [SerializeField] private GameObject target;
     [SerializeField] private ObjectFlasher objectFlasher;
     [SerializeField] private GameObject centerOfStage;                  // ステージ中央を設定
+    [SerializeField] private MakeAppearTrajectory makeAppearTrajectory;
 
     // プレファブ
     [SerializeField] private GameObject shockWavePrefab;
@@ -530,6 +531,9 @@ public class Big_GController : MonoBehaviour
                         Instantiate(shockWavePrefab, instancePos, this.transform.rotation);
                         attackStatus.attackCounter++;
                         attackStatus.recoveryTimeDuration = shockWave.recoveryTime;
+
+                        Vector3 appearPoint = this.gameObject.transform.forward * 8.0f + this.gameObject.transform.position;
+                        makeAppearTrajectory.MakeTrajectory(appearPoint);
                     }
                     else
                         returnLayerTimeDuration = returnLayerTime;
