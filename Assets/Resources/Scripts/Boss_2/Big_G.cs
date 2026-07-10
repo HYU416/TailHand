@@ -90,11 +90,11 @@ public class Big_G : MonoBehaviour
         big_gMotion.SwitchMotion(EBig_GAnimeState.Idle);
     }
 
-    public void SwitchAnimation(EBig_GAnimeState state, bool bBody = true, bool bL_Hand = true, bool bR_Hand = true)
+    public void SwitchAnimation(EBig_GAnimeState state)
     {
         animeState = state;
         if (big_gMotion)
-            big_gMotion.SwitchMotion(animeState, bBody, bL_Hand, bR_Hand);
+            big_gMotion.SwitchMotion(animeState);
     }
 
     public int GetCurrentAnimation()
