@@ -6,8 +6,11 @@ using UnityEngine;
 /// </summary>
 public class BossFinalAttackSequence : MonoBehaviour
 {
-    [Header("監視")]
+    [Header("監視（どちらか一方を設定）")]
+    [Tooltip("GameScene の BomBoss 用")]
     [SerializeField] private BossPhaseController phaseController;
+    [Tooltip("BossStage_Big_G 用")]
+    [SerializeField] private Big_G bigG;
 
     [Header("参照")]
     [SerializeField] private GameObject bossHead;
@@ -41,11 +44,17 @@ public class BossFinalAttackSequence : MonoBehaviour
 
     [Header("頭の打ち上げ")]
     [SerializeField, Min(0f)] private float launchUpwardSpeed = 8.0f;
+    [Tooltip("Big_G 用。体全体を真上に持ち上げる高さ")]
+    [SerializeField, Min(0.1f)] private float bigGAscendHeight = 12f;
+    [Tooltip("Big_G 用。打ち上げにかける秒数")]
+    [SerializeField, Min(0.05f)] private float bigGAscendDuration = 1.2f;
 
     [Header("頭の回転（コインはじき）")]
     [SerializeField] private string faceCenterObjectName = "Boss_Head";
     [SerializeField] private float coinFlipDegrees = 360f;
     [SerializeField] private Vector3 coinFlipAxisLocal = Vector3.right;
+    [Tooltip("回転の中心をルートからどれだけ上にずらすか（ワールドY）")]
+    [SerializeField] private float coinFlipPivotHeight = 2f;
 
     [Header("落下")]
     [Tooltip("1より大きいほど早く落ちます")]
@@ -78,49 +87,80 @@ public class BossFinalAttackSequence : MonoBehaviour
 
     void Start()
     {
-        if (phaseController == null)
-        {
+        if (!HasPhaseSource())
             return;
-        }
 
-        lastObservedPhase = phaseController.CurrentPhase;
+        lastObservedPhase = GetCurrentPhaseNumber();
 
-        if (phaseController.CurrentPhase >= 4)
-        {
+        if (ShouldStartSequence())
             TryStartPhase4Sequence();
-        }
     }
 
     void Update()
     {
-        if (phaseController == null)
+        if (!HasPhaseSource() || phase4SequenceTriggered)
+            return;
+
+        if (phaseController != null)
         {
+            int phase = phaseController.CurrentPhase;
+
+            if (lastObservedPhase < 4 && phase >= 4)
+                TryStartPhase4Sequence();
+
+            lastObservedPhase = phase;
             return;
         }
 
-        int phase = phaseController.CurrentPhase;
-
-        if (lastObservedPhase < 4 && phase >= 4)
-        {
+        if (bigG != null && bigG.GetCurrentPhase() == EPhase.Phase4)
             TryStartPhase4Sequence();
-        }
+    }
 
-        lastObservedPhase = phase;
+    bool HasPhaseSource()
+    {
+        return phaseController != null || bigG != null;
+    }
+
+    int GetCurrentPhaseNumber()
+    {
+        if (bigG != null)
+            return (int)bigG.GetCurrentPhase() + 1;
+
+        if (phaseController != null)
+            return phaseController.CurrentPhase;
+
+        return 1;
+    }
+
+    bool ShouldStartSequence()
+    {
+        if (phaseController != null)
+            return phaseController.CurrentPhase >= 4;
+
+        if (bigG != null)
+            return bigG.GetCurrentPhase() == EPhase.Phase4;
+
+        return false;
     }
 
     void TryStartPhase4Sequence()
     {
-        if (phase4SequenceTriggered || isPlaying || phaseController == null)
-        {
+        if (phase4SequenceTriggered || isPlaying || !HasPhaseSource())
             return;
-        }
 
-        if (phaseController.CurrentPhase < 4)
-        {
+        if (phaseController != null && phaseController.CurrentPhase < 4)
             return;
-        }
+
+        if (bigG != null && bigG.GetCurrentPhase() != EPhase.Phase4)
+            return;
 
         phase4SequenceTriggered = true;
+
+        EnsureTimeRunning();
+
+        if (bigG != null)
+            bigG.enabled = false;
+
         DisableGameClearTriggers();
         StartCoroutine(PlaySequenceRoutine());
     }
@@ -148,6 +188,18 @@ public class BossFinalAttackSequence : MonoBehaviour
         Transform faceCenter = ResolveFaceCenter(head);
         Transform anchor = ResolveBossAnchor();
         CameraFollow follow = ResolveCameraFollow();
+
+        EnsureTimeRunning();
+
+        if (follow == null)
+        {
+            Debug.LogWarning(
+                "BossFinalAttackSequence: CameraFollow が見つかりません。"
+                + " Main Camera に CameraFollow を付けるか、Inspector で割り当ててください。"
+            );
+        }
+
+        PrepareLaunchTarget(headObject);
         Rigidbody headRb = headObject.GetComponent<Rigidbody>();
 
         if (headRb == null)
@@ -168,7 +220,13 @@ public class BossFinalAttackSequence : MonoBehaviour
 
         if (follow != null && faceCenter != null)
         {
+            follow.FollowEnabled = true;
+            follow.BeginBossCinematic(faceCenter);
             yield return PlayPhase4Intro(follow, head, faceCenter, anchor);
+        }
+        else if (follow == null)
+        {
+            Debug.LogWarning("BossFinalAttackSequence: カメラ演出をスキップしました（CameraFollow 未設定）");
         }
 
         EnsureTimeRunning();
@@ -187,14 +245,17 @@ public class BossFinalAttackSequence : MonoBehaviour
             yield return new WaitForSeconds(delayBeforeLaunch);
         }
 
-        SpawnHeadEffect(head);
+        SpawnHeadEffect(head, faceCenter);
 
         if (follow != null)
         {
             follow.LockBossHeadLookDirection();
         }
 
-        yield return AscendHeadWithRotation(headRb, faceCenter, head.rotation, launchUpwardSpeed);
+        if (bigG != null)
+            yield return AscendBigGVertically(headRb, head);
+        else
+            yield return AscendHeadWithRotation(headRb, faceCenter, head.rotation, launchUpwardSpeed);
 
         if (follow != null)
         {
@@ -202,26 +263,57 @@ public class BossFinalAttackSequence : MonoBehaviour
         }
 
         EnsureTimeRunning();
-        yield return WaitForHeadLand(headRb);
 
-        if (loadQTESceneAfterSequence)
+        if (bigG != null)
         {
-            StartCoroutine(GoToQTESceneRoutine(follow));
+            EnsureLaunchCollider(headObject);
+            EnableFallPhysics(headRb);
+
+            if (loadQTESceneAfterSequence)
+            {
+                yield return GoToQTESceneRoutine(follow, headRb);
+            }
+            else
+            {
+                yield return WaitForHeadLand(headRb);
+                EnsureHeadCatchable(headObject, true);
+                FinishSequence(follow);
+            }
         }
         else
         {
-            EnsureHeadCatchable(headObject, true);
-            FinishSequence(follow);
+            yield return WaitForHeadLand(headRb);
+
+            if (loadQTESceneAfterSequence)
+            {
+                yield return GoToQTESceneRoutine(follow);
+            }
+            else
+            {
+                EnsureHeadCatchable(headObject, true);
+                FinishSequence(follow);
+            }
         }
     }
 
-    IEnumerator GoToQTESceneRoutine(CameraFollow follow)
+    IEnumerator GoToQTESceneRoutine(CameraFollow follow, Rigidbody fallingBody = null)
     {
         EnsureTimeRunning();
 
         if (delayBeforeQTESceneLoad > 0f)
         {
-            yield return new WaitForSecondsRealtime(delayBeforeQTESceneLoad);
+            float timer = 0f;
+            float extraGravity = Mathf.Abs(Physics.gravity.y) * (fallGravityMultiplier - 1f);
+
+            while (timer < delayBeforeQTESceneLoad)
+            {
+                timer += Time.unscaledDeltaTime;
+
+                if (fallingBody != null && !fallingBody.isKinematic && extraGravity > 0f)
+                    fallingBody.AddForce(Vector3.down * fallingBody.mass * extraGravity, ForceMode.Force);
+
+                yield return null;
+            }
         }
 
         CleanupHeadEffect();
@@ -251,6 +343,9 @@ public class BossFinalAttackSequence : MonoBehaviour
         Transform faceCenter,
         Transform anchor)
     {
+        EnsureTimeRunning();
+        follow.FollowEnabled = true;
+
         Vector3 introPosition = GetIntroCameraPosition(head, faceCenter);
         Vector3 watchPosition = anchor != null
             ? GetWatchCameraPosition(anchor)
@@ -259,7 +354,7 @@ public class BossFinalAttackSequence : MonoBehaviour
         Vector3 startPosition = follow.transform.position;
         follow.BeginBossCinematic(faceCenter);
 
-        yield return LerpBossCamera(follow, startPosition, introPosition, introCameraMoveDuration, false);
+        yield return LerpBossCamera(follow, startPosition, introPosition, introCameraMoveDuration, true);
 
         Time.timeScale = 0f;
         SpawnIntroImpactEffect(faceCenter);
@@ -309,7 +404,7 @@ public class BossFinalAttackSequence : MonoBehaviour
                 holdPosition,
                 watchPosition,
                 introToWatchMoveDuration,
-                false
+                true
             );
         }
         else
@@ -419,12 +514,12 @@ public class BossFinalAttackSequence : MonoBehaviour
             ? exEffectPrefab
             : Resources.Load<GameObject>("prefabs/Effects/EX");
 
-        if (prefab == null || !TryGetEffectSpawnPose(out Vector3 position, out Quaternion rotation))
+        if (prefab == null || !TryGetEffectSpawnPose(out Vector3 position, out _))
         {
             return;
         }
 
-        spawnedIntroEffect = Instantiate(prefab, position, rotation);
+        spawnedIntroEffect = Instantiate(prefab, position, Quaternion.identity);
         ApplyEffectScale(spawnedIntroEffect, prefab.transform.localScale, introImpactEffectScale);
     }
 
@@ -440,32 +535,41 @@ public class BossFinalAttackSequence : MonoBehaviour
         }
 
         position = GetTransformBoundsCenter(spawnTarget);
-        rotation = spawnTarget.rotation;
+        rotation = Quaternion.identity;
         return true;
     }
 
     Transform ResolveEffectSpawnTransform()
     {
-        GameObject headObject = ResolveHeadObject();
+        Transform searchRoot = bigG != null
+            ? bigG.transform
+            : ResolveHeadObject()?.transform;
 
-        if (headObject == null || string.IsNullOrEmpty(effectSpawnObjectName))
-        {
+        if (searchRoot == null)
             return null;
-        }
 
-        foreach (Transform child in headObject.GetComponentsInChildren<Transform>(true))
+        string[] candidateNames = bigG != null
+            ? new[] { effectSpawnObjectName, "Boss_2_GP", "Boss_Head_GP" }
+            : new[] { effectSpawnObjectName, "Boss_Head_GP" };
+
+        foreach (string objectName in candidateNames)
         {
-            if (child.name == effectSpawnObjectName)
+            if (string.IsNullOrEmpty(objectName))
+                continue;
+
+            foreach (Transform child in searchRoot.GetComponentsInChildren<Transform>(true))
             {
-                return child;
+                if (child.name == objectName)
+                    return child;
             }
         }
 
         Debug.LogWarning(
-            $"BossFinalAttackSequence: '{effectSpawnObjectName}' が見つかりません。"
-            + " ボス頭の子オブジェクト名を確認してください。"
+            $"BossFinalAttackSequence: エフェクト出し位置 '{effectSpawnObjectName}' が見つかりません。"
+            + (bigG != null ? " Boss_2_GP を確認してください。" : " Boss_Head_GP を確認してください。")
         );
-        return null;
+
+        return ResolveFaceCenter(searchRoot);
     }
 
     static Vector3 GetTransformBoundsCenter(Transform target)
@@ -526,7 +630,107 @@ public class BossFinalAttackSequence : MonoBehaviour
         }
 
         SetSequenceObjectsActive(true);
+        if (bigG != null && !loadQTESceneAfterSequence)
+            bigG.enabled = true;
+
         isPlaying = false;
+    }
+
+    void PrepareLaunchTarget(GameObject launchObject)
+    {
+        if (launchObject == null)
+            return;
+
+        if (bigG == null)
+            return;
+
+        Big_GMotion motion = bigG.GetComponent<Big_GMotion>();
+        if (motion != null)
+            motion.enabled = false;
+
+        Big_GController controller = bigG.GetComponent<Big_GController>();
+        if (controller != null)
+            controller.enabled = false;
+
+        foreach (Animator animator in bigG.GetComponentsInChildren<Animator>(true))
+        {
+            if (animator != null)
+                animator.enabled = false;
+        }
+
+        Big_GArmController[] armControllers = bigG.GetComponentsInChildren<Big_GArmController>(true);
+        foreach (Big_GArmController armController in armControllers)
+        {
+            if (armController != null)
+                armController.enabled = false;
+        }
+
+        Rigidbody rb = launchObject.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = launchObject.AddComponent<Rigidbody>();
+
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+    }
+
+    static void EnableFallPhysics(Rigidbody rb)
+    {
+        if (rb == null)
+            return;
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        rb.detectCollisions = true;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.constraints = RigidbodyConstraints.None;
+    }
+
+    static void EnsureLaunchCollider(GameObject launchObject)
+    {
+        if (launchObject == null)
+            return;
+
+        if (HasSolidCollider(launchObject))
+            return;
+
+        Renderer[] renderers = launchObject.GetComponentsInChildren<Renderer>(true);
+
+        BoxCollider box = launchObject.AddComponent<BoxCollider>();
+
+        if (renderers.Length == 0)
+        {
+            box.center = Vector3.up * 2f;
+            box.size = new Vector3(4f, 6f, 4f);
+            return;
+        }
+
+        Bounds bounds = renderers[0].bounds;
+
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        Transform root = launchObject.transform;
+        Vector3 localScale = root.lossyScale;
+
+        box.center = root.InverseTransformPoint(bounds.center);
+        box.size = new Vector3(
+            bounds.size.x / Mathf.Max(Mathf.Abs(localScale.x), 0.001f),
+            bounds.size.y / Mathf.Max(Mathf.Abs(localScale.y), 0.001f),
+            bounds.size.z / Mathf.Max(Mathf.Abs(localScale.z), 0.001f));
+    }
+
+    static bool HasSolidCollider(GameObject launchObject)
+    {
+        Collider[] colliders = launchObject.GetComponentsInChildren<Collider>(true);
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider != null && !collider.isTrigger && collider.enabled)
+                return true;
+        }
+
+        return false;
     }
 
     void DisableGameClearTriggers()
@@ -572,6 +776,67 @@ public class BossFinalAttackSequence : MonoBehaviour
         }
 
         disabledRespawnColliders = null;
+    }
+
+    IEnumerator AscendBigGVertically(Rigidbody bodyRb, Transform bodyTransform)
+    {
+        if (bodyRb == null || bodyTransform == null)
+            yield break;
+
+        Vector3 startPosition = bodyRb.position;
+        Quaternion startRotation = bodyTransform.rotation;
+        Vector3 flipAxisWorld = startRotation * coinFlipAxisLocal.normalized;
+
+        if (flipAxisWorld.sqrMagnitude < 0.0001f)
+            flipAxisWorld = Vector3.right;
+
+        float duration = Mathf.Max(0.05f, bigGAscendDuration);
+        float height = Mathf.Max(0.1f, bigGAscendHeight);
+        float pivotHeight = Mathf.Max(0f, coinFlipPivotHeight);
+        Vector3 startPivot = startPosition + Vector3.up * pivotHeight;
+        Vector3 startOffsetFromPivot = startPosition - startPivot;
+        float timer = 0f;
+
+        bodyRb.isKinematic = true;
+        bodyRb.useGravity = false;
+        bodyRb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        Debug.Log(
+            $"BossFinalAttackSequence: Big_G 打ち上げ開始 pos={startPosition}, height={height}, "
+            + $"duration={duration}, pivotHeight={pivotHeight}"
+        );
+
+        while (timer < duration)
+        {
+            timer += Time.fixedDeltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+
+            Quaternion targetRotation = Quaternion.AngleAxis(coinFlipDegrees * t, flipAxisWorld) * startRotation;
+            Vector3 ascendedPivot = startPivot + Vector3.up * (height * t);
+            Vector3 targetPosition = ascendedPivot + targetRotation * Quaternion.Inverse(startRotation) * startOffsetFromPivot;
+
+            bodyRb.MovePosition(targetPosition);
+            bodyRb.MoveRotation(targetRotation);
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        Quaternion finalRotation = Quaternion.AngleAxis(coinFlipDegrees, flipAxisWorld) * startRotation;
+        Vector3 finalPivot = startPivot + Vector3.up * height;
+        Vector3 finalPosition = finalPivot + finalRotation * Quaternion.Inverse(startRotation) * startOffsetFromPivot;
+
+        bodyRb.MovePosition(finalPosition);
+        bodyRb.MoveRotation(finalRotation);
+
+        Debug.Log(
+            $"BossFinalAttackSequence: Big_G 打ち上げ完了 pos={bodyRb.position}, movedY={bodyRb.position.y - startPosition.y:F2}"
+        );
+
+        bodyRb.isKinematic = false;
+        bodyRb.useGravity = true;
+        bodyRb.linearVelocity = Vector3.zero;
+        bodyRb.angularVelocity = Vector3.zero;
+        bodyRb.constraints = RigidbodyConstraints.None;
     }
 
     IEnumerator AscendHeadWithRotation(
@@ -703,23 +968,32 @@ public class BossFinalAttackSequence : MonoBehaviour
     Transform ResolveFaceCenter(Transform head)
     {
         if (faceCenterOverride != null)
-        {
             return faceCenterOverride;
+
+        if (head == null)
+            return null;
+
+        if (bigG != null)
+        {
+            foreach (string objectName in new[] { "Bone_Boss_2_Head", "Boss_2_Head", "Boss_Head" })
+            {
+                foreach (Transform child in bigG.GetComponentsInChildren<Transform>(true))
+                {
+                    if (child.name == objectName)
+                        return child;
+                }
+            }
         }
 
-        if (head == null || string.IsNullOrEmpty(faceCenterObjectName))
-        {
+        if (string.IsNullOrEmpty(faceCenterObjectName))
             return head;
-        }
 
         Transform[] children = head.GetComponentsInChildren<Transform>(true);
 
         foreach (Transform child in children)
         {
             if (child.name == faceCenterObjectName)
-            {
                 return child;
-            }
         }
 
         return head;
@@ -728,9 +1002,10 @@ public class BossFinalAttackSequence : MonoBehaviour
     Transform ResolveBossAnchor()
     {
         if (bossAnchor != null)
-        {
             return bossAnchor;
-        }
+
+        if (bigG != null)
+            return bigG.transform;
 
         return phaseController != null ? phaseController.transform : null;
     }
@@ -738,9 +1013,10 @@ public class BossFinalAttackSequence : MonoBehaviour
     GameObject ResolveHeadObject()
     {
         if (bossHead != null)
-        {
             return bossHead;
-        }
+
+        if (bigG != null)
+            return bigG.gameObject;
 
         return phaseController != null ? GameObject.FindGameObjectWithTag("BossHead") : null;
     }
@@ -748,12 +1024,19 @@ public class BossFinalAttackSequence : MonoBehaviour
     CameraFollow ResolveCameraFollow()
     {
         if (cameraFollow != null)
-        {
             return cameraFollow;
-        }
 
         Camera mainCamera = Camera.main;
-        return mainCamera != null ? mainCamera.GetComponent<CameraFollow>() : null;
+
+        if (mainCamera != null)
+        {
+            CameraFollow follow = mainCamera.GetComponent<CameraFollow>();
+
+            if (follow != null)
+                return follow;
+        }
+
+        return FindFirstObjectByType<CameraFollow>();
     }
 
     static void EnsureHeadCatchable(GameObject headObject, bool canCatch)
@@ -768,19 +1051,21 @@ public class BossFinalAttackSequence : MonoBehaviour
         catchable.SetCanCatch(canCatch);
     }
 
-    void SpawnHeadEffect(Transform head)
+    void SpawnHeadEffect(Transform head, Transform faceCenter)
     {
         CleanupHeadEffect();
 
         if (tempEffectPrefab == null)
-        {
             return;
-        }
 
-        Transform anchor = effectAnchor != null ? effectAnchor : head;
-        spawnedEffect = Instantiate(tempEffectPrefab, anchor);
-        spawnedEffect.transform.localPosition = Vector3.zero;
-        spawnedEffect.transform.localRotation = Quaternion.identity;
+        Vector3 spawnPosition = head.position;
+
+        if (TryGetEffectSpawnPose(out Vector3 effectPosition, out _))
+            spawnPosition = effectPosition;
+        else if (faceCenter != null)
+            spawnPosition = faceCenter.position;
+
+        spawnedEffect = Instantiate(tempEffectPrefab, spawnPosition, Quaternion.identity);
         ApplyEffectScale(spawnedEffect, tempEffectPrefab.transform.localScale, launchEffectScale);
     }
 
@@ -798,14 +1083,24 @@ public class BossFinalAttackSequence : MonoBehaviour
     void SetSequenceObjectsActive(bool active)
     {
         if (attackController != null)
-        {
             attackController.enabled = active;
+
+        if (bigG != null)
+        {
+            Big_GController controller = bigG.GetComponent<Big_GController>();
+            if (controller != null)
+                controller.enabled = active;
+
+            Big_GArmController[] armControllers = bigG.GetComponentsInChildren<Big_GArmController>(true);
+            foreach (Big_GArmController armController in armControllers)
+            {
+                if (armController != null)
+                    armController.enabled = active;
+            }
         }
 
         if (disableDuringSequence == null)
-        {
             return;
-        }
 
         foreach (Behaviour behaviour in disableDuringSequence)
         {
