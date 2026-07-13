@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fad74e03f9dbdb84882938c3e5237827, type: 3}
   m_Name: SoundManager
   m_EditorClassIdentifier: Assembly-CSharp::SoundManeger
-  seList: 4
+  seList: 6
   seListData:
   - audioClip: {fileID: 8300000, guid: 79863e7e5e7836c43950ae46319173f6, type: 3}
     audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
@@ -311,7 +311,133 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  bgmList: 0
+  - audioClip: {fileID: 8300000, guid: 663492e5979605845bf2cb571a77f416, type: 3}
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: 2a3347b27fd237f43809fa06fe4581ee, type: 3}
+    audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  bgmList: 7
   bgmListData:
   - audioClip: {fileID: 8300000, guid: d2a19b18be1f5d74f84aecc4ab38a7a2, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
@@ -358,7 +484,7 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 800
       lowPassResonanceQ: 1.2
-  - audioClip: {fileID: 8300000, guid: 7660eccfba7fbee439bff89b30d03b22, type: 3}
+  - audioClip: {fileID: 8300000, guid: 09a59696ea4e66c45bc0fe1057c625b9, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
@@ -490,6 +616,321 @@ MonoBehaviour:
     bypassListenerEffects: 0
     bypassReverbZones: 0
     isLoop: 1
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: 41d31ebaa1dde4747be7901bf7bf4ce3, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: fe9afd233712f3d4ba55c662e616288b, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 1
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: fe7df8405a0a0604182b5320fb12ae9f, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: 7e5b136dc6377f248b9cbef3d73fac8a, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 1
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 8300000, guid: 102379d5aedf9ea4fa9bedcd231e5b13, type: 3}
+    audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
     priority: 128
     volume: 1
     pitch: 1

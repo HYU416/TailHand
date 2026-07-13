@@ -11,6 +11,10 @@ public class ThrowableBomb : MonoBehaviour
     [Header("プレイヤーが投げた時だけボスに有効")]
     [SerializeField] private bool requirePlayerThrowForBossHit = true;
 
+    [Header("Trigger Colliderではボス命中扱いにしない")]
+    [Tooltip("ONの場合、Is Triggerが有効なColliderでは爆発せず、そのまま通過します")]
+    [SerializeField] private bool ignoreTriggerForBossHit = true;
+
     private ThrownBombState thrownBombState;
     private BombExplosion bombExplosion;
 
@@ -59,16 +63,34 @@ public class ThrowableBomb : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision == null) return;
+        if (collision == null)
+        {
+            return;
+        }
 
-        CheckBossHit(collision.gameObject);
+        Collider hitCollider = collision.collider;
+
+        if (hitCollider == null)
+        {
+            return;
+        }
+
+        CheckBossHit(hitCollider);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other == null) return;
+        if (other == null)
+        {
+            return;
+        }
 
-        CheckBossHit(other.gameObject);
+        if (ignoreTriggerForBossHit && other.isTrigger)
+        {
+            return;
+        }
+
+        CheckBossHit(other);
     }
 
     public void ArmByPlayerThrow()
@@ -78,7 +100,11 @@ public class ThrowableBomb : MonoBehaviour
             thrownBombState.MarkThrownByPlayer();
         }
 
-        Debug.Log("ThrowableBomb: プレイヤー投げ状態になりました: " + gameObject.name);
+        Debug.Log(
+            "ThrowableBomb: プレイヤー投げ状態になりました: " +
+            gameObject.name,
+            this
+        );
     }
 
     public bool CanAffectBoss()
@@ -95,7 +121,12 @@ public class ThrowableBomb : MonoBehaviour
     {
         if (bombExplosion == null)
         {
-            Debug.LogWarning("ThrowableBomb: BombExplosion が見つかりません: " + gameObject.name);
+            Debug.LogWarning(
+                "ThrowableBomb: BombExplosionが見つかりません: " +
+                gameObject.name,
+                this
+            );
+
             Destroy(gameObject);
             return;
         }
@@ -107,23 +138,38 @@ public class ThrowableBomb : MonoBehaviour
 
         if (!CanAffectBoss())
         {
-            Debug.Log("爆弾はボスに当たりましたが、プレイヤーが投げた物ではないため無視しました: " + gameObject.name);
+            Debug.Log(
+                "爆弾はボスに当たりましたが、" +
+                "プレイヤーが投げた物ではないため無視しました: " +
+                gameObject.name,
+                this
+            );
+
             return;
         }
 
         bombExplosion.ExplodeByBossHit();
     }
 
-    private void CheckBossHit(GameObject hitObject)
+    private void CheckBossHit(Collider hitCollider)
     {
-        if (hitObject == null) return;
+        if (hitCollider == null)
+        {
+            return;
+        }
+
+        if (ignoreTriggerForBossHit && hitCollider.isTrigger)
+        {
+            return;
+        }
 
         if (bombExplosion != null && bombExplosion.HasExploded)
         {
             return;
         }
 
-        GameObject bossTarget = FindBossTargetObject(hitObject);
+        GameObject bossTarget =
+            FindBossTargetObject(hitCollider.gameObject);
 
         if (bossTarget == null)
         {
@@ -135,9 +181,13 @@ public class ThrowableBomb : MonoBehaviour
 
     private GameObject FindBossTargetObject(GameObject hitObject)
     {
-        if (hitObject == null) return null;
+        if (hitObject == null)
+        {
+            return null;
+        }
 
-        if (IsSameTag(hitObject, bossWallTag) || IsSameTag(hitObject, bossCoreTag))
+        if (IsSameTag(hitObject, bossWallTag) ||
+            IsSameTag(hitObject, bossCoreTag))
         {
             return hitObject;
         }
@@ -146,7 +196,8 @@ public class ThrowableBomb : MonoBehaviour
 
         while (current != null)
         {
-            if (IsSameTag(current.gameObject, bossWallTag) || IsSameTag(current.gameObject, bossCoreTag))
+            if (IsSameTag(current.gameObject, bossWallTag) ||
+                IsSameTag(current.gameObject, bossCoreTag))
             {
                 return current.gameObject;
             }
@@ -159,9 +210,16 @@ public class ThrowableBomb : MonoBehaviour
 
     private bool IsSameTag(GameObject target, string tagName)
     {
-        if (target == null) return false;
-        if (string.IsNullOrEmpty(tagName)) return false;
+        if (target == null)
+        {
+            return false;
+        }
 
-        return target.tag == tagName;
+        if (string.IsNullOrEmpty(tagName))
+        {
+            return false;
+        }
+
+        return target.CompareTag(tagName);
     }
 }

@@ -17,7 +17,9 @@ public enum SEList
    SE_Missile,
    SE_GameChange1,
    SE_GameChange2,
-   MAX,
+   SE_SELECT,
+   SE_ENTER,
+    MAX,
 }
 
 //BGM‚ÌŽí—Þ
@@ -27,6 +29,11 @@ public enum BGMList
     BGM_GAME_LOOP,
     BGM_TITLE,
     BGM_TITLE_LOOP,
+    BGM_FINISHER,
+    BGM_FINISHER_LOOP,
+    BGM_FINISHER_END,
+    BGM_GAMEOVER,
+    BGM_GAMEOVER_JINGLE,
     MAX,
 }
 

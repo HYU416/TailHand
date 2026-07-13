@@ -477,7 +477,7 @@ public class BossPhaseController : MonoBehaviour
 
             if (bossStep1 != null)
             {
-                bossStep1.SetActive(false);
+                StartCoroutine(DisableBossStep(bossStep1));
             }
 
             yield return MoveDownObjects(new GameObject[]
@@ -497,7 +497,7 @@ public class BossPhaseController : MonoBehaviour
 
             if (bossStep2 != null)
             {
-                bossStep2.SetActive(false);
+                StartCoroutine(DisableBossStep(bossStep2));
             }
 
             yield return MoveDownObjects(new GameObject[]
@@ -515,7 +515,7 @@ public class BossPhaseController : MonoBehaviour
             // フェーズ4開始時のエフェクトは BossFinalAttackSequence 側に任せる。
             if (bossStep3 != null)
             {
-                bossStep3.SetActive(false);
+                StartCoroutine(DisableBossStep(bossStep3));
             }
 
             currentPhase = 4;
@@ -645,6 +645,12 @@ public class BossPhaseController : MonoBehaviour
         }
 
         catchable.SetCanCatch(true);
+    }
+
+    IEnumerator DisableBossStep(GameObject obj)
+    {
+        yield return new WaitForFixedUpdate();
+        obj.SetActive(false);
     }
 
 #if UNITY_EDITOR
