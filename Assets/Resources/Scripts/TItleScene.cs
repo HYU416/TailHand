@@ -93,6 +93,11 @@ public class TItleScene : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         GridLayoutGroup grid = stageSelectPanel.GetComponent<GridLayoutGroup>();
         if (grid != null) grid.enabled = false;
+        foreach (Image panel in stagePanels)
+        {
+            RectTransform rect = panel.rectTransform;
+            buttonDefaultPositions[rect] = rect.anchoredPosition;
+        }
         foreach (Transform target in stageSelectAnimationTargets)
         {
             RectTransform rect = target as RectTransform;
@@ -107,11 +112,6 @@ public class TItleScene : MonoBehaviour
             rect.anchoredPosition = hidePos;
         }
         foreach(Image panel in titlePanels)
-        {
-            RectTransform rect = panel.rectTransform;
-            buttonDefaultPositions[rect] = rect.anchoredPosition;
-        }
-        foreach(Image panel in stagePanels)
         {
             RectTransform rect = panel.rectTransform;
             buttonDefaultPositions[rect] = rect.anchoredPosition;
@@ -199,7 +199,10 @@ public class TItleScene : MonoBehaviour
         if(currentState == MenuState.StageSelect)
         {
             currentIndex = Mathf.Clamp(currentIndex, 1, stagePanels.Length - 1);
-
+            if (!isStageDecide)
+            {
+                MoveDecideButtonSelection(stagePanels, ref previousStageIndex, currentIndex);
+            }
             if ((Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit")) && !isStageDecide)
             {
                 // ç≈å„îˆÇÃÇ›ExitÇÃèàóù
@@ -286,11 +289,11 @@ public class TItleScene : MonoBehaviour
     {
         isStageDecide = true;
 
-        yield return StartCoroutine(UIAnimation(stageSelectAnimationTargets,false));
+        StartCoroutine(UIAnimation(stageSelectAnimationTargets,false));
+
+        StartCoroutine(UIAnimation(titleAnimationTargets, true));
 
         yield return StartCoroutine(CameraTurn(false));
-
-        yield return StartCoroutine(UIAnimation(titleAnimationTargets, true));
 
         currentIndex = 0;
         previousStageIndex = -1;
@@ -316,7 +319,7 @@ public class TItleScene : MonoBehaviour
         RectTransform current = panels[currentIndex].rectTransform;
         if (buttonDefaultPositions.TryGetValue(current, out Vector2 currentDefaultPos))
         {
-            current.anchoredPosition = currentDefaultPos + Vector2.right * 50.0f;
+            current.anchoredPosition = currentDefaultPos + Vector2.right * -50.0f;
         }
 
         index = currentIndex;
