@@ -22,15 +22,60 @@ namespace SimplestarGame
 
         internal void Fragment(RaycastHit hit)
         {
-            if (!this.TryGetComponent(out MeshFilter initMeshFilter))
+            Mesh sourceMesh = null;
+            Renderer sourceRenderer = null;
+            Mesh bakedMesh = null;
+
+            if (TryGetComponent(out MeshFilter meshFilter) &&
+                meshFilter.sharedMesh != null)
             {
-                Debug.LogWarning("破壊するターゲットの MeshFilter がアタッチされていません");
+                sourceMesh = meshFilter.sharedMesh;
+                sourceRenderer = GetComponent<MeshRenderer>();
+            }
+            else if (TryGetComponent(out SkinnedMeshRenderer skinnedRenderer) &&
+                     skinnedRenderer.sharedMesh != null)
+            {
+                bakedMesh = new Mesh
+                {
+                    name = skinnedRenderer.sharedMesh.name + "_BakedForFragment"
+                };
+
+                // 現在のアニメーション姿勢を通常メッシュに変換
+                skinnedRenderer.BakeMesh(bakedMesh, false);
+
+                sourceMesh = bakedMesh;
+                sourceRenderer = skinnedRenderer;
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"{name}: MeshFilter または SkinnedMeshRenderer がありません"
+                );
                 return;
             }
-            var scale = this.transform.localScale;
-            var initVerts = initMeshFilter.sharedMesh.vertices;
-            var initNormals = initMeshFilter.sharedMesh.normals;
-            var initUVs = initMeshFilter.sharedMesh.uv;
+
+            if (sourceMesh.vertexCount == 0)
+            {
+                Debug.LogWarning($"{name}: 破壊対象のメッシュに頂点がありません");
+
+                if (bakedMesh != null)
+                {
+                    Destroy(bakedMesh);
+                }
+
+                return;
+            }
+
+            var scale = transform.localScale;
+            var initVerts = sourceMesh.vertices;
+            var initNormals = sourceMesh.normals;
+            var initUVs = sourceMesh.uv;
+
+            // ここから先は配列を使用するため、BakeしたMesh本体は破棄可能
+            if (bakedMesh != null)
+            {
+                Destroy(bakedMesh);
+            }
             var resizedVerts = new Vector3[initVerts.Length];
             for (int i = 0; i < initVerts.Length; i++)
             {
@@ -338,10 +383,13 @@ namespace SimplestarGame
                 // スライスされるオブジェクトの数ループ
                 for (int zIdx = 0; zIdx < meshCount; zIdx++)
                 {
-                    var mesh = new Mesh();
+                    var mesh = new Mesh
+                    {
+                        name = $"{name}_FragmentMesh_{zIdx}"
+                    };
                     var verts = new Vector3[6 * vCount + 2 * extraIdx];
                     var uvs = new Vector2[verts.Length];
-                    
+
                     Vector3 planePoint0 = planePoint;
                     planePoint0.z = -0.5f * scaleZ + sliceDepthArray[zIdx];
                     Vector3 planeNornal0 = planeNornals[zIdx];
@@ -438,7 +486,7 @@ namespace SimplestarGame
                                     }
                                     else
                                     {
-                                        
+
                                         uvs[(3 + skipIdx) * vCount + nextVIdx] = new Vector2(uvXNext, nextLerpZ0);
                                         uvs[(2 + skipIdx) * vCount + nextVIdx] = new Vector2(uvXNext, nextLerpZ1);
                                     }
@@ -481,7 +529,7 @@ namespace SimplestarGame
                     mesh.RecalculateBounds();
                     mesh.RecalculateNormals();
                     mesh.RecalculateTangents();
- 
+
                     var fragment = Instantiate(this.fragmentPrefab);
                     SetLayerRecursively(fragment.gameObject, LayerMask.NameToLayer("BreakObject_Fragment"));
                     fragment.name = this.name + "_fragment" + zIdx + ((1 == extraIdx) ? "extra" : "");
@@ -491,20 +539,23 @@ namespace SimplestarGame
                     fragment.transform.localScale = Vector3.one;
                     fragment.transform.SetParent(null);
                     fragment.sharedMesh = mesh;
+                    Debug.Log(
+                    $"{fragment.name}: " +
+                    $"Mesh={fragment.sharedMesh != null}, " +
+                    $"Vertices={mesh.vertexCount}, " +
+                    $"Triangles={mesh.triangles.Length / 3}"
+                        );
 
-                    if (this.TryGetComponent(out MeshRenderer myMeshRenderer))
+                    if (sourceRenderer != null && sourceRenderer.sharedMaterial != null && fragment.TryGetComponent(out MeshRenderer fragmentRenderer))
                     {
-                        if (fragment.TryGetComponent(out MeshRenderer meshRenderer))
-                        {
-                            meshRenderer.material = new Material(myMeshRenderer.material);
-                        }
+                        fragmentRenderer.material =new Material(sourceRenderer.sharedMaterial);
                     }
                     if (fragment.TryGetComponent(out MeshCollider meshCollider))
                     {
                         meshCollider.sharedMesh = mesh;
                     }
                     fragment.gameObject.AddComponent<MeshCleaner>();
-                    
+
                     float reFragmentSize = scaleZ * 1.5f;
                     if (reFragmentSize < fragmentW && reFragmentSize < fragmentH)
                     {
