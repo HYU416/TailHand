@@ -5,7 +5,8 @@ public enum EPhase
 {
     Phase1,
     Phase2,
-    Phase3
+    Phase3,
+    Phase4
 }
 
 public enum EBig_GState
@@ -45,9 +46,11 @@ public class Big_G : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-            if (core != null)
-                if (!core.IsAlive())
-                    Destroy(this.gameObject);
+        if (phase >= EPhase.Phase4)
+            return;
+
+        if (core != null && !core.IsAlive())
+            Destroy(this.gameObject);
     }
 
     public EPhase GetCurrentPhase()
@@ -62,9 +65,17 @@ public class Big_G : MonoBehaviour
 
     public void PhaseUp()
     {
-        if (phase == EPhase.Phase3)
-            return;
+
         phase = (EPhase)((int)phase + 1);
+    }
+
+    public void EnterPhase4()
+    {
+        if (phase == EPhase.Phase4)
+            return;
+
+        phase = EPhase.Phase4;
+        Debug.Log("Big_G: Phase4");
     }
 
     public void SwitchState(EBig_GState s)

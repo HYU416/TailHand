@@ -621,11 +621,12 @@ public class CameraFollow : MonoBehaviour
         }
 
         Quaternion targetRot = Quaternion.LookRotation(lookDirection, Vector3.up);
+        float lookDelta = Time.timeScale > 0f ? Time.deltaTime : Time.unscaledDeltaTime;
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRot,
-            bossWatchLookSmooth * Time.deltaTime
+            bossWatchLookSmooth * lookDelta
         );
     }
 

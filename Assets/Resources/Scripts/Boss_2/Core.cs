@@ -60,16 +60,15 @@ public class Core : MonoBehaviour
         {
             if (big_g.GetCurrentPhase() == EPhase.Phase3)
             {
-                Debug.Log("Phase3_ƒRƒA”j‰ó");
-                status.bAlive = false;
-                gameClear.StartWin();
+                Debug.Log("Phase3_ï¿½Rï¿½Aï¿½jï¿½ï¿½");
+                big_g.EnterPhase4();
                 return;
             }
-            // ƒRƒA‚ª”j‰ó‚³‚ê‚½‚Ì‚ÅƒtƒF[ƒY‚ğã‚°‚é
+            // ï¿½Rï¿½Aï¿½ï¿½ï¿½jï¿½ó‚³‚ê‚½ï¿½Ì‚Åƒtï¿½Fï¿½[ï¿½Yï¿½ï¿½ï¿½ã‚°ï¿½ï¿½
             big_g.PhaseUp();
             big_g.SwitchState(EBig_GState.Normal);
             HPSet();
-            // ƒoƒŠƒA‚ÌÄ¶
+            // ï¿½oï¿½ï¿½ï¿½Aï¿½ÌÄï¿½
             barrierManager.Regenerate();
         }
     }
@@ -78,7 +77,7 @@ public class Core : MonoBehaviour
     {
         if (big_g != null && barrierManager != null)
         {
-            // ƒoƒŠƒA‚ª”j‰ó‚³‚ê‚½ó‘Ô‚©
+            // ï¿½oï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½jï¿½ó‚³‚ê‚½ï¿½ï¿½Ô‚ï¿½
             if (big_g.GetCurrentState() == EBig_GState.Core)
             {
                 if (col.gameObject.CompareTag("Projectile"))
