@@ -498,7 +498,8 @@ public class CameraFollow : MonoBehaviour
                     player.transform.position + offset;
 
                 // Bossを見る
-                transform.LookAt(Boss.transform.position + Vector3.up * 2f);
+                if (StageNumber == 1) transform.LookAt(Boss.transform.position + Vector3.up * 2f);
+                if (StageNumber == 2) transform.LookAt(Boss.transform.position + Vector3.up * 6f);
             }
             // Phase5 Boss名表示
             // Phase5 Bossを見上げる
@@ -521,10 +522,10 @@ public class CameraFollow : MonoBehaviour
                 }
                 if(StageNumber == 2)
                 {
-                    basePos.x -= 3.0f;
-                    basePos.z += 6.0f;
+                    basePos.x -= 6.0f;
+                    basePos.z += 3.0f;
                     startPos = basePos + Vector3.up * 1.5f;
-                    endPos = basePos + Vector3.up * 10f;
+                    endPos = basePos + Vector3.up * 19f;
                 }
 
 
