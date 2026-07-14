@@ -32,6 +32,11 @@ public class TItleScene : MonoBehaviour
     private float nextMoveTime = 0f;
     private Dictionary<RectTransform, Vector2> defaultPositions =
     new Dictionary<RectTransform, Vector2>();
+    private Dictionary<RectTransform, Vector2> buttonDefaultPositions =
+    new Dictionary<RectTransform, Vector2>();
+    private bool isStageDecide = false;
+    private int previousTitleIndex = 0;
+    private int previousStageIndex = 0;
 
     [Header("カメラワークの設定")]
     [SerializeField] private Transform player;
@@ -77,7 +82,7 @@ public class TItleScene : MonoBehaviour
     {
         //NavigationPanel.SetActive(false);
        // stageSelectPanel.transform.position = new Vector3(uiAnimationEndPos, stageSelectPanel.transform.position.y, transform.position.z);
-        animator.Play("Run");
+        animator.Play("Take 001");
         // カメラのポジション
         Vector3 center = player.position + Vector3.up * 1.5f;
         titleStartOffset = titleCamera.transform.position - center;
@@ -88,6 +93,11 @@ public class TItleScene : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         GridLayoutGroup grid = stageSelectPanel.GetComponent<GridLayoutGroup>();
         if (grid != null) grid.enabled = false;
+        foreach (Image panel in stagePanels)
+        {
+            RectTransform rect = panel.rectTransform;
+            buttonDefaultPositions[rect] = rect.anchoredPosition;
+        }
         foreach (Transform target in stageSelectAnimationTargets)
         {
             RectTransform rect = target as RectTransform;
@@ -101,6 +111,15 @@ public class TItleScene : MonoBehaviour
 
             rect.anchoredPosition = hidePos;
         }
+        foreach(Image panel in titlePanels)
+        {
+            RectTransform rect = panel.rectTransform;
+            buttonDefaultPositions[rect] = rect.anchoredPosition;
+        }
+
+       // MoveDecideButtonSelection(defaultPositions, currentIndex);
+
+
         // フェード
         Color c = whiteFadeImage.color;
         c.a = 0f;
@@ -121,7 +140,7 @@ public class TItleScene : MonoBehaviour
 
         if (isCameraMoving) return;
 
-        if (Time.time > nextMoveTime)
+        if (Time.time > nextMoveTime && !isStageDecide)
         {
             float h = Input.GetAxisRaw("Horizontal");
             float v = Input.GetAxisRaw("Vertical");
@@ -152,10 +171,11 @@ public class TItleScene : MonoBehaviour
         if (currentState == MenuState.Title)
         {
             currentIndex = Mathf.Clamp(currentIndex, 0, titlePanels.Length - 1);
-
+            MoveDecideButtonSelection(titlePanels, ref previousTitleIndex, currentIndex);
             for (int i = 0; i < titlePanels.Length; i++)
             {
-                titlePanels[i].sprite = i == currentIndex ? titleFrontSprite[i] : titleNormalSprite[i];
+                bool isSelected = i == currentIndex;
+                titlePanels[i].sprite = isSelected ? titleFrontSprite[i] : titleNormalSprite[i];
             }
             // StartButtonでStage一覧表示
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
@@ -179,23 +199,20 @@ public class TItleScene : MonoBehaviour
         if(currentState == MenuState.StageSelect)
         {
             currentIndex = Mathf.Clamp(currentIndex, 1, stagePanels.Length - 1);
-
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
+            if (!isStageDecide)
+            {
+                MoveDecideButtonSelection(stagePanels, ref previousStageIndex, currentIndex);
+            }
+            if ((Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit")) && !isStageDecide)
             {
                 // 最後尾のみExitの処理
                 if (currentIndex == stagePanels.Count() - 1 && !isCameraMoving)
                 {
-                    currentState = MenuState.Title;
-                    StartCoroutine(UIAnimation(titleAnimationTargets, true));
-
-                    StartCoroutine(UIAnimation(stageSelectAnimationTargets, false));
-
-                    StartCoroutine(CameraTurn(false));
-
-                    //NavigationPanel.SetActive(false);
+                    StartCoroutine(BackToTitle());
                 }
                 else
                 {
+                    isStageDecide = true;
                     StartCoroutine(LoadStageWithWhiteOut());
                 }
             }
@@ -266,6 +283,46 @@ public class TItleScene : MonoBehaviour
         }
 
         isCameraMoving = false;
+    }
+    
+    private IEnumerator BackToTitle()
+    {
+        isStageDecide = true;
+
+        StartCoroutine(UIAnimation(stageSelectAnimationTargets,false));
+
+        StartCoroutine(UIAnimation(titleAnimationTargets, true));
+
+        yield return StartCoroutine(CameraTurn(false));
+
+        currentIndex = 0;
+        previousStageIndex = -1;
+        currentState = MenuState.Title;
+
+        isStageDecide = false;
+    }
+    private void MoveDecideButtonSelection(Image[] panels,ref int index,int currentIndex)
+    {
+        if (panels == null || panels.Length == 0) return;
+        if(currentIndex < 0 || currentIndex >= panels.Length) return;
+
+        // 前の選択を戻す
+        if(index >= 0 && index < panels.Length) 
+        {
+            RectTransform prev = panels[index].rectTransform;
+            if(buttonDefaultPositions.TryGetValue(prev,out Vector2 previousDefaultPos))
+            {
+                prev.anchoredPosition = previousDefaultPos;
+            }
+        }
+        // 今の選択を動かす
+        RectTransform current = panels[currentIndex].rectTransform;
+        if (buttonDefaultPositions.TryGetValue(current, out Vector2 currentDefaultPos))
+        {
+            current.anchoredPosition = currentDefaultPos + Vector2.right * -50.0f;
+        }
+
+        index = currentIndex;
     }
 
     // UIアニメーション
@@ -365,3 +422,4 @@ public class TItleScene : MonoBehaviour
         sceneLoader.LoadScene(stageSceneNames[currentIndex]);
     }
 }
+
