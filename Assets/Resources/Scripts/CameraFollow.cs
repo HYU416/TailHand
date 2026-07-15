@@ -348,7 +348,14 @@ public class CameraFollow : MonoBehaviour
             //intro.time += 70.0f;
             var loop = MySoundManeger.Play(gameObject, BGMList.BGM_FINISHER_LOOP);
             loop.Stop();
-            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+            loop.timeSamples = 0;
+            //ループ予約
+            double remainingTime = (double)(intro.clip.samples - intro.timeSamples)
+                    / intro.clip.frequency
+                    / Mathf.Abs(intro.pitch);
+            double loopStartTime = AudioSettings.dspTime + remainingTime;
+            intro.SetScheduledEndTime(loopStartTime);
+            loop.PlayScheduled(loopStartTime);
         }
         if (StageNumber == 0)
         {

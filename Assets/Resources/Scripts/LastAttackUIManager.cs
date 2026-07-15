@@ -311,12 +311,14 @@ public class LastAttackUIManager : MonoBehaviour
         if (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.upArrowKey.wasPressedThisFrame)
         {
             SetChoice(WinMenuChoice.Next);
+            MySoundManeger.Play(gameObject, SEList.SE_SELECT);
             return true;
         }
 
         if (Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame)
         {
             SetChoice(WinMenuChoice.Quit);
+            MySoundManeger.Play(gameObject, SEList.SE_SELECT);
             return true;
         }
 

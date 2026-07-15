@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -58,6 +59,9 @@ public class LastAttack : MonoBehaviour
     bool maxSpinReached;
     bool waitingForThrowInput;
     float savedTimeScale = 1f;
+    private AudioSource endBGM;
+    private bool endBGMScheduled;
+
 
     public float LookHeightOffset => lookHeightOffset;
 
@@ -102,6 +106,15 @@ public class LastAttack : MonoBehaviour
         if (motion == null)
         {
             motion = gameObject.AddComponent<LastAttackMotion>();
+        }
+        GameObject cameraObject = Camera.main.gameObject;
+
+        // 事前に生成して停止しておく
+        endBGM = MySoundManeger.Play( cameraObject,BGMList.BGM_FINISHER_END);
+        if (endBGM != null)
+        {
+            endBGM.Stop();
+            endBGM.timeSamples = 0;
         }
     }
 
@@ -363,6 +376,39 @@ public class LastAttack : MonoBehaviour
         cameraFollow.SetQTECameraBackExtra(normalized * maxExtraCameraBack);
     }
 
+    public void StartFinisherEndBGM()
+    {
+        if (endBGMScheduled)
+        {
+            return;
+        }
+
+        GameObject cameraObject = Camera.main.gameObject;
+        AudioSource loopBGM = MySoundManeger.GetBGM(cameraObject, BGMList.BGM_FINISHER_LOOP);
+        if (loopBGM == null || endBGM == null)
+        {
+            Debug.LogWarning("FINISHER用BGMを取得できません");
+            return;
+        }
+
+        endBGMScheduled = true;
+        // 現在の1周を最後にする
+        loopBGM.loop = false;
+
+        double remainingTime =
+            (double)(loopBGM.clip.samples - loopBGM.timeSamples)
+            / loopBGM.clip.frequency
+            / Mathf.Abs(loopBGM.pitch);
+
+        double switchTime = AudioSettings.dspTime + remainingTime;
+
+        loopBGM.SetScheduledEndTime(switchTime);
+
+        endBGM.Stop();
+        endBGM.timeSamples = 0;
+        endBGM.PlayScheduled(switchTime);
+    }
+
     IEnumerator PlayThrowRoutine()
     {
         Time.timeScale = 1f;
@@ -382,6 +428,10 @@ public class LastAttack : MonoBehaviour
         // 投げモーション開始時にカメラを Cube へ移動し、プレイヤーを配置する。
         QTEThrowAftermath.ApplyCameraAndPlayer(throwAftermath, activeCameraFollow, transform, motion);
         motion.PlayThrowImmediate();
+        //メインカメラを取得
+        StartFinisherEndBGM();
+
+
 
         yield return null;
 
