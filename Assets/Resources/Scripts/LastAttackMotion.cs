@@ -158,6 +158,14 @@ public class LastAttackMotion : MonoBehaviour
     }
 
     /// <summary>
+    /// プレイヤー Throw クリップの長さ（未設定なら 0）。
+    /// </summary>
+    public float GetPlayerThrowClipLength()
+    {
+        return playerThrowClip != null ? Mathf.Max(0f, playerThrowClip.length) : 0f;
+    }
+
+    /// <summary>
     /// QTE 開始時の向きを記録します（スピン前に呼ぶ）。
     /// </summary>
     public void CaptureStartOrientation()

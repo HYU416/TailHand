@@ -448,12 +448,20 @@ public class LastAttack : MonoBehaviour
 
         yield return null;
 
-        // 投げモーション（Throw）が終わり ThrowToIdle が始まってから、頭を飛ばし始める。
-        float throwWait = 0f;
+        // Throw クリップ終了（ThrowToIdle 開始）を基準に、遅延で前後調整する。
+        // 例: -0.3 → Throw 終了の 0.3 秒前に飛ばす / +0.2 → 終了の 0.2 秒後に飛ばす
+        float throwLength = motion.GetPlayerThrowClipLength();
 
-        while (!motion.HasPlayerStartedThrowToIdle() && throwWait < throwAnimationFallbackDuration)
+        if (throwLength <= 0f)
+            throwLength = throwAnimationFallbackDuration;
+
+        float launchDelay = throwAftermath != null ? throwAftermath.bossHeadLaunchDelay : 0f;
+        float launchAt = Mathf.Max(0f, throwLength + launchDelay);
+        float throwElapsed = 0f;
+
+        while (throwElapsed < launchAt)
         {
-            throwWait += Time.deltaTime;
+            throwElapsed += Time.deltaTime;
             yield return null;
         }
 

@@ -42,6 +42,9 @@ public class QTEThrowAftermathSettings
     [Tooltip("飛ばすボスの頭オブジェクト（SkinnedMesh のボーンではなく頭単体のモデルを推奨）")]
     public Transform bossHeadOverride;
 
+    [Tooltip("ThrowToIdle 基準のオフセット秒。負=前にずらす / 正=後にずらす")]
+    public float bossHeadLaunchDelay = 0f;
+
     [Min(0f)] public float bossHeadLaunchSpeed = 12f;
 
     [Tooltip("ON: カメラ(Cube)と逆方向（奥）へ飛ばす。OFF: 下の固定方向を使う")]
