@@ -47,6 +47,10 @@ public class LastAttack : MonoBehaviour
     [Header("投げ演出")]
     [SerializeField] private QTEThrowAftermathSettings throwAftermath = new QTEThrowAftermathSettings();
 
+    [Header("ROLLSEのループ速度の変化")]
+    [SerializeField]
+    private AnimationCurve loopRollSESpeedCurve = AnimationCurve.Linear(0f, 0f, 1f, 3f);
+
     LastAttackMotion motion;
     CameraFollow activeCameraFollow;
     PlayerInput playerInput;
@@ -61,7 +65,6 @@ public class LastAttack : MonoBehaviour
     float savedTimeScale = 1f;
     private AudioSource endBGM;
     private bool endBGMScheduled;
-
 
     public float LookHeightOffset => lookHeightOffset;
 
@@ -116,6 +119,8 @@ public class LastAttack : MonoBehaviour
             endBGM.Stop();
             endBGM.timeSamples = 0;
         }
+
+        loopRollSESpeedCurve = AnimationCurve.Linear(0f, 0f, 1f, 3f);
     }
 
     void SetupSpinPivot()
@@ -322,6 +327,14 @@ public class LastAttack : MonoBehaviour
         }
 
         rotationSpeed = Mathf.Clamp(rotationSpeed, 0f, maxSpinSpeed);
+
+        //回転速度に応じてROLLSEのループ速度を変化させる
+        var rollSE = MySoundManeger.GetSE(Camera.main.gameObject, SEList.SE_ROLL);
+        if (rollSE != null)
+        {
+            float normalized = Mathf.InverseLerp(0f, maxSpinSpeed, Mathf.Abs(rotationSpeed));
+            rollSE.pitch = 1f + loopRollSESpeedCurve.Evaluate(normalized);
+        }
     }
 
     float GetSpinEase()
