@@ -335,6 +335,7 @@ public class LastAttackMotion : MonoBehaviour
 
         Vector3 effectPosition = GetHeadBoundsCenter(watchHead);
         SpawnHeadStopEffect(effectPosition);
+        MySoundManeger.Play(gameObject, SEList.SE_LASTCORECRUSH);
         watchHead.gameObject.SetActive(false);
 
         LastAttackUIManager uiManager = FindObjectOfType<LastAttackUIManager>(true);

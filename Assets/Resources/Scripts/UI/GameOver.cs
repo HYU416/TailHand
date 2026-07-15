@@ -70,17 +70,28 @@ public class GameOver : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.UpArrow) || v > 0.5f)
             {
-                currentIndex -= 1;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex - 1, 0, buttonPanels.Length - 1);
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
             if (Input.GetKeyDown(KeyCode.DownArrow) || v < -0.5f)
             {
-                currentIndex += 1;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex + 1, 0, buttonPanels.Length - 1);
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
 
             if (Input.GetButtonDown("Submit"))
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 if (currentIndex == 0)
                 {
                     if (StageNumber == 1) sceneLoader.LoadScene("GameScene");

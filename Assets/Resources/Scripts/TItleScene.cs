@@ -145,25 +145,53 @@ public class TItleScene : MonoBehaviour
             float h = Input.GetAxisRaw("Horizontal");
             float v = Input.GetAxisRaw("Vertical");
 
+            // Œ»Ý‚Ìƒpƒlƒ‹”‚ðŽæ“¾
+            int panelCount = currentState == MenuState.Title? titlePanels.Length: stagePanels.Length;
+            int minIndex = currentState == MenuState.Title ? 0 : 1;
+            int maxIndex = panelCount - 1;
+
             if (Input.GetKeyDown(KeyCode.RightArrow) || h > 0.5f)
             {
-                currentIndex += 1;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex + 1, minIndex, maxIndex);
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
             if (Input.GetKeyDown(KeyCode.LeftArrow) || h < -0.5f)
             {
-                currentIndex -= 1;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex - 1, minIndex, maxIndex);
+
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
             if (Input.GetKeyDown(KeyCode.UpArrow) || v > 0.5f)
             {
-                currentIndex -= columnCount;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex - columnCount, minIndex, maxIndex);
+
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
+
             if (Input.GetKeyDown(KeyCode.DownArrow) || v < -0.5f)
             {
-                currentIndex += columnCount;
-                nextMoveTime = Time.time + moveCooldown;
+                int nextIndex = Mathf.Clamp(currentIndex + columnCount, minIndex, maxIndex);
+                if (nextIndex != currentIndex)
+                {
+                    currentIndex = nextIndex;
+                    nextMoveTime = Time.time + moveCooldown;
+                    MySoundManeger.Play(gameObject, SEList.SE_SELECT);
+                }
             }
         }
 
@@ -180,6 +208,7 @@ public class TItleScene : MonoBehaviour
             // StartButton‚ÅStageˆê——•\Ž¦
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 if (currentIndex == 0 && !isCameraMoving)
                 {
                     StartCoroutine(UIAnimation(titleAnimationTargets, false)); 
@@ -205,6 +234,7 @@ public class TItleScene : MonoBehaviour
             }
             if ((Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit")) && !isStageDecide)
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 // ÅŒã”ö‚Ì‚ÝExit‚Ìˆ—
                 if (currentIndex == stagePanels.Count() - 1 && !isCameraMoving)
                 {

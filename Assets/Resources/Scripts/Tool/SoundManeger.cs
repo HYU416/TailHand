@@ -12,13 +12,19 @@ using static SoundManeger;
 //SE‚ÌŽí—Þ
 public enum SEList
 {
-   SE_CATCH,
-   SE_CRUSH,
-   SE_Missile,
-   SE_GameChange1,
-   SE_GameChange2,
-   SE_SELECT,
-   SE_ENTER,
+    SE_CATCH,
+    SE_CRUSH,
+    SE_Missile,
+    SE_GameChange1,
+    SE_GameChange2,
+    SE_SELECT,
+    SE_ENTER,
+    SE_BEAM,
+    SE_BOSSLANDING,
+    SE_BOSSNAME,
+    SE_CORECRUSH,
+    SE_CRASH,
+    SE_LASTCORECRUSH,
     MAX,
 }
 
@@ -34,6 +40,7 @@ public enum BGMList
     BGM_FINISHER_END,
     BGM_GAMEOVER,
     BGM_GAMEOVER_JINGLE,
+    BGM_START,
     MAX,
 }
 
