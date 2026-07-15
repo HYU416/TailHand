@@ -100,6 +100,8 @@ public class QTESceneController : MonoBehaviour
     [SerializeField] private Transform playerThrowMovePoint;
     [Tooltip("飛ばすボス頭オブジェクト（頭単体の Mesh 付きモデルを推奨）")]
     [SerializeField] private Transform bossHeadOverride;
+    [Tooltip("ThrowToIdle 基準のオフセット秒。負=前にずらす / 正=後にずらす（例: -0.3 で 0.3 秒早く飛ばす）")]
+    [SerializeField] private float bossHeadLaunchDelay = 0f;
     [SerializeField, Min(0f)] private float bossHeadLaunchSpeed = 35f;
     [Tooltip("ON: カメラ(Cube)と逆方向（奥）へ飛ばす。OFF: 下の固定方向を使う")]
     [SerializeField] private bool launchAwayFromCamera = false;
@@ -471,6 +473,7 @@ public class QTESceneController : MonoBehaviour
             cameraLookHeightOffset = throwCameraLookHeight,
             playerMovePoint = playerThrowMovePoint,
             bossHeadOverride = bossHeadOverride,
+            bossHeadLaunchDelay = bossHeadLaunchDelay,
             bossHeadLaunchSpeed = bossHeadLaunchSpeed,
             launchAwayFromCamera = launchAwayFromCamera,
             bossHeadLaunchUpward = bossHeadLaunchUpward,
