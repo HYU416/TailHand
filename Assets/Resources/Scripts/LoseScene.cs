@@ -81,6 +81,7 @@ public class LoseScene : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Return))
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 if (currentIndex == 0)
                 {
                     sceneLoader.LoadScene("GameScene");

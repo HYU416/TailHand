@@ -91,6 +91,7 @@ public class GameOver : MonoBehaviour
 
             if (Input.GetButtonDown("Submit"))
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 if (currentIndex == 0)
                 {
                     if (StageNumber == 1) sceneLoader.LoadScene("GameScene");

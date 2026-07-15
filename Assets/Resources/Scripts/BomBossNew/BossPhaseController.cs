@@ -474,7 +474,7 @@ public class BossPhaseController : MonoBehaviour
         if (currentPhase == 1)
         {
             EffectManager.Instance.Play(EffectType.CoreBreak, phase1Core.transform.position);
-
+            MySoundManeger.Play(gameObject, SEList.SE_CORECRUSH);
             if (bossStep1 != null)
             {
                 StartCoroutine(DisableBossStep(bossStep1));
@@ -494,7 +494,7 @@ public class BossPhaseController : MonoBehaviour
         if (currentPhase == 2)
         {
             EffectManager.Instance.Play(EffectType.CoreBreak, phase2Core.transform.position);
-
+            MySoundManeger.Play(gameObject, SEList.SE_CORECRUSH);
             if (bossStep2 != null)
             {
                 StartCoroutine(DisableBossStep(bossStep2));
@@ -512,6 +512,8 @@ public class BossPhaseController : MonoBehaviour
 
         if (currentPhase == 3)
         {
+            EffectManager.Instance.Play(EffectType.CoreBreak, phase3Core.transform.position);
+            MySoundManeger.Play(gameObject, SEList.SE_CORECRUSH);
             // フェーズ4開始時のエフェクトは BossFinalAttackSequence 側に任せる。
             if (bossStep3 != null)
             {

@@ -15,13 +15,14 @@ public class ChangeTag : MonoBehaviour
         {
             tailEnd = GameObject.Find(hasPlayerCatchEnemyName);
         }
+        if(tailEnd == null) return;
         playerCatchEnemy = tailEnd.GetComponent<PlayerCatchEnemy>();
-
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (playerCatchEnemy == null) return;
         var obj = playerCatchEnemy.CatchingObjectPtr();
         if (obj == this.gameObject)
             this.gameObject.tag = "Projectile";

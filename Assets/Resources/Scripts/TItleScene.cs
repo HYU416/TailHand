@@ -208,6 +208,7 @@ public class TItleScene : MonoBehaviour
             // StartButton‚ÅStageˆê——•\¦
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 if (currentIndex == 0 && !isCameraMoving)
                 {
                     StartCoroutine(UIAnimation(titleAnimationTargets, false)); 
@@ -233,6 +234,7 @@ public class TItleScene : MonoBehaviour
             }
             if ((Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit")) && !isStageDecide)
             {
+                MySoundManeger.Play(gameObject, SEList.SE_ENTER);
                 // ÅŒã”ö‚Ì‚İExit‚Ìˆ—
                 if (currentIndex == stagePanels.Count() - 1 && !isCameraMoving)
                 {
