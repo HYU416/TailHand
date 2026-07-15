@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fad74e03f9dbdb84882938c3e5237827, type: 3}
   m_Name: SoundManager
   m_EditorClassIdentifier: Assembly-CSharp::SoundManeger
-  seList: 12
+  seList: 11
   seListData:
   - audioClip: {fileID: 8300000, guid: 79863e7e5e7836c43950ae46319173f6, type: 3}
     audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
@@ -754,6 +754,69 @@ MonoBehaviour:
       lowPassResonanceQ: 1
   - audioClip: {fileID: 8300000, guid: cd968080ecfaead47a1ec79c1188a1f9, type: 3}
     audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
+    bypassEffects: 0
+    bypassListenerEffects: 0
+    bypassReverbZones: 0
+    isLoop: 0
+    priority: 128
+    volume: 1
+    pitch: 1
+    StereoPan: 0
+    spatialBlend: 0
+    reverbZoneMix: 1
+    dopplerLevel: 1
+    spread: 0
+    velumeRollOffType: 0
+    minDistance: 1
+    maxDistance: 500
+    customRolloffCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    audioFilterData:
+      useChorus: 0
+      chorusDryMix: 0.5
+      chorusWetMix1: 0.5
+      chorusWetMix2: 0.5
+      chorusWetMix3: 0.5
+      chorusDelay: 40
+      chorusRate: 1
+      chorusDepth: 0.5
+      useDistortion: 0
+      distortionLevel: 0.5
+      useEcho: 0
+      echoDelay: 500
+      echoDecayRatio: 0.5
+      echoDryMix: 0.5
+      echoWetMix: 0.5
+      useHighPass: 0
+      highPassCutoffFrequency: 5000
+      highPassResonanceQ: 1
+      useLowPass: 0
+      lowPassCutoffFrequency: 5000
+      lowPassResonanceQ: 1
+  - audioClip: {fileID: 0}
+    audioMixerGroup: {fileID: 0}
     bypassEffects: 0
     bypassListenerEffects: 0
     bypassReverbZones: 0

@@ -190,7 +190,7 @@ public class Player : MonoBehaviour
             //Debug.Log("Hit: " + hit.collider.name);
             //貫通対策
             //反射する
-            if (hit.collider.gameObject.CompareTag("Boss") || hit.collider.gameObject.CompareTag("ItemBox"))
+            if (hit.collider.gameObject.CompareTag("Boss") || hit.collider.gameObject.CompareTag("ItemBox") || hit.collider.gameObject.CompareTag("FieldWall"))
             {
 
                 float skin = 0.05f;

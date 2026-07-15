@@ -75,6 +75,8 @@ public partial class BossPhaseAttackController
             Quaternion.LookRotation(shootDirection)
         );
 
+        MySoundManeger.Play(gameObject, SEList.SE_Missile);
+
         if (ignoreBossCollidersForMissile)
         {
             IgnoreBossCollidersForSpawnedMissile(missileObject, gunSetting.gun);

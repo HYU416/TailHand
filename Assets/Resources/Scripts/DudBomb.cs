@@ -270,6 +270,7 @@ public class DudBomb : MonoBehaviour
             EffectType.Hit2,
             hitEffectPosition
         );
+       
     }
 
     public bool CanAffectBoss()
@@ -372,7 +373,7 @@ public class DudBomb : MonoBehaviour
             effectType,
             effectPosition
         );
-
+        MySoundManeger.Play(gameObject, SEList.SE_WALL_CRASH);
         CheckExplosionHit();
 
         Destroy(gameObject);

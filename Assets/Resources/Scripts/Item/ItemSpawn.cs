@@ -111,7 +111,7 @@ public class ItemSpawn : MonoBehaviour
     {
         if(other.CompareTag("ExplosionEffect"))
         {
-            MySoundManeger.Play(gameObject, SEList.SE_CRUSH);
+            MySoundManeger.Play(gameObject, SEList.SE_ITEM_CRUSH);
 
             // アイテムボックスの破壊
             Destroy(gameObject);
