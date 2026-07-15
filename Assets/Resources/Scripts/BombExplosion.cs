@@ -260,7 +260,7 @@ public class BombExplosion : MonoBehaviour
     public void ExplodeByBossHit()
     {
         if (hasExploded) return;
-
+        MySoundManeger.Play(gameObject, SEList.SE_WALL_CRASH);
         Explode("BOMがボス壁またはコアに当たって爆発しました: " + gameObject.name);
     }
 

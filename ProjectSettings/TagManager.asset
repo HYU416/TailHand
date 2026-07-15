@@ -23,6 +23,7 @@ TagManager:
   - IgnorePlayerTail
   - Projectile
   - FieldBack
+  - FieldWall
   layers:
   - Default
   - TransparentFX

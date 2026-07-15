@@ -13,7 +13,7 @@ using static SoundManeger;
 public enum SEList
 {
     SE_CATCH,
-    SE_CRUSH,
+    SE_ITEM_CRUSH,
     SE_Missile,
     SE_GameChange1,
     SE_GameChange2,
@@ -23,8 +23,9 @@ public enum SEList
     SE_BOSSLANDING,
     SE_BOSSNAME,
     SE_CORECRUSH,
-    SE_CRASH,
+    SE_WALL_CRASH,
     SE_LASTCORECRUSH,
+    SE_ROLL,
     MAX,
 }
 
