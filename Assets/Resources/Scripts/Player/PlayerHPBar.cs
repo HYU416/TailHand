@@ -144,6 +144,7 @@ public class PlayerHPBar : MonoBehaviour
         onDead?.Invoke();
     }
 
+
     private void OnValidate()
     {
         maxHP = Mathf.Max(1f, maxHP);
@@ -153,5 +154,10 @@ public class PlayerHPBar : MonoBehaviour
         {
             UpdateHPBar();
         }
+    }
+
+    public float GetHP()
+    {
+        return currentHP;
     }
 }
