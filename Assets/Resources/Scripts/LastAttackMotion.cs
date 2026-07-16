@@ -61,6 +61,7 @@ public class LastAttackMotion : MonoBehaviour
     CameraFollow watchCamera;
     float watchStopDistance;
     GameObject watchStopEffectPrefab;
+    Vector3 watchStopEffectOffset;
     bool watchingHead;
 
     public void BindCharacters(Animator player, Animator boss)
@@ -281,7 +282,8 @@ public class LastAttackMotion : MonoBehaviour
         Transform origin,
         CameraFollow camera,
         float stopDistance,
-        GameObject stopEffectPrefab = null)
+        GameObject stopEffectPrefab = null,
+        Vector3 stopEffectOffset = default)
     {
         if (head == null || origin == null || stopDistance <= 0f)
         {
@@ -293,6 +295,7 @@ public class LastAttackMotion : MonoBehaviour
         watchCamera = camera;
         watchStopDistance = stopDistance;
         watchStopEffectPrefab = stopEffectPrefab;
+        watchStopEffectOffset = stopEffectOffset;
         watchingHead = true;
     }
 
@@ -341,7 +344,7 @@ public class LastAttackMotion : MonoBehaviour
             watchCamera.FreezeQTEFraming();
         }
 
-        Vector3 effectPosition = GetHeadBoundsCenter(watchHead);
+        Vector3 effectPosition = GetHeadBoundsCenter(watchHead) + watchStopEffectOffset;
         SpawnHeadStopEffect(effectPosition);
         MySoundManeger.Play(gameObject, SEList.SE_LASTCORECRUSH);
         watchHead.gameObject.SetActive(false);

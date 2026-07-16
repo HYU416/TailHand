@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Game/BossStage_Big_G.unity
     guid: 3a2dd9e0d1cd6af47b49a973eed8ec63
+  - enabled: 1
+    path: Assets/Scenes/Game/QTEScene2.unity
+    guid: 54c17ce67e1a1644ba083745824b39cf
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
