@@ -62,6 +62,9 @@ public class QTEThrowAftermathSettings
 
     [Tooltip("頭が止まったときに再生する爆発エフェクト（LAST_boom など）")]
     public GameObject bossHeadStopEffectPrefab;
+
+    [Tooltip("エフェクト位置を頭の中心からずらすオフセット（ワールド座標）")]
+    public Vector3 bossHeadStopEffectOffset = Vector3.zero;
 }
 
 public static class QTEThrowAftermath
@@ -112,7 +115,8 @@ public static class QTEThrowAftermath
                 playerTransform,
                 cameraFollow,
                 settings.bossHeadStopDistance,
-                settings.bossHeadStopEffectPrefab
+                settings.bossHeadStopEffectPrefab,
+                settings.bossHeadStopEffectOffset
             );
         }
     }

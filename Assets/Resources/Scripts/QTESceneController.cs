@@ -115,6 +115,8 @@ public class QTESceneController : MonoBehaviour
     [SerializeField, Min(0f)] private float bossHeadStopDistance = 16f;
     [Tooltip("頭が止まったときに再生する爆発エフェクト（LAST_boom）")]
     [SerializeField] private GameObject bossHeadStopEffectPrefab;
+    [Tooltip("エフェクト位置を頭の中心からずらすオフセット（ワールド座標）。Y を上げるとエフェクトが上に出ます")]
+    [SerializeField] private Vector3 bossHeadStopEffectOffset = Vector3.zero;
 
     [Header("QTE UI")]
     [SerializeField] private LastAttackUIManager mashPromptUI;
@@ -481,6 +483,7 @@ public class QTESceneController : MonoBehaviour
             bossHeadUseGravity = bossHeadUseGravity,
             bossHeadStopDistance = bossHeadStopDistance,
             bossHeadStopEffectPrefab = bossHeadStopEffectPrefab,
+            bossHeadStopEffectOffset = bossHeadStopEffectOffset,
         };
     }
 
