@@ -323,6 +323,8 @@ public class Player : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (hpBar.GetHP() <= 0.0f)
+            return;
         if (hpBar != null)
             if (invincibilityDuration <= 0.0f)
             {
