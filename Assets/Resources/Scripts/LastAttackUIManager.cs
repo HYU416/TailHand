@@ -54,6 +54,8 @@ public class LastAttackUIManager : MonoBehaviour
     [SerializeField, Min(0.01f)] private float winMoveDuration = 0.45f;
     [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
     [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
+    [Tooltip("選択中の NEXT / QUIT の拡大率")]
+    [SerializeField, Min(1f)] private float selectedMenuScale = 1.2f;
     [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
     [SerializeField] private Vector2 quitMenuPosition = new Vector2(0f, -164f);
     [SerializeField] private string nextSceneName = "BossStage_Big_G";
@@ -399,16 +401,18 @@ public class LastAttackUIManager : MonoBehaviour
         UpdateMenuButtonSprite(
             nextGameImage,
             nextMenuPosition,
-            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite
+            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite,
+            currentChoice == WinMenuChoice.Next
         );
         UpdateMenuButtonSprite(
             quitGameImage,
             quitMenuPosition,
-            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite
+            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite,
+            currentChoice == WinMenuChoice.Quit
         );
     }
 
-    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite)
+    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite, bool selected)
     {
         if (image == null || sprite == null)
         {
@@ -416,10 +420,10 @@ public class LastAttackUIManager : MonoBehaviour
         }
 
         image.sprite = sprite;
-        ConfigureMenuImageLayout(image, anchoredPosition);
+        ConfigureMenuImageLayout(image, anchoredPosition, selected);
     }
 
-    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition)
+    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition, bool selected = false)
     {
         if (image == null)
         {
@@ -449,6 +453,10 @@ public class LastAttackUIManager : MonoBehaviour
         }
 
         float uniformScale = menuButtonTargetWidth / rect.sizeDelta.x;
+
+        if (selected)
+            uniformScale *= selectedMenuScale;
+
         rect.localScale = Vector3.one * uniformScale;
     }
 
