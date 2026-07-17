@@ -113,6 +113,7 @@ public partial class BossPhaseAttackController
         Vector3 spawnPosition =
             gunSetting.gun.position + shootDirection * gunSetting.muzzleOffset;
 
+        BombExplosionSound.isBombExplosionSoundPlaying = false;
         GameObject bomb = Instantiate(
             prefab,
             spawnPosition,

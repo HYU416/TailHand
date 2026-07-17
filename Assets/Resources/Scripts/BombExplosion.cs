@@ -299,6 +299,11 @@ public class BombExplosion : MonoBehaviour
         }
 
         GameObject effect = EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
+        if (!BombExplosionSound.isBombExplosionSoundPlaying)
+        {
+            BombExplosionSound.isBombExplosionSoundPlaying = true;
+            MySoundManeger.Play(gameObject, SEList.SE_WALL_CRASH);
+        }
         if (effect == null)
         {
             Debug.LogWarning("Explosion2 ÇÃê∂ê¨Ç…é∏îsÇµÇ‹ÇµÇΩ");
