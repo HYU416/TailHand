@@ -210,6 +210,7 @@ public partial class BossPhaseAttackController
             groundPosition.z
         );
 
+        BombExplosionSound.isBombExplosionSoundPlaying = false;
         GameObject bomb = Instantiate(
             prefab,
             spawnPosition,

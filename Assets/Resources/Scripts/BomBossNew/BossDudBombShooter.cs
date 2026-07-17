@@ -180,6 +180,7 @@ public class BossDudBombShooter : MonoBehaviour
 
         Vector3 spawnPosition = firePoint.position + shootDirection * forwardSpawnOffset;
 
+        BombExplosionSound.isBombExplosionSoundPlaying = false;
         GameObject bomb = Instantiate(
             dudBombPrefab,
             spawnPosition,
