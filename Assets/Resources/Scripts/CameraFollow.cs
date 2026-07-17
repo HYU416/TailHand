@@ -357,8 +357,7 @@ public class CameraFollow : MonoBehaviour
             intro.SetScheduledEndTime(loopStartTime);
             loop.PlayScheduled(loopStartTime);
 
-            var se =  MySoundManeger.Play(gameObject, SEList.SE_ROLL);
-            se.Stop();
+            
         }
         if (StageNumber == 0)
         {
