@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fad74e03f9dbdb84882938c3e5237827, type: 3}
   m_Name: SoundManager
   m_EditorClassIdentifier: Assembly-CSharp::SoundManeger
-  seList: 7
+  seList: 11
   seListData:
   - audioClip: {fileID: 8300000, guid: 79863e7e5e7836c43950ae46319173f6, type: 3}
     audioMixerGroup: {fileID: -274628198928033804, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
@@ -129,7 +129,7 @@ MonoBehaviour:
     bypassReverbZones: 0
     isLoop: 0
     priority: 128
-    volume: 0.1
+    volume: 0.3
     pitch: 1
     StereoPan: 0
     spatialBlend: 0
@@ -318,7 +318,7 @@ MonoBehaviour:
     bypassReverbZones: 0
     isLoop: 0
     priority: 128
-    volume: 1
+    volume: 0.25
     pitch: 1
     StereoPan: 0
     spatialBlend: 0
@@ -444,7 +444,7 @@ MonoBehaviour:
     bypassReverbZones: 0
     isLoop: 0
     priority: 128
-    volume: 0.932
+    volume: 0.2
     pitch: 1
     StereoPan: 0
     spatialBlend: 0
@@ -878,9 +878,9 @@ MonoBehaviour:
       useLowPass: 0
       lowPassCutoffFrequency: 5000
       lowPassResonanceQ: 1
-  bgmList: 12
+  bgmList: 0
   bgmListData:
-  - audioClip: {fileID: 8300000, guid: d2a19b18be1f5d74f84aecc4ab38a7a2, type: 3}
+  - audioClip: {fileID: 8300000, guid: a82ba7d0bc853d240be6f81da825463b, type: 3}
     audioMixerGroup: {fileID: 6006552417546178158, guid: 4ac70f419b1dca943b5054fbb37c1ddc, type: 2}
     bypassEffects: 0
     bypassListenerEffects: 0
@@ -1692,4 +1692,4 @@ MonoBehaviour:
   - Volume: 1
   - Volume: 1
   - Volume: 1
-  selectIndex: 0
+  selectIndex: 2
