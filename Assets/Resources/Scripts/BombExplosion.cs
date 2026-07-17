@@ -56,6 +56,7 @@ public class BombExplosion : MonoBehaviour
     //エフェクトのスピードカーブ
     public AnimationCurve effectSpeedCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
     private EffectPlayer damageZoneEffect;
+    private bool explodedByBossHit;
 
     public bool HasExploded
     {
@@ -260,7 +261,9 @@ public class BombExplosion : MonoBehaviour
     public void ExplodeByBossHit()
     {
         if (hasExploded) return;
-        MySoundManeger.Play(gameObject, SEList.SE_WALL_CRASH);
+        explodedByBossHit = true;
+        var camera = Camera.main.gameObject;
+        MySoundManeger.Play(camera, SEList.SE_WALL_CRASH);
         Explode("BOMがボス壁またはコアに当たって爆発しました: " + gameObject.name);
     }
 
@@ -299,7 +302,7 @@ public class BombExplosion : MonoBehaviour
         }
 
         GameObject effect = EffectManager.Instance.Play(EffectType.Explosion2, transform.position);
-        if (!BombExplosionSound.isBombExplosionSoundPlaying)
+        if (!explodedByBossHit && !BombExplosionSound.isBombExplosionSoundPlaying)
         {
             BombExplosionSound.isBombExplosionSoundPlaying = true;
             var camera = Camera.main.gameObject;
