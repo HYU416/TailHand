@@ -147,7 +147,7 @@ public class TItleScene : MonoBehaviour
 
             // Œ»Ý‚Ìƒpƒlƒ‹”‚ðŽæ“¾
             int panelCount = currentState == MenuState.Title? titlePanels.Length: stagePanels.Length;
-            int minIndex = currentState == MenuState.Title ? 0 : 1;
+            int minIndex = 0;
             int maxIndex = panelCount - 1;
 
             if (Input.GetKeyDown(KeyCode.RightArrow) || h > 0.5f)
@@ -227,7 +227,7 @@ public class TItleScene : MonoBehaviour
         // Title‚Ö‘JˆÚ
         if(currentState == MenuState.StageSelect)
         {
-            currentIndex = Mathf.Clamp(currentIndex, 1, stagePanels.Length - 1);
+            currentIndex = Mathf.Clamp(currentIndex, 0, stagePanels.Length - 1);
             if (!isStageDecide)
             {
                 MoveDecideButtonSelection(stagePanels, ref previousStageIndex, currentIndex);
