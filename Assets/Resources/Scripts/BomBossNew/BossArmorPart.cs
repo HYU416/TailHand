@@ -318,6 +318,7 @@ public class BossArmorPart : MonoBehaviour
         if (currentHp <= 0)
         {
             BreakArmor();
+            
         }
     }
 
@@ -350,6 +351,8 @@ public class BossArmorPart : MonoBehaviour
         {
             gameObject.SetActive(false);
         }
+        var camera = Camera.main.gameObject;
+        MySoundManeger.Play(camera, SEList.SE_WALL_CRASH);
     }
 
     public void ForceBreakArmor()

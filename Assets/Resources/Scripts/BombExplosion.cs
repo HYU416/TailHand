@@ -263,7 +263,7 @@ public class BombExplosion : MonoBehaviour
         if (hasExploded) return;
         explodedByBossHit = true;
         var camera = Camera.main.gameObject;
-        MySoundManeger.Play(camera, SEList.SE_WALL_CRASH);
+        //MySoundManeger.Play(camera, SEList.SE_WALL_CRASH);
         Explode("BOMがボス壁またはコアに当たって爆発しました: " + gameObject.name);
     }
 
