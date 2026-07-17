@@ -302,7 +302,8 @@ public class BombExplosion : MonoBehaviour
         if (!BombExplosionSound.isBombExplosionSoundPlaying)
         {
             BombExplosionSound.isBombExplosionSoundPlaying = true;
-            MySoundManeger.Play(gameObject, SEList.SE_WALL_CRASH);
+            var camera = Camera.main.gameObject;
+            MySoundManeger.Play(camera, SEList.SE_WALL_CRASH);
         }
         if (effect == null)
         {
