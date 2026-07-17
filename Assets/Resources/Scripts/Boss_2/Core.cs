@@ -33,8 +33,6 @@ public class Core : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.P))
-            TakeDamage();
     }
 
     private void HPSet()
