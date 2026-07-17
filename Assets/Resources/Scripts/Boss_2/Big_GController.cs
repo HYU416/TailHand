@@ -121,6 +121,7 @@ public class Big_GController : MonoBehaviour
 
     private const float returnLayerTime = 0.1f;
     private float returnLayerTimeDuration = 0.0f;
+    private float forcedRepatriationTime = 15.0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -325,6 +326,8 @@ public class Big_GController : MonoBehaviour
 
         if (!attackStatus.bAttack)
         {
+            forcedRepatriationTime = 15.0f;
+
             attackStatus.bAttack = true;
             attackStatus.airTimeDuration = attackStatus.airTimer;
 
@@ -346,6 +349,19 @@ public class Big_GController : MonoBehaviour
             {
                 SetupAttack(noiseCannon.startupTime, noiseCannon.activeTime);
                 attackState = EAttackState.NoiseCannon;
+            }
+        }
+        else
+        {
+            if (IsTimerZero(ref forcedRepatriationTime))
+            {
+                ResetAttackStatus();
+                ResetDrummingStatus();
+                ResetNoiseCannonStatus();
+                ResetShockWaveStatus();
+                objectFlasher.ResetFlashing();
+                objectFlasher.ResetFlashingData();
+                forcedRepatriationTime = 15.0f;
             }
         }
     }
