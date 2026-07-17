@@ -26,6 +26,7 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float stageHeight = 12f;
 
     [SerializeField ] GameObject StartSequenceUIObject;
+    [SerializeField] GameObject GameUIObject;
 
     [SerializeField] BossPhaseAttackController bossAttack;
 
@@ -379,8 +380,9 @@ public class CameraFollow : MonoBehaviour
         }
 
         StartSequenceUIObject.SetActive(false);
+        GameUIObject.SetActive(false);
 
-        
+
         //player = GameObject.FindGameObjectWithTag("Player");
         //Boss = GameObject.FindGameObjectWithTag("Boss");
     }
@@ -553,9 +555,10 @@ public class CameraFollow : MonoBehaviour
             else
             {
                 StartSequenceUIObject.SetActive(false);
+                GameUIObject.SetActive(true);
                 //bossNameUI.SetActive(false);
 
-                if(StageNumber == 1)bossAttack.StartBattle();
+                if (StageNumber == 1)bossAttack.StartBattle();
                 Gamestart = true;
             }
             return;
