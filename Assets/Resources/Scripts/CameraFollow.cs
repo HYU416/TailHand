@@ -60,7 +60,7 @@ public class CameraFollow : MonoBehaviour
     Vector3 frameFixedCameraPosition;
     float frameHeightOffset = 1.5f;
     bool frameSmooth = true;
-
+    private bool isBossNameSEPlayed = false;
 
     public bool FollowEnabled
     {
@@ -540,7 +540,12 @@ public class CameraFollow : MonoBehaviour
             // Phase6 Boss名表示
             else if (introTime < 19.0f)
             {
-                MySoundManeger.Play(gameObject, SEList.SE_BOSSNAME);
+                if (!isBossNameSEPlayed)
+                {
+                    isBossNameSEPlayed = true;
+                    MySoundManeger.Play(gameObject, SEList.SE_BOSSNAME);
+                }
+                
                 // Boss名表示
                 StartSequenceUIObject.SetActive(true);
                 //bossNameUI.SetActive(true);
