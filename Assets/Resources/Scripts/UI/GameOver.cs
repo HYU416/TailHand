@@ -19,6 +19,7 @@ public class GameOver : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private GameObject player;
+    [SerializeField] private GameObject playerTail;
     [SerializeField] private GameObject losePlayer;
     [SerializeField] private Sprite[] loseNormalSprite;
     [SerializeField] private Sprite[] loseFrontSprite;
@@ -34,6 +35,7 @@ public class GameOver : MonoBehaviour
     private int currentIndex = 0;
     private float nextMoveTime = 0f;
     private float moveCooldown = 0.2f;
+    private Vector3 defoultButtonScale;
 
     private enum ShowState
     {
@@ -57,6 +59,7 @@ public class GameOver : MonoBehaviour
         fadeOutPanel.color = fadeColor;
 
         losePlayer.SetActive(false);
+        defoultButtonScale = buttonPanels[0].transform.localScale;
     }
 
     void Update()
@@ -109,6 +112,7 @@ public class GameOver : MonoBehaviour
         for (int i = 0; i < buttonPanels.Length; i++)
         {
             buttonPanels[i].sprite = i == currentIndex ? loseFrontSprite[i] : loseNormalSprite[i];
+            buttonPanels[i].transform.localScale = i == currentIndex ? defoultButtonScale * 1.2f : defoultButtonScale;
         }
 
         // アニメーション
@@ -188,6 +192,7 @@ public class GameOver : MonoBehaviour
     {
         if(!isStart)
         {
+            playerTail.SetActive(false);
             player.SetActive(false);
             losePlayer.SetActive(true);
             losePlayer.transform.position = player.transform.position ;
