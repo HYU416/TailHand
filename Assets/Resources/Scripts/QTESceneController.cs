@@ -7,7 +7,7 @@ using UnityEngine;
 public class QTESceneController : MonoBehaviour
 {
     [Header("QTE モデル")]
-    [Tooltip("一体 Prefab を使う場合はこちら。未設定なら Player/Boss モデルを組み立てます")]
+    [Tooltip("一体 Prefab、またはシーン上に置いた QTECombo。シーン上のオブジェクトを入れるとクローンせずそのまま使います")]
     [SerializeField] private GameObject comboModelPrefab;
     [Tooltip("キャラモデル（fbx_Player_Fin など）")]
     [SerializeField] private GameObject playerModelPrefab;
@@ -130,6 +130,7 @@ public class QTESceneController : MonoBehaviour
     [SerializeField] private bool previewThrowMotionOnly;
 
     GameObject comboInstance;
+    bool comboIsSceneInstance;
     LastAttack activeLastAttack;
     bool qteStarted;
     bool skipContactCheck;
@@ -339,10 +340,20 @@ public class QTESceneController : MonoBehaviour
     void PrepareComboModel()
     {
         Transform parent = GetComboParent();
+        comboIsSceneInstance = false;
 
         if (comboModelPrefab != null)
         {
-            comboInstance = Instantiate(comboModelPrefab, parent);
+            // シーン上に置いたオブジェクトならクローンせずそのまま使う
+            if (comboModelPrefab.scene.IsValid())
+            {
+                comboInstance = comboModelPrefab;
+                comboIsSceneInstance = true;
+            }
+            else
+            {
+                comboInstance = Instantiate(comboModelPrefab, parent);
+            }
         }
         else if (playerModelPrefab != null && bossModelPrefab != null)
         {
@@ -367,7 +378,9 @@ public class QTESceneController : MonoBehaviour
             return;
         }
 
-        ApplyComboTransform(comboInstance.transform);
+        if (!comboIsSceneInstance)
+            ApplyComboTransform(comboInstance.transform);
+
         EnsureComboRenderersEnabled(comboInstance, true);
         comboInstance.SetActive(false);
         EnsureComboComponents(comboInstance);
@@ -559,19 +572,23 @@ public class QTESceneController : MonoBehaviour
             return;
         }
 
-        Transform parent = GetComboParent();
-
-        if (parent != null && comboInstance.transform.parent != parent)
+        if (!comboIsSceneInstance)
         {
-            comboInstance.transform.SetParent(parent, false);
-        }
-        else if (parent == null)
-        {
-            Vector3 spawnPosition = GetSpawnPosition(qteCenterPoint, fallbackQteCenter);
-            comboInstance.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+            Transform parent = GetComboParent();
+
+            if (parent != null && comboInstance.transform.parent != parent)
+            {
+                comboInstance.transform.SetParent(parent, false);
+            }
+            else if (parent == null)
+            {
+                Vector3 spawnPosition = GetSpawnPosition(qteCenterPoint, fallbackQteCenter);
+                comboInstance.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+            }
+
+            ApplyComboTransform(comboInstance.transform);
         }
 
-        ApplyComboTransform(comboInstance.transform);
         EnsureComboRenderersEnabled(comboInstance, true);
         activeLastAttack?.InitializeVisuals();
         comboInstance.SetActive(true);

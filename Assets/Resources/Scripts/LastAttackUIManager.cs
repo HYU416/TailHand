@@ -50,6 +50,8 @@ public class LastAttackUIManager : MonoBehaviour
     [SerializeField, Min(0.1f)] private float winDisplayScale = 1.45f;
     [Tooltip("選択 UI 表示前に WIN を上へ移動する量")]
     [SerializeField] private float winMoveUpOffset = 50f;
+    [Tooltip("WIN が上へスライドする秒数")]
+    [SerializeField, Min(0.01f)] private float winMoveDuration = 0.45f;
     [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
     [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
     [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
@@ -213,21 +215,35 @@ public class LastAttackUIManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(delayBeforeShowSelection);
         }
 
-        MoveWinUp();
+        yield return MoveWinUpRoutine();
         ShowSelectionButtons();
         currentChoice = WinMenuChoice.Next;
         UpdateSelectionVisuals();
         isSelectionActive = true;
     }
 
-    void MoveWinUp()
+    IEnumerator MoveWinUpRoutine()
     {
-        if (winRectTransform == null)
+        if (winRectTransform == null || Mathf.Approximately(winMoveUpOffset, 0f))
         {
-            return;
+            yield break;
         }
 
-        winRectTransform.anchoredPosition = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
+        Vector2 from = winInitialAnchoredPosition;
+        Vector2 to = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
+        float duration = Mathf.Max(0.01f, winMoveDuration);
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+            float eased = t * t * (3f - 2f * t);
+            winRectTransform.anchoredPosition = Vector2.Lerp(from, to, eased);
+            yield return null;
+        }
+
+        winRectTransform.anchoredPosition = to;
     }
 
     void ConfigureWinDisplay()
