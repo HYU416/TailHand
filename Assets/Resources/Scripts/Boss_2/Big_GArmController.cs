@@ -10,6 +10,8 @@ public class Big_GArmController : MonoBehaviour
     [SerializeField] private GameObject body;
     [SerializeField] private GameObject centerOnStage;
     [SerializeField] private ThrowTrajectoryCorrector trajectory;
+    [SerializeField] private GameObject armBone;
+    [SerializeField] private BoxCollider collider;
 
     private Vector3 savedLocalPosition;
     private Quaternion savedLocalRotation;
@@ -17,6 +19,8 @@ public class Big_GArmController : MonoBehaviour
     private float moveSpeed = 0.0f;
     private float rotateSpeed = 0.0f;
     private bool bCaught = false;
+    private bool bDetach;
+    private Vector3 defaultColliderPos;
     
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -31,6 +35,8 @@ public class Big_GArmController : MonoBehaviour
         if (rb == null)
             rb = GetComponent<Rigidbody>();
         rb.isKinematic = true;
+        bDetach = false;
+        defaultColliderPos = collider.center;
     }
 
     // Update is called once per frame
@@ -54,6 +60,7 @@ public class Big_GArmController : MonoBehaviour
                 bReturned = true;
                 Debug.Log("–ß‚èŠ®—¹");
             }
+            return;
         }
 
         if (bCaught)
@@ -81,10 +88,18 @@ public class Big_GArmController : MonoBehaviour
             {
                 trajectory.SetSpeed(0.0f);
                 var returnPos = centerOnStage.transform.position;
-                //returnPos.y = 30.0f;
                 this.transform.position = returnPos;
             }
 
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (bDetach)
+        {
+            armBone.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            armBone.transform.localRotation = Quaternion.Euler(63.0f, -66.0f, -80.0f);
         }
     }
 
@@ -101,7 +116,7 @@ public class Big_GArmController : MonoBehaviour
         rb.AddForce(randomDirection * launchForce, ForceMode.Impulse);
 
         // ‰ñ“]
-        rb.AddTorque(Random.insideUnitSphere * 5.0f, ForceMode.Impulse);
+        rb.AddTorque(Random.insideUnitSphere * 10.0f, ForceMode.Impulse);
     }
 
     public void DetachArm()
@@ -115,6 +130,10 @@ public class Big_GArmController : MonoBehaviour
         rb.useGravity = true;
         this.gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
         BlowOff();
+        bDetach = true;
+        collider.center = new Vector3(-1.0f, 2.0f, 0.0f);
+        var anim = GetComponent<Animator>();
+        anim.enabled = false;
     }
 
     public void ReattachArm()
@@ -126,5 +145,9 @@ public class Big_GArmController : MonoBehaviour
         rb.isKinematic = true;
         this.gameObject.tag = "Untagged";
         this.gameObject.layer = LayerMask.NameToLayer("Enemy");
+        bDetach = false;
+        collider.center = defaultColliderPos;
+        var anim = GetComponent<Animator>();
+        anim.enabled = true;
     }
 }
