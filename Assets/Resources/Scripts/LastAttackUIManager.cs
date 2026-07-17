@@ -50,8 +50,12 @@ public class LastAttackUIManager : MonoBehaviour
     [SerializeField, Min(0.1f)] private float winDisplayScale = 1.45f;
     [Tooltip("選択 UI 表示前に WIN を上へ移動する量")]
     [SerializeField] private float winMoveUpOffset = 50f;
+    [Tooltip("WIN が上へスライドする秒数")]
+    [SerializeField, Min(0.01f)] private float winMoveDuration = 0.45f;
     [Tooltip("NEXT / QUIT の表示幅（縦横比は維持）")]
     [SerializeField, Min(1f)] private float menuButtonTargetWidth = 350f;
+    [Tooltip("選択中の NEXT / QUIT の拡大率")]
+    [SerializeField, Min(1f)] private float selectedMenuScale = 1.2f;
     [SerializeField] private Vector2 nextMenuPosition = new Vector2(0f, -44f);
     [SerializeField] private Vector2 quitMenuPosition = new Vector2(0f, -164f);
     [SerializeField] private string nextSceneName = "BossStage_Big_G";
@@ -213,21 +217,35 @@ public class LastAttackUIManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(delayBeforeShowSelection);
         }
 
-        MoveWinUp();
+        yield return MoveWinUpRoutine();
         ShowSelectionButtons();
         currentChoice = WinMenuChoice.Next;
         UpdateSelectionVisuals();
         isSelectionActive = true;
     }
 
-    void MoveWinUp()
+    IEnumerator MoveWinUpRoutine()
     {
-        if (winRectTransform == null)
+        if (winRectTransform == null || Mathf.Approximately(winMoveUpOffset, 0f))
         {
-            return;
+            yield break;
         }
 
-        winRectTransform.anchoredPosition = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
+        Vector2 from = winInitialAnchoredPosition;
+        Vector2 to = winInitialAnchoredPosition + new Vector2(0f, winMoveUpOffset);
+        float duration = Mathf.Max(0.01f, winMoveDuration);
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+            float eased = t * t * (3f - 2f * t);
+            winRectTransform.anchoredPosition = Vector2.Lerp(from, to, eased);
+            yield return null;
+        }
+
+        winRectTransform.anchoredPosition = to;
     }
 
     void ConfigureWinDisplay()
@@ -383,16 +401,18 @@ public class LastAttackUIManager : MonoBehaviour
         UpdateMenuButtonSprite(
             nextGameImage,
             nextMenuPosition,
-            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite
+            currentChoice == WinMenuChoice.Next ? nextSelectedSprite : nextUnselectedSprite,
+            currentChoice == WinMenuChoice.Next
         );
         UpdateMenuButtonSprite(
             quitGameImage,
             quitMenuPosition,
-            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite
+            currentChoice == WinMenuChoice.Quit ? quitSelectedSprite : quitUnselectedSprite,
+            currentChoice == WinMenuChoice.Quit
         );
     }
 
-    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite)
+    void UpdateMenuButtonSprite(Image image, Vector2 anchoredPosition, Sprite sprite, bool selected)
     {
         if (image == null || sprite == null)
         {
@@ -400,10 +420,10 @@ public class LastAttackUIManager : MonoBehaviour
         }
 
         image.sprite = sprite;
-        ConfigureMenuImageLayout(image, anchoredPosition);
+        ConfigureMenuImageLayout(image, anchoredPosition, selected);
     }
 
-    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition)
+    void ConfigureMenuImageLayout(Image image, Vector2 anchoredPosition, bool selected = false)
     {
         if (image == null)
         {
@@ -433,6 +453,10 @@ public class LastAttackUIManager : MonoBehaviour
         }
 
         float uniformScale = menuButtonTargetWidth / rect.sizeDelta.x;
+
+        if (selected)
+            uniformScale *= selectedMenuScale;
+
         rect.localScale = Vector3.one * uniformScale;
     }
 

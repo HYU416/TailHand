@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static SceneLoader;
 
 public class CameraFollow : MonoBehaviour
 {
@@ -329,19 +330,11 @@ public class CameraFollow : MonoBehaviour
         //シーンによってBGMを変える
         if (sceneName == "GameScene")
         {
-            var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-            //intro.time += 70.0f;
-            var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
-            loop.Stop();
-            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+            var StartBGM = MySoundManeger.Play(gameObject, BGMList.BGM_START);
         }
         else if(sceneName == "BossStage_Big_G")
         {
-            var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
-            //intro.time += 70.0f;
-            var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
-            loop.Stop();
-            loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+            var StartBGM = MySoundManeger.Play(gameObject, BGMList.BGM_START2);
         }
         else if(sceneName == "QTEScene")
         {
@@ -488,7 +481,7 @@ public class CameraFollow : MonoBehaviour
                     {
                         r.enabled = true;
                     }
-
+                    MySoundManeger.Play(gameObject, SEList.SE_BOSSLANDING);
                     Boss.transform.position = bossStartPos;
                 }
 
@@ -547,7 +540,7 @@ public class CameraFollow : MonoBehaviour
             // Phase6 Boss名表示
             else if (introTime < 19.0f)
             {
-
+                MySoundManeger.Play(gameObject, SEList.SE_BOSSNAME);
                 // Boss名表示
                 StartSequenceUIObject.SetActive(true);
                 //bossNameUI.SetActive(true);
@@ -557,9 +550,28 @@ public class CameraFollow : MonoBehaviour
                 StartSequenceUIObject.SetActive(false);
                 GameUIObject.SetActive(true);
                 //bossNameUI.SetActive(false);
-
                 if (StageNumber == 1)bossAttack.StartBattle();
                 Gamestart = true;
+
+                string sceneName = SceneManager.GetActiveScene().name;
+
+                MySoundManeger.Stop(gameObject);
+                if (sceneName == "GameScene")
+                {
+                    var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME);
+                    //intro.time += 70.0f;
+                    var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GAME_LOOP);
+                    loop.Stop();
+                    loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+                }
+                else if (sceneName == "BossStage_Big_G")
+                {
+                    var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAME2);
+                    //intro.time += 70.0f;
+                    var loop = MySoundManeger.Play(gameObject, BGMList.BGM_GMAE2_LOOP);
+                    loop.Stop();
+                    loop.PlayScheduled(AudioSettings.dspTime + intro.clip.length - intro.time);
+                }
             }
             return;
         }
