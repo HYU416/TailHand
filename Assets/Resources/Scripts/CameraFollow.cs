@@ -28,6 +28,7 @@ public class CameraFollow : MonoBehaviour
 
     [SerializeField ] GameObject StartSequenceUIObject;
     [SerializeField] GameObject GameUIObject;
+    [SerializeField] GameObject GameSkipObject;
 
     [SerializeField] BossPhaseAttackController bossAttack;
 
@@ -374,6 +375,7 @@ public class CameraFollow : MonoBehaviour
 
         StartSequenceUIObject.SetActive(false);
         GameUIObject.SetActive(false);
+        GameSkipObject.SetActive(true);
 
 
         //player = GameObject.FindGameObjectWithTag("Player");
@@ -416,6 +418,16 @@ public class CameraFollow : MonoBehaviour
         if (!Gamestart)
         {
             if (player == null) return;
+
+            if (Input.GetKeyDown(KeyCode.K) || Input.GetButtonDown("Submit"))
+            {
+                introTime = 19.0f;
+                // Bossを表示
+                foreach (Renderer r in bossRenderers)
+                {
+                    r.enabled = true;
+                }
+            }
 
             introTime += Time.deltaTime;
 
@@ -552,6 +564,7 @@ public class CameraFollow : MonoBehaviour
             }
             else
             {
+                GameSkipObject.SetActive(false);
                 StartSequenceUIObject.SetActive(false);
                 GameUIObject.SetActive(true);
                 //bossNameUI.SetActive(false);
