@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
@@ -16,6 +17,11 @@ public class TItleScene : MonoBehaviour
     [SerializeField] private Sprite[] stageSelectFrontSprite;
      [SerializeField] private Sprite[] titleNormalSprite;
     [SerializeField] private Sprite[] titleFrontSprite;
+    [SerializeField] private Image[] navigate;
+    [SerializeField] private Sprite[] navigateASprite;
+    [SerializeField] private Sprite[] navigateBSprite;
+    [SerializeField] private PlayerInput playerInput;
+
 
     [Header("タイトルのPanel")]
     [SerializeField] private Image[] titlePanels;
@@ -76,7 +82,9 @@ public class TItleScene : MonoBehaviour
         StageSelect,
     }
     private MenuState currentState = MenuState.Title;
-    
+
+    private bool useGamepadPrompt = true;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -117,8 +125,16 @@ public class TItleScene : MonoBehaviour
             buttonDefaultPositions[rect] = rect.anchoredPosition;
         }
 
-       // MoveDecideButtonSelection(defaultPositions, currentIndex);
+        // MoveDecideButtonSelection(defaultPositions, currentIndex);
 
+        useGamepadPrompt = true;  
+
+        for (int i = 0; i < navigate.Length; i++)
+        {
+            navigate[i].sprite = useGamepadPrompt
+                ? navigateBSprite[i]
+                : navigateASprite[i];
+        }
 
         // フェード
         Color c = whiteFadeImage.color;
@@ -134,6 +150,14 @@ public class TItleScene : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //IsUsingGamepad(playerInput);
+        CheckLastUsedDevice();
+
+        for(int i = 0;i < navigate.Length;i++)
+        {
+            navigate[i].sprite = useGamepadPrompt ? navigateASprite[i] : navigateBSprite[i];
+        }
+
         // ステージの回転
         stage.transform.Rotate(0,stageRotateSpeed * Time.deltaTime, 0);
         //item.transform.Rotate(0,itemRotateSpeed * Time.deltaTime, 0);
@@ -450,6 +474,87 @@ public class TItleScene : MonoBehaviour
             yield return null;
         }
         sceneLoader.LoadScene(stageSceneNames[currentIndex]);
+    }
+
+    void RefreshInputDeviceMode()
+    {
+        useGamepadPrompt = IsUsingGamepad(playerInput);
+    }
+    static bool IsUsingGamepad(PlayerInput input)
+    {
+        if (input == null)
+        {
+            return Gamepad.current != null && Keyboard.current == null;
+        }
+
+        string scheme = input.currentControlScheme;
+
+        if (!string.IsNullOrEmpty(scheme))
+        {
+            if (scheme.Contains("Gamepad"))
+            {
+                return true;
+            }
+
+            if (scheme.Contains("Keyboard") || scheme.Contains("Mouse"))
+            {
+                return false;
+            }
+        }
+
+        foreach (InputDevice device in input.devices)
+        {
+            if (device is Gamepad)
+            {
+                return true;
+            }
+        }
+
+        return Gamepad.current != null && Keyboard.current == null;
+    }
+
+    void CheckLastUsedDevice()
+    {
+        // キーボードが押されたらKeyboard表示
+        if (Keyboard.current != null &&
+            Keyboard.current.anyKey.wasPressedThisFrame)
+        {
+            useGamepadPrompt = false;
+        }
+
+        if (Gamepad.current == null)
+        {
+            return;
+        }
+
+        Gamepad gamepad = Gamepad.current;
+
+        // ゲームパッドのボタンが押されたらGamePad表示
+        if (gamepad.buttonSouth.wasPressedThisFrame ||
+            gamepad.buttonNorth.wasPressedThisFrame ||
+            gamepad.buttonEast.wasPressedThisFrame ||
+            gamepad.buttonWest.wasPressedThisFrame ||
+            gamepad.startButton.wasPressedThisFrame ||
+            gamepad.selectButton.wasPressedThisFrame ||
+            gamepad.leftShoulder.wasPressedThisFrame ||
+            gamepad.rightShoulder.wasPressedThisFrame ||
+            gamepad.dpad.up.wasPressedThisFrame ||
+            gamepad.dpad.down.wasPressedThisFrame ||
+            gamepad.dpad.left.wasPressedThisFrame ||
+            gamepad.dpad.right.wasPressedThisFrame)
+        {
+            useGamepadPrompt = true;
+            return;
+        }
+
+        // スティックを動かしたらGamePad表示
+        if (gamepad.leftStick.ReadValue().sqrMagnitude > 0.25f ||
+            gamepad.rightStick.ReadValue().sqrMagnitude > 0.25f ||
+            gamepad.leftTrigger.ReadValue() > 0.2f ||
+            gamepad.rightTrigger.ReadValue() > 0.2f)
+        {
+            useGamepadPrompt = true;
+        }
     }
 }
 
