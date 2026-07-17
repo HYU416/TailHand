@@ -47,9 +47,17 @@ public class LastAttack : MonoBehaviour
     [Header("投げ演出")]
     [SerializeField] private QTEThrowAftermathSettings throwAftermath = new QTEThrowAftermathSettings();
 
-    [Header("ROLLSEのループ速度の変化")]
+    [Header("サウンド")]
     [SerializeField]
-    private AnimationCurve loopRollSESpeedCurve = AnimationCurve.Linear(0f, 0f, 1f, 3f);
+    private AnimationCurve rollSEIntervalCurve = new AnimationCurve(
+    new Keyframe(0f, 0.28f),
+    new Keyframe(0.25f, 0.15f),
+    new Keyframe(0.5f, 0.08f),
+    new Keyframe(1f, 0.025f)
+);
+
+    private float nextRollSETime;
+    private AudioSource currentRollSE;
 
     LastAttackMotion motion;
     CameraFollow activeCameraFollow;
@@ -120,7 +128,7 @@ public class LastAttack : MonoBehaviour
             endBGM.timeSamples = 0;
         }
 
-        loopRollSESpeedCurve = AnimationCurve.Linear(0f, 0f, 1f, 3f);
+       
     }
 
     void SetupSpinPivot()
@@ -177,6 +185,7 @@ public class LastAttack : MonoBehaviour
             UpdateMashInput();
             ApplySpinVisuals();
             UpdateLoopAnimation();
+            UpdateRollSEInterval();
             UpdateCameraPullback(cameraFollow);
             CheckThrowThresholdReached();
 
@@ -327,14 +336,7 @@ public class LastAttack : MonoBehaviour
         }
 
         rotationSpeed = Mathf.Clamp(rotationSpeed, 0f, maxSpinSpeed);
-
-        //回転速度に応じてROLLSEのループ速度を変化させる
-        var rollSE = MySoundManeger.GetSE(Camera.main.gameObject, SEList.SE_ROLL);
-        if (rollSE != null)
-        {
-            float normalized = Mathf.InverseLerp(0f, maxSpinSpeed, Mathf.Abs(rotationSpeed));
-            rollSE.pitch = 1f + loopRollSESpeedCurve.Evaluate(normalized);
-        }
+        UpdateRollSEInterval();
     }
 
     float GetSpinEase()
@@ -389,6 +391,32 @@ public class LastAttack : MonoBehaviour
         cameraFollow.SetQTECameraBackExtra(normalized * maxExtraCameraBack);
     }
 
+    void UpdateRollSEInterval()
+    {
+        float normalized = Mathf.InverseLerp(0f, maxSpinSpeed, Mathf.Abs(rotationSpeed));
+        float interval = rollSEIntervalCurve.Evaluate(normalized);
+        interval = Mathf.Max(0.01f, interval);
+
+        if (Time.time < nextRollSETime)
+        {
+            return;
+        }
+
+        currentRollSE = MySoundManeger.Play(Camera.main.gameObject, SEList.SE_ROLL);
+        nextRollSETime = Time.time + interval;
+    }
+
+    void StopRollSE()
+    {
+        if (currentRollSE == null)
+        {
+            return;
+        }
+        currentRollSE.Stop();
+        Destroy(currentRollSE.gameObject);
+        currentRollSE = null;
+    }
+
     public void StartFinisherEndBGM()
     {
         if (endBGMScheduled)
@@ -424,6 +452,8 @@ public class LastAttack : MonoBehaviour
 
     IEnumerator PlayThrowRoutine()
     {
+        StopRollSE();
+
         Time.timeScale = 1f;
         rotationSpeed = 0f;
         ResetSpinVisualRotation();

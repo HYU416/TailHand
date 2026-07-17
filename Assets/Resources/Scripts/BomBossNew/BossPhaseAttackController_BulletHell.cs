@@ -57,6 +57,8 @@ public partial class BossPhaseAttackController
         for (int i = 0; i < guns.Length; i++)
         {
             FireOneBulletHell(guns[i], setting);
+            if(i== 0) MySoundManeger.Play(gameObject, SEList.SE_BEAM);
+
         }
     }
 
@@ -90,7 +92,7 @@ public partial class BossPhaseAttackController
             gunSetting.gun.position + shootDirection * gunSetting.muzzleOffset;
 
         GameObject bulletObject = EffectManager.Instance.Play(EffectType.Beam, spawnPosition, Quaternion.LookRotation(shootDirection));
-        MySoundManeger.Play(gameObject, SEList.SE_BEAM);
+        //MySoundManeger.Play(gameObject, SEList.SE_BEAM);
 
 
         BulletHellBullet bullet = bulletObject.GetComponent<BulletHellBullet>();

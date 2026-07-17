@@ -203,12 +203,12 @@ public class GameOver : MonoBehaviour
         if (sceneName == "GameScene")
         {
             GameObject mainCamera  = Camera.main.gameObject;
-            MySoundManeger.Stop(mainCamera, BGMList.BGM_GAME);
+            MySoundManeger.Stop(mainCamera);
         }
         else if(sceneName == "BossStage_Big_G")
         {
             GameObject mainCamera  = Camera.main.gameObject;
-            MySoundManeger.Stop(mainCamera, BGMList.BGM_GAME);
+            MySoundManeger.Stop(mainCamera);
         }
         //ゲームオーバーのジングルとBGMを再生
         var intro = MySoundManeger.Play(gameObject, BGMList.BGM_GAMEOVER_JINGLE);

@@ -42,6 +42,9 @@ public enum BGMList
     BGM_GAMEOVER,
     BGM_GAMEOVER_JINGLE,
     BGM_START,
+    BGM_START2,
+    BGM_GAME2,
+    BGM_GMAE2_LOOP,
     MAX,
 }
 
