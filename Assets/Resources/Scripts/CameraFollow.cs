@@ -427,6 +427,7 @@ public class CameraFollow : MonoBehaviour
                 {
                     r.enabled = true;
                 }
+                Boss.transform.position = bossLandPos;
             }
 
             introTime += Time.deltaTime;
