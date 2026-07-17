@@ -37,6 +37,7 @@ public class Big_GArmController : MonoBehaviour
         rb.isKinematic = true;
         bDetach = false;
         defaultColliderPos = collider.center;
+        collider.enabled = false;
     }
 
     // Update is called once per frame
@@ -65,16 +66,22 @@ public class Big_GArmController : MonoBehaviour
 
         if (bCaught)
         {
+            if (playerCatchEnemy == null)
+                Debug.Log("Error Big_GArmController_playerCatchEnemy");
+
             if (playerCatchEnemy.CatchingObjectPtr() == null)
             {
                 bCaught = false;
                 this.gameObject.tag = "Projectile";
+                collider.isTrigger = true;
             }
         }
         else
         {
-            if (playerCatchEnemy.CatchingObjectPtr() == this.gameObject)
-                bCaught = true;
+            if (playerCatchEnemy == null)
+                Debug.Log("Error Big_GArmController_playerCatchEnemy");
+                if (playerCatchEnemy.CatchingObjectPtr() == this.gameObject)
+                    bCaught = true;
         }
         if (body != null)
         {
@@ -116,7 +123,7 @@ public class Big_GArmController : MonoBehaviour
         rb.AddForce(randomDirection * launchForce, ForceMode.Impulse);
 
         // ‰ñ“]
-        rb.AddTorque(Random.insideUnitSphere * 10.0f, ForceMode.Impulse);
+        rb.AddTorque(Random.insideUnitSphere * 5, ForceMode.Impulse);
     }
 
     public void DetachArm()
@@ -129,11 +136,13 @@ public class Big_GArmController : MonoBehaviour
         rb.isKinematic = false;
         rb.useGravity = true;
         this.gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
-        BlowOff();
         bDetach = true;
+        bReturned = true;
+        collider.enabled = true;
         collider.center = new Vector3(-1.0f, 2.0f, 0.0f);
         var anim = GetComponent<Animator>();
         anim.enabled = false;
+        BlowOff();
     }
 
     public void ReattachArm()
@@ -147,6 +156,8 @@ public class Big_GArmController : MonoBehaviour
         this.gameObject.layer = LayerMask.NameToLayer("Enemy");
         bDetach = false;
         collider.center = defaultColliderPos;
+        collider.isTrigger = false;
+        collider.enabled = false;
         var anim = GetComponent<Animator>();
         anim.enabled = true;
     }

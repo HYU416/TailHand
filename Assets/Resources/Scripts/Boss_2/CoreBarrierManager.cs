@@ -30,9 +30,6 @@ public class CoreBarrierManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.M))
-            TakeDamage();
-
         if (status.bDestroy && !bFragmented)
         {
             bFragmented = true;
