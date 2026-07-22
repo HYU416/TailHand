@@ -10,7 +10,7 @@ public class BreakObject : MonoBehaviour
     [SerializeField] float explosionForce = 300f;
     [Header("”š”­”¼Œa")]
     [SerializeField] float explosionRadius = 1f;
-
+    
     public void OnBreak()
     {
         Collider col = GetComponent<Collider>();
@@ -58,14 +58,28 @@ public class BreakObject : MonoBehaviour
     IEnumerator CoExplodeObjects(RaycastHit hit, float scale)
     {
         yield return new WaitForFixedUpdate();
-        Collider[] colliders = Physics.OverlapSphere(hit.point, this.explosionRadius);
-        foreach (var item in colliders)
+
+        Collider[] colliders = Physics.OverlapSphere(
+            hit.point,
+            explosionRadius,
+            LayerMask.GetMask("BreakObject_Fragment")
+        );
+
+        foreach (Collider item in colliders)
         {
-            if (item.TryGetComponent(out Rigidbody rigidbody))
+            Rigidbody rigidbody = item.attachedRigidbody;
+
+            if (rigidbody == null)
             {
-                rigidbody.isKinematic = false;
-                rigidbody.AddExplosionForce(this.explosionForce * scale, hit.point + hit.normal * 0.1f, this.explosionRadius * scale);
+                continue;
             }
+
+            rigidbody.isKinematic = false;
+            rigidbody.AddExplosionForce(
+                explosionForce * scale,
+                hit.point + hit.normal * 0.1f,
+                explosionRadius * scale
+            );
         }
     }
 }
